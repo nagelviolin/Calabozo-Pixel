@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Calabozo en Línea</title>
 <meta name="theme-color" content="#0E1713">
 <meta name="mobile-web-app-capable" content="yes">
@@ -138,6 +138,33 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
 .chatpanel input { flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; background: var(--bg); color: var(--fg); border: 2px solid var(--line); border-radius: 6px; font: 500 16px var(--body); }
 .chatpanel input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
 .toast { position: absolute; top: 74px; left: 50%; transform: translateX(-50%); z-index: 15; max-width: 86%; text-align: center; pointer-events: none; }
+
+/* ---- teléfono: pantalla completa y ajustes ---- */
+html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+.stage { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.gear { display: none; position: absolute; top: 10px; right: 160px; width: 46px; height: 46px; padding: 0; align-items: center; justify-content: center; background: rgba(10, 17, 14, 0.85); color: var(--fg); border: 2px solid var(--line); border-radius: 50%; cursor: pointer; z-index: 6; }
+.cfgclose { display: none; }
+@media (pointer: coarse), (max-width: 760px) {
+  html, body { height: 100%; overflow: hidden; }
+  body { padding: 0 !important; }
+  .wrap { display: block; max-width: none; }
+  header, .keys, .foot, #phoneview { display: none !important; }
+  .stage-row { display: block; }
+  .stage, .stage.phone { position: fixed; inset: 0; width: auto; height: auto; border: 0; border-radius: 0; }
+  .hud { top: max(10px, env(safe-area-inset-top, 0px)); left: max(10px, env(safe-area-inset-left, 0px)); }
+  .mini { top: max(10px, env(safe-area-inset-top, 0px)); right: max(10px, env(safe-area-inset-right, 0px)); }
+  .gear { display: inline-flex; top: max(10px, env(safe-area-inset-top, 0px)); right: calc(max(10px, env(safe-area-inset-right, 0px)) + 150px); }
+  .place { top: calc(max(10px, env(safe-area-inset-top, 0px)) + 76px); left: max(10px, env(safe-area-inset-left, 0px)); }
+  .joy { left: max(14px, env(safe-area-inset-left, 0px)); bottom: max(14px, env(safe-area-inset-bottom, 0px)); }
+  .act { right: max(10px, env(safe-area-inset-right, 0px)); bottom: max(10px, env(safe-area-inset-bottom, 0px)); }
+  .fab { right: max(10px, env(safe-area-inset-right, 0px)); bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 62px); }
+  .controls { display: none; }
+  body.cfg-open .controls { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; flex-direction: column; align-items: stretch; gap: 12px; padding: 16px max(16px, env(safe-area-inset-left, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--panel); border-top: 3px solid var(--fg); max-height: 82dvh; overflow-y: auto; }
+  body.cfg-open .cfgclose { display: inline-flex; align-items: center; justify-content: center; }
+}
+@media (pointer: coarse) and (max-height: 520px), (max-height: 520px) and (max-width: 900px) {
+  body.cfg-open .controls { flex-direction: row; flex-wrap: wrap; align-items: center; }
+}
 </style>
 
 <div class="wrap">
@@ -150,6 +177,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
     <div class="stage" id="stage" tabindex="0">
       <canvas id="cv" role="img" aria-label="Vista en primera persona de las calles del centro de Calabozo"></canvas>
       <div class="chip hud"><b id="hudStreet">Plaza Bolívar</b><span id="hudClock">1:00 pm · 37 °C</span><span class="warn" id="hudDark" hidden>Sin luz</span><span id="hudNet" style="display:none"></span></div>
+      <button type="button" class="gear" id="cfgBtn" aria-label="Ajustes"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
       <div class="chip mini"><canvas id="mm" aria-label="Minimapa con tu posición y hacia dónde miras"></canvas></div>
       <div class="chip place" id="place" data-on="0"><small id="placeType"></small><span id="placeName"></span></div>
       <div class="chip hint" id="hint">Haz clic aquí. Camina con ↑ ↓ o W S, gira con ← → o arrastrando el mouse, y A D para pasos de lado. En el teléfono: la palanca camina y arrastrar el dedo por la imagen gira. Pulsa E frente a las tiendas o una puerta, y T para escribir en el chat.</div>
@@ -199,7 +227,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
       <button type="button" class="btn" data-q="1" aria-pressed="false">Media</button>
       <button type="button" class="btn" data-q="2" aria-pressed="false">Retro</button>
     </div>
-    <div class="group" role="group" aria-label="Hora del día">
+    <div class="group" role="group" aria-label="Hora del día" hidden>
       <span class="glabel">Hora</span>
       <button type="button" class="btn" data-hour="0" aria-pressed="false">Mañana</button>
       <button type="button" class="btn" data-hour="1" aria-pressed="true">Mediodía</button>
@@ -207,7 +235,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
       <button type="button" class="btn" data-hour="3" aria-pressed="false">Noche</button>
     </div>
     <div class="group">
-      <button type="button" class="btn" id="blackout" aria-pressed="false">Se fue la luz</button>
+      <button type="button" class="btn" id="blackout" aria-pressed="false" hidden>Se fue la luz</button>
       <button type="button" class="btn" id="sound" aria-pressed="false">Sonido</button>
       <button type="button" class="btn" id="phoneview" aria-pressed="false">Vista de teléfono</button>
       <button type="button" class="btn" id="home">Volver a la plaza</button>
@@ -217,6 +245,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
       <button type="button" class="btn" id="avBtn" hidden>Mi personaje</button>
       <button type="button" class="btn" id="accBtn">Entrar o crear cuenta</button>
     </div>
+    <div class="group"><button type="button" class="btn" id="fsBtn">Pantalla completa</button><button type="button" class="btn primary cfgclose" id="cfgClose">Volver al juego</button></div>
   </div>
   <p class="keys">↑ ↓ o W S para caminar · ← → o arrastrar para girar · A D de lado · Shift para correr · E para hablar o tocar la puerta · T para el chat</p>
   <p class="foot">Calles, plazas, iglesias y negocios con nombre vienen de OpenStreetMap (© colaboradores de OpenStreetMap). Posición de las casas: Overture Maps (Microsoft ML Buildings, OSM; ODbL). La cuadrícula está enderezada para el juego; las casas sin mapear, las fachadas, los diálogos de las tiendas son inventados. Los demás personajes son personas reales conectadas.</p>
@@ -791,7 +820,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
   var hour = 1, dark = false, darkSince = 0, started = false, soundOn = false, gameMin = 780;
   var keys = {}, time = 0, walkPh = 0, rng = mulberry(20261015);
   var FOV = 74 * Math.PI / 180, EYE = 0.82, MAXD = 70;
-  var quality = 0, dyn = 1, avgFt = 16, slowT = 0, fastT = 0;
+  var mmN = 0; var MOB = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || Math.min(screen.width, screen.height) < 600; var quality = MOB ? 2 : 0, dyn = 1, avgFt = 16, slowT = 0, fastT = 0;
   try { var qs = localStorage.getItem('calabozo-calidad'); if (qs !== null && +qs >= 0 && +qs <= 2) quality = +qs; } catch (e) {}
 
   function freeAt(x, y) { var r = 7; for (var i = 0; i < 4; i++) { var tx = Math.floor((x + (i & 1 ? r : -r)) / TS), ty = Math.floor((y + (i & 2 ? r : -r)) / TS); if (tx < 0 || ty < 0 || tx >= W || ty >= H || COLL[ty * W + tx]) return false; } return true; }
@@ -869,7 +898,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
     var r = stage.getBoundingClientRect();
     cv.width = Math.max(1, Math.floor(r.width)); cv.height = Math.max(1, Math.floor(r.height));
     var qs2 = quality === 2 ? 1 / 2.4 : (quality === 1 ? 0.62 : 1) * dyn;
-    RW = Math.round(clamp(cv.width * qs2, 200, quality === 2 ? 520 : 1400)); RH = Math.max(120, Math.round(RW * cv.height / cv.width));
+    RW = Math.round(clamp(cv.width * qs2, 200, MOB ? (quality === 2 ? 300 : (quality === 1 ? 400 : 520)) : (quality === 2 ? 520 : 1400))); RH = Math.max(120, Math.round(RW * cv.height / cv.width));
     buf.width = RW; buf.height = RH; zbuf = new Float32Array(RW); ztop = new Float32Array(RW); bctx.imageSmoothingEnabled = quality !== 2; bctx.imageSmoothingQuality = 'high';
     cv.classList.toggle('retro', quality === 2);
     floorImg = bctx.createImageData(RW, RH); floor32 = new Uint32Array(floorImg.data.buffer);
@@ -998,7 +1027,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
   var hudTimer = 0, lastStreet = '', lastPlace = null, POIS = D.pois;
   var POI_LABEL = { plaza: 'Plaza', parque: 'Parque', iglesia: 'Iglesia', catedral: 'Catedral', clinica: 'Salud', escuela: 'Escuela', mercado: 'Mercado', alcaldia: 'Gobierno', policia: 'Policía', banco: 'Banco', cultura: 'Cultura', hotel: 'Hospedaje', farmacia: 'Farmacia', panaderia: 'Panadería', licoreria: 'Licorería', comida: 'Comida', tienda: 'Tienda', cancha: 'Cancha', cementerio: 'Cementerio', casa: 'Casa' };
   function update(dt) {
-    time += dt; gameMin += dt / 2; onlineTick(dt);
+    time += dt; gameMin = calaboMin(); if (hourOf(gameMin) !== hour) { hour = hourOf(gameMin); updateSitters(); if (audio) audio.setMode(); } onlineTick(dt);
     var moving = false;
     if (!dlg && !gateOpen && !chatOpen) {
       var turn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
@@ -1078,7 +1107,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
   function render() {
     var sky = SKY[hour], horizon = Math.round(RH / 2 + (quality === 2 ? Math.sin(walkPh) * 1.2 : 0)), proj = (RW / 2) / Math.tan(FOV / 2);
     var px = player.x / TS, py = player.y / TS, dirX = Math.cos(player.a), dirY = Math.sin(player.a), pl = Math.tan(FOV / 2), planeX = -dirY * pl, planeY = dirX * pl;
-    var maxd = dark && hour === 3 ? 16 : sky.dist, fogR = dark && hour === 3 ? 2 : sky.fog[0], fogG = dark && hour === 3 ? 3 : sky.fog[1], fogB = dark && hour === 3 ? 8 : sky.fog[2];
+    var maxd = dark && hour === 3 ? 16 : sky.dist * (MOB ? 0.8 : 1), fogR = dark && hour === 3 ? 2 : sky.fog[0], fogG = dark && hour === 3 ? 3 : sky.fog[1], fogB = dark && hour === 3 ? 8 : sky.fog[2];
     var fogCss = 'rgb(' + fogR + ',' + fogG + ',' + fogB + ')';
     // cielo
     var gr = bctx.createLinearGradient(0, 0, 0, horizon); gr.addColorStop(0, sky.top); gr.addColorStop(1, dark && hour === 3 ? '#05060C' : sky.bot);
@@ -1101,8 +1130,9 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
       var stx = rowDist * (rdx1 - rdx0) / RW, sty = rowDist * (rdy1 - rdy0) / RW, fx = px + rowDist * rdx0, fy = py + rowDist * rdy0;
       var off = y * RW;
       var tpp = Math.max(Math.hypot(stx, sty), rowDist * rowDist / (EYE * proj)) * GS;
-      var lvl = tpp < 1.6 ? 0 : (tpp < 6 ? 1 : (tpp < 24 ? 2 : 3)), lsz = LSIZE[lvl], bil = quality !== 2 && tpp < 0.8;
-      for (var x = 0; x < RW; x++, fx += stx, fy += sty) {
+      var lvl = tpp < 1.6 ? 0 : (tpp < 6 ? 1 : (tpp < 24 ? 2 : 3)), lsz = LSIZE[lvl], bil = !MOB && quality !== 2 && tpp < 0.8;
+      var FS = MOB && quality > 0 ? 2 : 1;
+      for (var x = 0; x < RW; x += FS, fx += stx * FS, fy += sty * FS) {
         var tx = fx | 0, ty = fy | 0, col, r, g, b;
         if (tx < 0 || ty < 0 || tx >= W || ty >= H) { r = 184; g = 175; b = 107; }
         else {
@@ -1125,7 +1155,8 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
           }
         }
         r = (r * li) >> 8; g = (g * li) >> 8; b = (b * li) >> 8;
-        floor32[off + x] = 0xFF000000 | ((((b * ia + fogB * fa) >> 8)) << 16) | ((((g * ia + fogG * fa) >> 8)) << 8) | ((r * ia + fogR * fa) >> 8);
+        var pv = 0xFF000000 | ((((b * ia + fogB * fa) >> 8)) << 16) | ((((g * ia + fogG * fa) >> 8)) << 8) | ((r * ia + fogR * fa) >> 8);
+        floor32[off + x] = pv; if (FS === 2 && x + 1 < RW) floor32[off + x + 1] = pv;
       }
     }
     bctx.putImageData(floorImg, 0, 0, 0, horizon + 1, RW, RH - horizon - 1);
@@ -1283,7 +1314,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
       if (s.t === 'c' && s.o.honk > 0) { ctx.font = '700 15px "DM Sans", system-ui, sans-serif'; var tt = s.o.type === 'moto' ? '¡Piii!' : '¡Pi pi!', w2 = ctx.measureText(tt).width + 12, X = s.scr[0] * scale, Y = (s.scr[1] - 6) * scale; ctx.fillStyle = '#FFFFFF'; ctx.fillRect(X - w2 / 2, Y - 11, w2, 22); ctx.fillStyle = '#16120F'; ctx.fillText(tt, X, Y + 1); }
       if (target && target.kind === 'npc' && target.o === s.o && s.t === 'n' && !dlg) { ctx.font = '700 14px "DM Sans", system-ui, sans-serif'; var nm = s.o.name, w3 = ctx.measureText(nm).width + 14, X2 = s.scr[0] * scale, Y2 = (s.scr[1] - 4) * scale - 12; ctx.fillStyle = 'rgba(10,17,14,0.88)'; ctx.fillRect(X2 - w3 / 2, Y2 - 12, w3, 24); ctx.fillStyle = '#F5B301'; ctx.fillText(nm, X2, Y2 + 1); }
     });
-    drawMinimap();
+    if (!MOB || (++mmN % 4) === 0) drawMinimap();
   }
   function viewOf(hx, hy, s) {
     var vx = player.x / TS - s.x, vy = player.y / TS - s.y, vl = Math.hypot(vx, vy) || 1; vx /= vl; vy /= vl;
@@ -1360,6 +1391,15 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
 
   var gateOpen = true;
   // ---------------------------------------------------------------- en línea: cuenta, avatar, jugadores y chat
+  // ---- hora de Calabozo (Venezuela, UTC-4 todo el año): nadie puede cambiarla
+  var clockOff = 0;
+  function calaboMin() { var d = new Date(Date.now() + clockOff - 4 * 3600000); return d.getUTCHours() * 60 + d.getUTCMinutes() + d.getUTCSeconds() / 60; }
+  function hourOf(m) { return (m >= 360 && m < 660) ? 0 : (m >= 660 && m < 930) ? 1 : (m >= 930 && m < 1090) ? 2 : 3; }
+  function syncClock() {
+    if (!OL.sb) return; var t0 = Date.now();
+    try { OL.sb.rpc('server_time').then(function (r) { if (r && !r.error && r.data) { var sv = Date.parse(r.data); if (isFinite(sv)) clockOff = sv - (t0 + Date.now()) / 2; } }).catch(function () {}); } catch (e) {}
+  }
+  setInterval(syncClock, 600000);
   var CFG = { url: 'https://cftttfcpauzspsjnoslv.supabase.co', key: 'sb_publishable_AXM2BDbj-9WyZJvCHsEKQw_V71-pZgA' };
   var SBL = window.__SB_TEST || window.supabase;
   var OL = { sb: null, user: null, profile: null, chan: null, chat: null, on: false, solo: false, conn: false };
@@ -1526,7 +1566,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
   // ---- en el pueblo
   function myPresence() { return { name: OL.profile.name, avatar: OL.profile.avatar, x: Math.round(player.x), y: Math.round(player.y) }; }
   function enterGame() {
-    OL.on = true; OL.solo = false; hideGate(); syncAccountUI();
+    OL.on = true; OL.solo = false; hideGate(); syncAccountUI(); syncClock();
     var me = OL.user.id;
     OL.chan = OL.sb.channel('plaza', { config: { broadcast: { self: false }, presence: { key: me } } });
     OL.chan.on('presence', { event: 'sync' }, onSync).on('broadcast', { event: 'pos' }, onPos);
@@ -1641,6 +1681,23 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
     if ((e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.metaKey && !e.altKey && inStage() && OL.on && !chatOpen && !gateOpen) { e.preventDefault(); openChat(); }
   });
 
+  // ---- ajustes y pantalla completa
+  function goFull() {
+    var el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!f || document.fullscreenElement || document.webkitFullscreenElement) return;
+    try { var p = f.call(el); if (p && p.then) p.then(function () { try { screen.orientation.lock('landscape').catch(function () {}); } catch (e) {} }).catch(function () {}); } catch (e) {}
+  }
+  function isStandalone() { return (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches)) || window.navigator.standalone === true; }
+  $('fsBtn').addEventListener('click', function () { if (document.fullscreenElement || document.webkitFullscreenElement) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {} } else goFull(); });
+  if (!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen) || isStandalone()) $('fsBtn').hidden = true;
+  $('cfgBtn').addEventListener('click', function () { document.body.classList.toggle('cfg-open'); });
+  $('cfgClose').addEventListener('click', function () { document.body.classList.remove('cfg-open'); try { stage.focus({ preventScroll: true }); } catch (e) {} });
+  if (MOB) {
+    $('hint').textContent = 'Palanca para caminar · arrastra el dedo por la imagen para mirar';
+    stage.addEventListener('pointerdown', function () { if (!isStandalone()) goFull(); }, { once: true });
+  }
+  cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
   // ---- botones de cuenta
   function syncAccountUI() {
     var on = OL.on;
@@ -1690,7 +1747,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
     // si el equipo no da abasto, baja un poco la resolución interna (y la sube cuando sobra)
     avgFt = avgFt * 0.92 + raw * 0.08;
     if (quality !== 2) {
-      if (avgFt > 26) { slowT += dt; fastT = 0; } else if (avgFt < 17.5) { fastT += dt; slowT = 0; } else { slowT = 0; fastT = 0; }
+      if (avgFt > (MOB ? 22 : 26)) { slowT += dt; fastT = 0; } else if (avgFt < 17.5) { fastT += dt; slowT = 0; } else { slowT = 0; fastT = 0; }
       if (slowT > 1.2 && dyn > 0.5) { dyn = Math.max(0.5, dyn * 0.85); slowT = 0; fit(); }
       if (fastT > 5 && dyn < 1) { dyn = Math.min(1, dyn * 1.1); fastT = 0; fit(); }
     }
