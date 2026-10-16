@@ -1166,16 +1166,92 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var cloudMats = cloudSpr.map(function (c) { var t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; return new THREE.SpriteMaterial({ map: t, fog: false, depthWrite: false, transparent: true, opacity: 0.88 }); });
     var cloudObjs = CLOUDS.map(function (c) { var s = new THREE.Sprite(cloudMats[c.seed % 4]); s.scale.set(110 * c.s, 37 * c.s, 1); s.renderOrder = -7; scene.add(s); return s; });
 
+
+    // ---- la plaza: cerca, árboles, farolas y calle peatonal en zigzag
+    var PLZ = new Uint8Array(W * H), ZID = new Uint8Array(W * H), ZC = [], PLAZAS = [];
+    (function () {
+      var seen = new Uint8Array(W * H), q = new Int32Array(W * H), N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]], i, c, n;
+      for (var s0 = 0; s0 < W * H; s0++) {
+        if (seen[s0] || (G[s0] !== 6 && G[s0] !== 2)) continue;
+        var head = 0, tail = 0, n6 = 0, x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1; q[tail++] = s0; seen[s0] = 1;
+        while (head < tail) {
+          c = q[head++]; var cx = c % W, cy = (c / W) | 0; if (G[c] === 6) n6++;
+          x0 = Math.min(x0, cx); x1 = Math.max(x1, cx); y0 = Math.min(y0, cy); y1 = Math.max(y1, cy);
+          for (i = 0; i < 4; i++) { var nx = cx + N4[i][0], ny = cy + N4[i][1]; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue; n = ny * W + nx; if (!seen[n] && (G[n] === 6 || G[n] === 2)) { seen[n] = 1; q[tail++] = n; } }
+        }
+        if (n6 >= 150) { PLAZAS.push({ x0: x0, x1: x1, y0: y0, y1: y1 }); for (i = 0; i < tail; i++) PLZ[q[i]] = PLAZAS.length; }
+      }
+      seen.fill(0);
+      for (s0 = 0; s0 < W * H; s0++) {
+        if (seen[s0] || G[s0] !== 9) continue;
+        var h2 = 0, t2 = 0, ax0 = 1e9, ax1 = -1, ay0 = 1e9, ay1 = -1; q[t2++] = s0; seen[s0] = 1;
+        while (h2 < t2) {
+          c = q[h2++]; var qx = c % W, qy = (c / W) | 0; ax0 = Math.min(ax0, qx); ax1 = Math.max(ax1, qx); ay0 = Math.min(ay0, qy); ay1 = Math.max(ay1, qy);
+          for (i = 0; i < 4; i++) { var mx = qx + N4[i][0], my = qy + N4[i][1]; if (mx < 0 || my < 0 || mx >= W || my >= H) continue; n = my * W + mx; if (!seen[n] && G[n] === 9) { seen[n] = 1; q[t2++] = n; } }
+        }
+        if (t2 >= 30 && ZC.length < 250) { ZC.push({ x0: ax0, x1: ax1, y0: ay0, y1: ay1, vert: (ay1 - ay0) > (ax1 - ax0) }); for (i = 0; i < t2; i++) ZID[q[i]] = ZC.length; }
+      }
+    })();
+    function inPlaza(tx, ty) { return tx >= 0 && ty >= 0 && tx < W && ty < H && PLZ[ty * W + tx] > 0; }
+    function fenceGap(pz, side, t) { var mid = side < 2 ? (pz.y0 + pz.y1) / 2 : (pz.x0 + pz.x1) / 2; return Math.abs(t + 0.5 - mid) < 2.6; }
+    // bordes de la cerca: [x1,z1,x2,z2] en cuadros
+    var FENCE = [];
+    (function () {
+      for (var ty = 0; ty < H; ty++) for (var tx = 0; tx < W; tx++) {
+        var id = PLZ[ty * W + tx]; if (!id) continue; var pz = PLAZAS[id - 1], gap;
+        if (PLZ[ty * W + tx - 1] !== id) { gap = fenceGap(pz, 0, ty); if (!gap) { FENCE.push([tx + 0.06, ty, tx + 0.06, ty + 1]); COLL[ty * W + tx] = 1; } }
+        if (PLZ[ty * W + tx + 1] !== id) { gap = fenceGap(pz, 1, ty); if (!gap) { FENCE.push([tx + 0.94, ty, tx + 0.94, ty + 1]); COLL[ty * W + tx] = 1; } }
+        if (PLZ[(ty - 1) * W + tx] !== id) { gap = fenceGap(pz, 2, tx); if (!gap) { FENCE.push([tx, ty + 0.06, tx + 1, ty + 0.06]); COLL[ty * W + tx] = 1; } }
+        if (PLZ[(ty + 1) * W + tx] !== id) { gap = fenceGap(pz, 3, tx); if (!gap) { FENCE.push([tx, ty + 0.94, tx + 1, ty + 0.94]); COLL[ty * W + tx] = 1; } }
+      }
+    })();
+    // árboles de sombra, palmas y farolas dentro de la plaza y en la calle peatonal
+    var EXTRA = [], xid = 100000;
+    (function () {
+      for (var ty = 1; ty < H - 1; ty++) for (var tx = 1; tx < W - 1; tx++) {
+        var i = ty * W + tx, k = G[i];
+        if (PLZ[i] && !COLL[i]) {
+          var r = hh(tx, ty, 41);
+          if (k === 2 && r < 0.095) { var kind = hh(tx, ty, 42) < 0.5 ? 'samán' : 'mango'; EXTRA.push({ k: kind, tx: tx, ty: ty, v: Math.floor(hh(tx, ty, 43) * 4), big: 1.2, pi: xid++ }); COLL[i] = 1; }
+          else if (k === 6 && r < 0.012) { EXTRA.push({ k: 'palma', tx: tx, ty: ty, v: Math.floor(hh(tx, ty, 44) * 4), big: 1.1, pi: xid++ }); COLL[i] = 1; }
+          else if (k === 6 && tx % 9 === 0 && ty % 9 === 0) { EXTRA.push({ k: 'farol', tx: tx, ty: ty, v: 0, pi: xid++ }); COLL[i] = 1; }
+        }
+        var zi = ZID[i];
+        if (zi) { var z = ZC[zi - 1]; if (z.vert ? (tx === Math.floor((z.x0 + z.x1) / 2) && (ty - z.y0) % 7 === 3) : (ty === Math.floor((z.y0 + z.y1) / 2) && (tx - z.x0) % 7 === 3)) { EXTRA.push({ k: 'farol', tx: tx, ty: ty, v: 0, pi: xid++ }); COLL[i] = 1; } }
+      }
+    })();
+
     // ---- suelo por trozos de 32x32 cuadros
     var CSZ = 32, PPT = 16, GT = [];
     function gtile(k, v) { var i = k * 4 + v; return GT[i] || (GT[i] = groundTile(k, v)); }
+    var ZCOL = [[201, 195, 184], [143, 138, 132], [181, 104, 79], [143, 138, 132]];
+    function zigzag(g, ox, oy, tx, ty) {
+      var z = ZC[ZID[ty * W + tx] - 1], im = g.createImageData(PPT, PPT), cxp = ((z.vert ? (z.x0 + z.x1 + 1) : (z.y0 + z.y1 + 1)) / 2) * PPT;
+      for (var py = 0; py < PPT; py++) for (var px = 0; px < PPT; px++) {
+        var wx = tx * PPT + px, wy = ty * PPT + py, u = Math.abs((z.vert ? wx : wy) + 0.5 - cxp), a = z.vert ? wy : wx;
+        var c = ZCOL[Math.floor((a + u * 1.0) / 6) & 3], o = (py * PPT + px) * 4; im.data[o] = c[0]; im.data[o + 1] = c[1]; im.data[o + 2] = c[2]; im.data[o + 3] = 255;
+      }
+      g.putImageData(im, ox, oy); g.fillStyle = '#E8C13A';
+      if (ZID[ty * W + tx - 1] === 0) g.fillRect(ox, oy, 2, PPT); if (ZID[ty * W + tx + 1] === 0) g.fillRect(ox + PPT - 2, oy, 2, PPT);
+      if (ZID[(ty - 1) * W + tx] === 0) g.fillRect(ox, oy, PPT, 2); if (ZID[(ty + 1) * W + tx] === 0) g.fillRect(ox, oy + PPT - 2, PPT, 2);
+    }
     var chunks = new Map();
     function makeChunk(cx, cy) {
       var c = mk(CSZ * PPT, CSZ * PPT), g = c.getContext('2d');
       g.imageSmoothingEnabled = true;
       for (var y = 0; y < CSZ; y++) for (var x = 0; x < CSZ; x++) {
         var tx = cx * CSZ + x, ty = cy * CSZ + y, k = (tx < 0 || ty < 0 || tx >= W || ty >= H) ? 2 : G[ty * W + tx], v = (tx < 0 || ty < 0 || tx >= W || ty >= H) ? 0 : VAR[ty * W + tx];
-        g.drawImage(gtile(k > 13 ? 0 : k, v), x * PPT, y * PPT, PPT, PPT);
+        var inb = tx >= 0 && ty >= 0 && tx < W && ty < H, kk = k > 13 ? 0 : k, pl = inb && PLZ[ty * W + tx];
+        if (pl && k === 6) kk = 7;
+        if (inb && k === 9 && ZID[ty * W + tx]) { zigzag(g, x * PPT, y * PPT, tx, ty); continue; }
+        g.drawImage(gtile(kk, v), x * PPT, y * PPT, PPT, PPT);
+        if (pl) {
+          var pid = PLZ[ty * W + tx];
+          if (k === 2) { g.fillStyle = '#2F9E5B'; if (G[ty * W + tx - 1] !== 2) g.fillRect(x * PPT, y * PPT, 2, PPT); if (G[ty * W + tx + 1] !== 2) g.fillRect(x * PPT + PPT - 2, y * PPT, 2, PPT); if (G[(ty - 1) * W + tx] !== 2) g.fillRect(x * PPT, y * PPT, PPT, 2); if (G[(ty + 1) * W + tx] !== 2) g.fillRect(x * PPT, y * PPT + PPT - 2, PPT, 2); }
+          g.fillStyle = '#2BB19B';
+          if (PLZ[ty * W + tx - 1] !== pid) g.fillRect(x * PPT, y * PPT, 3, PPT); if (PLZ[ty * W + tx + 1] !== pid) g.fillRect(x * PPT + PPT - 3, y * PPT, 3, PPT);
+          if (PLZ[(ty - 1) * W + tx] !== pid) g.fillRect(x * PPT, y * PPT, PPT, 3); if (PLZ[(ty + 1) * W + tx] !== pid) g.fillRect(x * PPT, y * PPT + PPT - 3, PPT, 3);
+        }
         if (k === 4) {
           var m = CURB[ty * W + tx];
           if (m) { g.fillStyle = '#F1EEE6'; if (m & 1) g.fillRect(x * PPT, y * PPT, PPT, 2); if (m & 2) g.fillRect(x * PPT, y * PPT + PPT - 2, PPT, 2); if (m & 4) g.fillRect(x * PPT, y * PPT, 2, PPT); if (m & 8) g.fillRect(x * PPT + PPT - 2, y * PPT, 2, PPT); }
@@ -1186,6 +1262,20 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       mesh.rotation.x = -Math.PI / 2; mesh.position.set(cx * CSZ + CSZ / 2, 0, cy * CSZ + CSZ / 2);
       scene.add(mesh); return { mesh: mesh, tex: tex };
     }
+
+
+    // ---- cerca de hierro de la plaza
+    (function () {
+      if (!FENCE.length) return;
+      var c = mk(64, 64), g = c.getContext('2d'), i;
+      g.fillStyle = '#17181A'; for (i = 0; i < 8; i++) { g.fillRect(i * 8 + 3, 8, 2, 46); g.fillRect(i * 8 + 2, 5, 4, 4); }
+      g.fillRect(0, 12, 64, 3); g.fillRect(0, 46, 64, 3); g.fillStyle = '#2BB19B'; g.fillRect(0, 54, 64, 10); g.fillStyle = '#1F8F7C'; g.fillRect(0, 54, 64, 2);
+      var t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.anisotropy = MAXAN;
+      var pos = [], uv = [], idx = [], nor = [], hgt = 0.62;
+      FENCE.forEach(function (f, n) { var b = n * 4; pos.push(f[0], 0, f[1], f[2], 0, f[3], f[2], hgt, f[3], f[0], hgt, f[1]); uv.push(0, 0, 1, 0, 1, 1, 0, 1); for (var q = 0; q < 4; q++) nor.push(0, 1, 0); idx.push(b, b + 1, b + 2, b, b + 2, b + 3); });
+      var geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); geo.setIndex(idx);
+      var m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map: t, alphaTest: 0.5, side: THREE.DoubleSide })); scene.add(m);
+    })();
 
     // ---- edificios
     var blds = new Map(), bQueue = [];
@@ -1249,19 +1339,28 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 
     // ---- objetos (árboles, postes, estatua…)
     var propMats = {}, props = new Map(), PK = { mango: 1, 'samán': 1, palma: 1, poste: 1, tanque: 1, banco: 1, estatua: 1, busto: 1, cuerda: 1 };
-    var propList = PROPS.map(function (o, i) { o.pi = i; return o; }).filter(function (o) { return PK[o.k]; });
+    var propList = PROPS.map(function (o, i) { o.pi = i; return o; }).filter(function (o) { return PK[o.k]; }).concat(EXTRA);
+    function farolSpr(lit) {
+      return sprite(lit ? 'farolN' : 'farolD', 32, 90, function (g) {
+        if (lit) { var gr = g.createRadialGradient(16, 12, 0, 16, 12, 16); gr.addColorStop(0, 'rgba(255,240,170,0.95)'); gr.addColorStop(1, 'rgba(255,220,120,0)'); g.fillStyle = gr; g.fillRect(0, 0, 32, 30); }
+        fr(g, 14, 20, 4, 68, '#17181A'); fr(g, 11, 82, 10, 8, '#17181A'); fr(g, 12, 70, 8, 3, '#2B2C2F');
+        fr(g, 9, 4, 14, 3, '#17181A'); fr(g, 12, 1, 8, 4, '#17181A'); fr(g, 10, 7, 12, 12, lit ? '#FFF0A0' : '#EFE7C6'); fr(g, 9, 7, 2, 12, '#17181A'); fr(g, 21, 7, 2, 12, '#17181A'); fr(g, 9, 18, 14, 3, '#17181A');
+      });
+    }
     function propMat(o) {
-      var key = o.k + (o.k === 'poste' ? o.v % 2 : o.v), m = propMats[key];
+      var key = o.k + (o.k === 'poste' ? o.v % 2 : (o.k === 'farol' ? 0 : o.v)), m = propMats[key];
       if (m !== undefined) return m;
-      var ps = propSpr(o.k, o.v); if (!ps) return (propMats[key] = null);
-      var t = new THREE.CanvasTexture(ps[0]); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.anisotropy = 2;
-      var mat = new THREE.SpriteMaterial({ map: t, alphaTest: 0.5, transparent: false, depthWrite: true });
-      return (propMats[key] = { mat: mat, h: ps[1], w: ps[1] * ps[0].width / ps[0].height });
+      var cv0, hh0, cv1 = null;
+      if (o.k === 'farol') { cv0 = farolSpr(false); cv1 = farolSpr(true); hh0 = 1.9; }
+      else { var ps = propSpr(o.k, o.v); if (!ps) return (propMats[key] = null); cv0 = ps[0]; hh0 = ps[1]; }
+      function mkMat(cnv) { var t = new THREE.CanvasTexture(cnv); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.anisotropy = 2; return new THREE.SpriteMaterial({ map: t, alphaTest: 0.5, transparent: false, depthWrite: true }); }
+      var mat = mkMat(cv0), r = { mat: mat, mn: cv1 ? mkMat(cv1) : null, h: hh0, w: hh0 * cv0.width / cv0.height, lamp: !!cv1 };
+      return (propMats[key] = r);
     }
     function addProp(o) {
       var pm = propMat(o); if (!pm) { props.set(o.pi, null); return; }
-      var s = new THREE.Sprite(pm.mat); s.center.set(0.5, 0); s.scale.set(pm.w, pm.h, 1); s.position.set(o.tx + 0.5, 0, o.ty + 0.5);
-      scene.add(s); props.set(o.pi, s);
+      var k = o.big || 1, s = new THREE.Sprite(PH[hour].win && pm.mn ? pm.mn : pm.mat); s.center.set(0.5, 0); s.scale.set(pm.w * k, pm.h * k, 1); s.position.set(o.tx + 0.5, 0, o.ty + 0.5);
+      s.userData.pm = pm; scene.add(s); props.set(o.pi, s);
     }
 
     // ---- jugadores remotos
@@ -1339,7 +1438,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       blds.forEach(function (r) { setWindows(r, ph.win && !dark); });
       glc.style.filter = '';
     }
-    function propMatsTint(hex) { Object.keys(propMats).forEach(function (k) { if (propMats[k]) propMats[k].mat.color.setHex(hex); }); }
+    function propMatsTint(hex) { Object.keys(propMats).forEach(function (k) { var pm = propMats[k]; if (pm && !pm.lamp) pm.mat.color.setHex(hex); }); props.forEach(function (sp) { if (sp && sp.userData.pm.lamp) sp.material = PH[hour].win ? sp.userData.pm.mn : sp.userData.pm.mat; }); }
 
     R3.on = true;
     R3.stats = function () { return { blds: blds.size, chunks: chunks.size, props: props.size, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures }; };
