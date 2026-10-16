@@ -217,6 +217,19 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .invite p { font-size: 13.5px; }
 .invite .btn { min-height: 32px; font-size: 13px; }
 @media (max-height: 520px) { .chatpanel { max-width: min(400px, 56%); } }
+/* chat de voz: micrófono debajo del botón de Chat */
+.fab { bottom: 136px; }
+.mic { position: absolute; right: 10px; bottom: 74px; width: 54px; height: 54px; border-radius: 50%; border: 2px solid var(--line); background: rgba(10, 17, 14, 0.85); color: var(--fg); display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; z-index: 5; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.mic[hidden] { display: none; }
+.mic.rec { background: #D7263D; border-color: #FFFFFF; color: #FFFFFF; animation: micp 1s ease-in-out infinite; }
+.mic .mict { position: absolute; top: -22px; right: 0; font: 700 12px var(--body); color: #FFFFFF; background: #D7263D; border-radius: 10px; padding: 1px 7px; display: none; white-space: nowrap; }
+.mic.rec .mict { display: block; }
+@keyframes micp { 50% { box-shadow: 0 0 0 8px rgba(215, 38, 61, 0.35); } }
+.stage.dialog-open .mic, .stage.chat-open .mic, .stage.kb .mic { display: none; }
+@media (pointer: coarse), (max-width: 760px), (max-height: 560px) {
+  .fab { bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 126px); }
+  .mic { right: max(10px, env(safe-area-inset-right, 0px)); bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 64px); }
+}
 /* teclado abierto: el chat se pega justo encima del teclado */
 .stage.kb .hint { display: none !important; }
 .stage.kb .chatpanel { bottom: calc(var(--kb, 0px) + 4px); max-height: calc(100% - var(--kb, 0px) - 8px); }
@@ -252,6 +265,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       </div>
       <div class="joy" id="joy" role="application" aria-label="Palanca para caminar: arrastra en la dirección que quieres ir"><div class="joyk" id="joyKnob"></div></div>
       <button type="button" class="fab" id="chatFab" hidden>Chat</button>
+      <button type="button" class="mic" id="micBtn" hidden aria-label="Mantén pulsado para hablar con quien esté cerca"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/></svg><span class="mict" id="micT"></span></button>
       <button type="button" class="act" id="act" hidden>Hablar (E)</button>
       <div class="chatlive" id="chatLive" aria-live="polite"></div>
       <div class="chip toast" id="toast" hidden></div>
@@ -2315,7 +2329,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     OL.on = true; OL.solo = false; hideGate(); syncAccountUI(); syncClock();
     var me = OL.user.id;
     OL.chan = OL.sb.channel('plaza', { config: { broadcast: { self: false }, presence: { key: me } } });
-    OL.chan.on('presence', { event: 'sync' }, onSync).on('broadcast', { event: 'pos' }, onPos).on('broadcast', { event: 'typ' }, onTyp).on('broadcast', { event: 'ipos' }, onIpos);
+    OL.chan.on('presence', { event: 'sync' }, onSync).on('broadcast', { event: 'pos' }, onPos).on('broadcast', { event: 'typ' }, onTyp).on('broadcast', { event: 'voz' }, onVoz).on('broadcast', { event: 'ipos' }, onIpos);
     OL.chan.subscribe(function (st) {
       if (st === 'SUBSCRIBED') { OL.conn = true; try { OL.chan.track(myPresence()); } catch (e) {} setNet(); }
       else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT' || st === 'CLOSED') { OL.conn = false; setNet(); }
@@ -2629,6 +2643,57 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   });
 
   // "escribiendo…" sobre la cabeza
+  // ---- chat de voz: mantén pulsado el micrófono, al soltar se envía a quienes estén cerca
+  var VOZ_MAX = 15, voz = { stream: null, rec: null, parts: [], t0: 0, timer: 0, on: false, cancel: false };
+  function vozStop(cancel) { if (!voz.on) return; voz.cancel = !!cancel; voz.on = false; clearInterval(voz.timer); $('micBtn').classList.remove('rec'); try { voz.rec.stop(); } catch (e) {} sendTyp(0); }
+  function vozStart() {
+    if (voz.on || !OL.on || !OL.chan) return;
+    if (!nearbyPlayers().length) { toast('No hay nadie cerca para escucharte'); return; }
+    var go = function (st) {
+      voz.stream = st; voz.parts = []; voz.cancel = false;
+      var mime = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'].filter(function (m) { return MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m); })[0];
+      try { voz.rec = new MediaRecorder(st, mime ? { mimeType: mime, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 }); } catch (e) { toast('No se pudo usar el micrófono'); return; }
+      voz.rec.ondataavailable = function (e) { if (e.data && e.data.size) voz.parts.push(e.data); };
+      voz.rec.onstop = function () { var dur = (performance.now() - voz.t0) / 1000; if (!voz.cancel && dur >= 0.4) vozSend(new Blob(voz.parts, { type: voz.rec.mimeType || 'audio/webm' }), dur); };
+      voz.rec.start(); voz.on = true; voz.t0 = performance.now(); $('micBtn').classList.add('rec'); $('micT').textContent = '0 s';
+      sendTyp(1, VOZ_MAX);
+      voz.timer = setInterval(function () { var t = (performance.now() - voz.t0) / 1000; $('micT').textContent = Math.floor(t) + ' s'; if (t >= VOZ_MAX) vozStop(false); }, 250);
+    };
+    if (voz.stream && voz.stream.active) { go(voz.stream); return; }
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }).then(function (st) { if (micHeld) go(st); else voz.stream = st; })
+      .catch(function () { toast('Permite el micrófono para hablar'); });
+  }
+  function vozSend(blob, dur) {
+    var to = nearbyPlayers().map(function (o) { return o.p.id; });
+    if (!to.length) { toast('Ya no hay nadie cerca'); return; }
+    if (blob.size > 200000) { toast('El audio es muy largo'); return; }
+    var fr = new FileReader();
+    fr.onload = function () { try { OL.chan.send({ type: 'broadcast', event: 'voz', payload: { id: OL.user.id, to: to, d: +dur.toFixed(1), a: fr.result } }); toast('Audio enviado a ' + to.length + (to.length === 1 ? ' persona' : ' personas')); } catch (e) { toast('No se pudo enviar el audio'); } };
+    fr.readAsDataURL(blob);
+  }
+  var vozQ = [], vozPlaying = false;
+  function onVoz(m) {
+    var d = m && m.payload, p = d && players[d.id]; if (!p || !OL.user || muted[d.id]) return;
+    if (!Array.isArray(d.to) || d.to.indexOf(OL.user.id) < 0) return;
+    if (typeof d.a !== 'string' || d.a.indexOf('data:audio/') !== 0) return;
+    vozQ.push(d); if (!vozPlaying) vozNext();
+  }
+  function vozNext() {
+    var d = vozQ.shift(); if (!d) { vozPlaying = false; return; } vozPlaying = true;
+    var p = players[d.id], au = new Audio(d.a), dur = clamp(+d.d || 3, 0.5, VOZ_MAX);
+    if (p) { p.typUntil = 0; p.bubble = '🔊 ' + (p.name || 'Vecino') + ' está hablando'; p.bubbleUntil = time + dur + 0.5; }
+    au.onended = au.onerror = function () { vozNext(); };
+    var pr = au.play(); if (pr && pr.catch) pr.catch(function () { toast('Toca la pantalla para oír los audios'); vozNext(); });
+  }
+  var micHeld = false;
+  (function () {
+    var b = $('micBtn');
+    b.addEventListener('pointerdown', function (e) { e.preventDefault(); micHeld = true; try { b.setPointerCapture(e.pointerId); } catch (er) {} vozStart(); });
+    function up() { if (!micHeld) return; micHeld = false; vozStop(false); }
+    b.addEventListener('pointerup', up); b.addEventListener('pointercancel', function () { micHeld = false; vozStop(true); });
+    b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    window.addEventListener('blur', function () { micHeld = false; vozStop(true); });
+  })();
   function sendTyp(on, hold) { if (on && typeof IN !== 'undefined' && IN.active) IN.typUntil = time + (hold || 3); if (!OL.on || !OL.conn || !OL.chan) return; try { OL.chan.send({ type: 'broadcast', event: 'typ', payload: { id: OL.user.id, on: on ? 1 : 0, hold: hold || 3 } }); } catch (e) {} }
   function onTyp(m) {
     var d = m && m.payload, p = d && players[d.id]; if (!p) return;
@@ -2720,7 +2785,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   // ---- botones de cuenta
   function syncAccountUI() {
     var on = OL.on;
-    $('chatBtn').hidden = !on; $('chatFab').hidden = !on; $('avBtn').hidden = !on; $('hudNet').style.display = on ? '' : 'none';
+    $('chatBtn').hidden = !on; $('chatFab').hidden = !on; $('micBtn').hidden = !on || !(navigator.mediaDevices && window.MediaRecorder); $('avBtn').hidden = !on; $('hudNet').style.display = on ? '' : 'none';
     $('accBtn').textContent = on ? 'Salir' : 'Entrar o crear cuenta'; setNet();
   }
   $('chatBtn').addEventListener('click', function () { chatOpen ? closeChat() : openChat(); });
