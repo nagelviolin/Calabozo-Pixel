@@ -71,7 +71,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
 .joy::before { content: ''; position: absolute; inset: 22px; border-radius: 50%; border: 2px dashed rgba(234, 242, 236, 0.25); }
 .joyk { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: rgba(245, 179, 1, 0.9); border: 3px solid #241A00; box-shadow: 0 2px 8px rgba(0,0,0,.45); pointer-events: none; }
 .stage.phone .joy { display: block; }
-@media (pointer: coarse), (max-width: 640px) { .joy { display: block; } }
+@media (pointer: coarse), (max-width: 640px), (max-height: 560px) { .joy { display: block; } }
 .stage.dialog-open .joy, .stage.chat-open .joy { display: none !important; }
 .fab { position: absolute; right: 10px; bottom: 74px; min-height: 48px; padding: 0 14px; border: 2px solid var(--line); border-radius: 24px; background: rgba(10, 17, 14, 0.85); color: var(--fg); font: 700 14px var(--body); cursor: pointer; z-index: 5; }
 .stage.dialog-open .fab, .stage.chat-open .fab { display: none; }
@@ -121,7 +121,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
 .ch[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
 .sw:focus-visible, .ch:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .chatlive { position: absolute; left: 10px; bottom: 10px; width: min(440px, calc(100% - 200px)); display: flex; flex-direction: column; gap: 3px; pointer-events: none; }
-@media (pointer: coarse), (max-width: 640px) { .chatlive { bottom: 158px; width: calc(100% - 20px); } }
+@media (pointer: coarse), (max-width: 640px), (max-height: 560px) { .chatlive { bottom: 158px; width: calc(100% - 20px); } }
 .chatlive .l { background: rgba(10, 17, 14, 0.78); border-radius: 4px; padding: 3px 8px; font-size: 13.5px; line-height: 1.3; align-self: flex-start; max-width: 100%; overflow-wrap: anywhere; }
 .chatlive b { color: var(--accent); }
 .stage.dialog-open .chatlive { display: none; }
@@ -148,7 +148,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .stage { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .gear { display: none; position: absolute; top: 10px; right: 160px; width: 46px; height: 46px; padding: 0; align-items: center; justify-content: center; background: rgba(10, 17, 14, 0.85); color: var(--fg); border: 2px solid var(--line); border-radius: 50%; cursor: pointer; z-index: 6; }
 .cfgclose { display: none; }
-@media (pointer: coarse), (max-width: 760px) {
+@media (pointer: coarse), (max-width: 760px), (max-height: 560px) {
   html, body { height: 100%; overflow: hidden; }
   body { padding: 0 !important; }
   .wrap { display: block; max-width: none; }
@@ -217,6 +217,15 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .invite p { font-size: 13.5px; }
 .invite .btn { min-height: 32px; font-size: 13px; }
 @media (max-height: 520px) { .chatpanel { max-width: min(400px, 56%); } }
+/* teclado abierto: el chat se pega justo encima del teclado */
+.stage.kb .hint { display: none !important; }
+.stage.kb .chatpanel { bottom: calc(var(--kb, 0px) + 4px); max-height: calc(100% - var(--kb, 0px) - 8px); }
+@media (max-height: 560px) {
+  .stage.kb .chatpanel { left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); max-width: none; border-radius: 6px; }
+  .stage.kb .chatpanel header, .stage.kb .ctabs, .stage.kb .hud, .stage.kb .mini, .stage.kb .gear, .stage.kb .place, .stage.kb .toast, .stage.kb .hint { display: none !important; }
+  .stage.kb #chatList { flex: 1 1 auto; height: auto; max-height: 4em; padding: 3px 8px; gap: 2px; }
+  .stage.kb .chatpanel form { padding: 4px; }
+}
 </style>
 
 <div class="wrap">
@@ -250,7 +259,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         <header><div><b id="chatTitle">Chat</b> <span id="chatWho"></span></div><div class="hb"><button type="button" class="btn ghost" id="chatLeave" hidden>Salir</button><button type="button" class="btn" id="chatClose">Cerrar</button></div></header>
         <div class="ctabs" id="chatTabs" role="tablist" aria-label="Tus charlas"></div>
         <div id="chatList" role="log" aria-live="polite"></div>
-        <form id="chatForm" autocomplete="off"><input id="chatInput" type="text" maxlength="200" placeholder="Escribe y pulsa Enter" aria-label="Mensaje"><button type="submit" class="btn primary">Enviar</button></form>
+        <form id="chatForm" autocomplete="off"><input id="chatInput" type="text" maxlength="200" placeholder="Escribe y pulsa Enter" aria-label="Mensaje" enterkeyhint="send"><button type="submit" class="btn primary">Enviar</button></form>
       </div>
       <div class="invite" id="inv" hidden role="alertdialog" aria-labelledby="invTxt">
         <p id="invTxt"></p>
@@ -929,7 +938,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   var hour = 1, dark = false, darkSince = 0, started = false, soundOn = false, gameMin = 780;
   var keys = {}, time = 0, walkPh = 0, rng = mulberry(20261015);
   var FOV = 74 * Math.PI / 180, EYE = 0.82, MAXD = 70;
-  var mmN = 0; var MOB = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || Math.min(screen.width, screen.height) < 600; var quality = MOB ? 1 : 0, dyn = 1, avgFt = 16, slowT = 0, fastT = 0;
+  var mmN = 0; var MOB = (window.matchMedia && (matchMedia('(pointer: coarse)').matches || matchMedia('(hover: none)').matches)) || Math.min(screen.width, screen.height) < 600; var quality = MOB ? 1 : 0, dyn = 1, avgFt = 16, slowT = 0, fastT = 0;
   try { var qs = localStorage.getItem('calabozo-calidad'); if (qs !== null && +qs >= 0 && +qs <= 2) quality = +qs; } catch (e) {}
 
   function freeAt(x, y) { var r = 7; for (var i = 0; i < 4; i++) { var tx = Math.floor((x + (i & 1 ? r : -r)) / TS), ty = Math.floor((y + (i & 2 ? r : -r)) / TS); if (tx < 0 || ty < 0 || tx >= W || ty >= H || COLL[ty * W + tx]) return false; } return true; }
@@ -2618,6 +2627,26 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   function closeChat() { chatOpen = false; $('chatPanel').hidden = true; stage.classList.remove('chat-open'); try { stage.focus({ preventScroll: true }); } catch (e) {} }
   $('chatClose').addEventListener('click', closeChat);
+  // teclado: en pantalla completa Android no encoge la vista, así que movemos el chat nosotros
+  (function () {
+    var baseH = window.innerHeight, plug = 0;
+    function apply() {
+      var vv = window.visualViewport, shrunk = Math.max(0, baseH - window.innerHeight);
+      var fromVV = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+      var kb = Math.max(fromVV, plug - shrunk); if (kb < 60) kb = 0;
+      stage.style.setProperty('--kb', kb + 'px'); stage.classList.toggle('kb', kb > 0 || (plug > 0 && document.activeElement === $('chatInput')));
+      if (kb || plug) { var l = $('chatList'); l.scrollTop = l.scrollHeight; }
+    }
+    window.addEventListener('resize', function () { if (!plug && !stage.classList.contains('kb')) baseH = window.innerHeight; apply(); });
+    if (window.visualViewport) visualViewport.addEventListener('resize', apply);
+    var K = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Keyboard;
+    if (K && K.addListener) {
+      K.addListener('keyboardWillShow', function (i) { plug = +i.keyboardHeight || 0; apply(); });
+      K.addListener('keyboardDidShow', function (i) { plug = +i.keyboardHeight || 0; apply(); });
+      K.addListener('keyboardWillHide', function () { plug = 0; apply(); });
+    }
+    $('chatInput').addEventListener('blur', function () { setTimeout(apply, 50); });
+  })();
   $('chatForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var inp = $('chatInput'), txt = inp.value.replace(/\s+/g, ' ').trim(); if (!txt || !OL.on || inp.disabled) return;
