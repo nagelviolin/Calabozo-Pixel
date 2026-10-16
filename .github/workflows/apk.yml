@@ -1,0 +1,62 @@
+name: Construir APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Preparar la app de Android
+        run: |
+          mkdir -p www
+          cp index.html sw.js manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png www/
+          npm init -y
+          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+          npx cap init "Calabozo en Línea" com.calabozo.enlinea --web-dir=www
+          npx cap add android
+          npx cap sync android
+
+      - name: Poner el icono del juego
+        run: |
+          RES=android/app/src/main/res
+          rm -rf $RES/mipmap-anydpi-v26
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            for n in ic_launcher ic_launcher_round ic_launcher_foreground; do
+              cp icon-192.png $RES/mipmap-$d/$n.png
+            done
+          done
+
+      - name: Construir el APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Guardar el APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk calabozo-en-linea.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: calabozo-en-linea-apk
+          path: calabozo-en-linea.apk
+
+      - name: Publicar el APK para descargarlo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "apk-${{ github.run_number }}" calabozo-en-linea.apk \
+            --title "Calabozo en Línea (APK ${{ github.run_number }})" \
+            --notes "APK para instalar en Android. Permite instalar apps de orígenes desconocidos para este navegador o gestor de archivos."

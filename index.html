@@ -152,7 +152,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
       <div class="chip hud"><b id="hudStreet">Plaza Bolívar</b><span id="hudClock">1:00 pm · 37 °C</span><span class="warn" id="hudDark" hidden>Sin luz</span><span id="hudNet" style="display:none"></span></div>
       <div class="chip mini"><canvas id="mm" aria-label="Minimapa con tu posición y hacia dónde miras"></canvas></div>
       <div class="chip place" id="place" data-on="0"><small id="placeType"></small><span id="placeName"></span></div>
-      <div class="chip hint" id="hint">Haz clic aquí. Camina con ↑ ↓ o W S, gira con ← → o arrastrando el mouse, y A D para pasos de lado. En el teléfono: la palanca camina y arrastrar el dedo por la imagen gira. Pulsa E frente a la gente, las tiendas o una puerta.</div>
+      <div class="chip hint" id="hint">Haz clic aquí. Camina con ↑ ↓ o W S, gira con ← → o arrastrando el mouse, y A D para pasos de lado. En el teléfono: la palanca camina y arrastrar el dedo por la imagen gira. Pulsa E frente a las tiendas o una puerta, y T para escribir en el chat.</div>
       <div class="dpad">
         <button type="button" class="dp up" data-k="up" aria-label="Caminar hacia adelante"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 14l6-6 6 6"/></svg></button>
         <button type="button" class="dp left" data-k="left" aria-label="Girar a la izquierda"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6a7 7 0 1 0 2 6"/><path d="M15 2v4h-4"/></svg></button>
@@ -171,7 +171,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
       </div>
       <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateT">
         <div class="gcard">
-          <h2 id="gateT">Calabozo a Pie · en línea</h2>
+          <h2 id="gateT">Calabozo en Línea</h2>
           <div id="gWait"><p>Conectando con el pueblo…</p></div>
           <form id="gAuth" class="gform" hidden novalidate>
             <p>Crea tu cuenta para tener tu propio personaje y charlar con otras personas en la plaza.</p>
@@ -219,7 +219,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
     </div>
   </div>
   <p class="keys">↑ ↓ o W S para caminar · ← → o arrastrar para girar · A D de lado · Shift para correr · E para hablar o tocar la puerta · T para el chat</p>
-  <p class="foot">Calles, plazas, iglesias y negocios con nombre vienen de OpenStreetMap (© colaboradores de OpenStreetMap). Posición de las casas: Overture Maps (Microsoft ML Buildings, OSM; ODbL). La cuadrícula está enderezada para el juego; las casas sin mapear, las fachadas, la gente del pueblo y los diálogos son inventados. Los demás personajes son personas reales conectadas.</p>
+  <p class="foot">Calles, plazas, iglesias y negocios con nombre vienen de OpenStreetMap (© colaboradores de OpenStreetMap). Posición de las casas: Overture Maps (Microsoft ML Buildings, OSM; ODbL). La cuadrícula está enderezada para el juego; las casas sin mapear, las fachadas, los diálogos de las tiendas son inventados. Los demás personajes son personas reales conectadas.</p>
 </div>
 
 <script>
@@ -1678,6 +1678,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
     Object.keys(players).forEach(function (k) { var p = players[k], x = p.x / TS - sx, y = p.y / TS - sy; if (x < 0 || y < 0 || x > 160 || y > 120) return; mctx.fillStyle = '#8FD9A8'; mctx.strokeStyle = '#0E1713'; mctx.lineWidth = 1; mctx.beginPath(); mctx.arc(x, y, 3, 0, Math.PI * 2); mctx.fill(); mctx.stroke(); });
   }
 
+  npcs.length = 0; npcs.push = function () { return 0; };
   initOnline();
   // ---------------------------------------------------------------- arranque
   setQuality(quality); setHour(1);
