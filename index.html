@@ -1396,28 +1396,43 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         { f: 'N', n: [0, -1], c: [x0 + w / 2, z0], L: w }, { f: 'S', n: [0, 1], c: [x0 + w / 2, z0 + h], L: w },
         { f: 'O', n: [-1, 0], c: [x0, z0 + h / 2], L: h }, { f: 'E', n: [1, 0], c: [x0 + w, z0 + h / 2], L: h }
       ];
-      var pos = [], nor = [], uv = [], idx = [], mats = [], lights = [], groups = [], vi = 0, ii = 0;
-      faces.forEach(function (fc) {
-        var front = fc.f === b.f, t = front ? makeFront(b) : makeSide(b, fc.L), hg = front ? th : sh;
-        var sc = front ? 0.5 : 0.25, cnv = shrink(t.c, sc);
-        var rx = fc.n[1], rz = -fc.n[0], hx = fc.L / 2;
+      // las 4 fachadas y el techo van en una sola textura: el edificio se dibuja de una vez (antes eran 5 llamadas)
+      var parts = faces.map(function (fc) {
+        var front = fc.f === b.f, t = front ? makeFront(b) : makeSide(b, fc.L), sc = front ? 0.5 : 0.25;
+        return { fc: fc, hg: front ? th : sh, cnv: shrink(t.c, sc), l: t.lights, sc: sc * 2 };
+      });
+      var PAD = 4, AW = PAD, AH = PAD;
+      parts.forEach(function (pt) { AW = Math.max(AW, pt.cnv.width + PAD * 2); pt.oy = AH; AH += pt.cnv.height + PAD * 2; });
+      var roofY = AH; AH += 8;
+      var atl = mk(AW, AH), ag = atl.getContext('2d');
+      parts.forEach(function (pt) {
+        var c = pt.cnv, cw = c.width, ch = c.height, y = pt.oy + PAD; pt.ox = PAD; pt.y = y;
+        ag.drawImage(c, PAD, y);
+        ag.drawImage(c, 0, 0, cw, 1, PAD, y - PAD, cw, PAD); ag.drawImage(c, 0, ch - 1, cw, 1, PAD, y + ch, cw, PAD);
+        ag.drawImage(c, 0, 0, 1, ch, 0, y, PAD, ch); ag.drawImage(c, cw - 1, 0, 1, ch, PAD + cw, y, PAD, ch);
+      });
+      ag.fillStyle = '#' + ('00000' + (LAND[b.k] ? 0xC9C2B0 : (ROOFC[b.roof] || 0xD0CBBE)).toString(16)).slice(-6); ag.fillRect(0, roofY, AW, 8);
+      var pos = [], nor = [], uv = [], idx = [], vi = 0;
+      parts.forEach(function (pt) {
+        var fc = pt.fc, hg = pt.hg, rx = fc.n[1], rz = -fc.n[0], hx = fc.L / 2;
         var ax = fc.c[0] - rx * hx, az = fc.c[1] - rz * hx, bx = fc.c[0] + rx * hx, bz = fc.c[1] + rz * hx;
         pos.push(ax, 0, az, bx, 0, bz, bx, hg, bz, ax, hg, az);
         for (var q = 0; q < 4; q++) nor.push(fc.n[0], 0, fc.n[1]);
-        uv.push(0, 0, 1, 0, 1, 1, 0, 1);
-        idx.push(vi, vi + 1, vi + 2, vi, vi + 2, vi + 3); groups.push([ii, 6, mats.length]); ii += 6; vi += 4;
-        mats.push(new THREE.MeshLambertMaterial({ map: texOf(cnv), alphaTest: 0.5 }));
-        lights.push({ l: t.lights, sc: sc * 2, w: cnv.width, h: cnv.height });
+        var u0 = PAD / AW, u1 = (PAD + pt.cnv.width) / AW, vT = 1 - pt.y / AH, vB = 1 - (pt.y + pt.cnv.height) / AH;
+        uv.push(u0, vB, u1, vB, u1, vT, u0, vT);
+        idx.push(vi, vi + 1, vi + 2, vi, vi + 2, vi + 3); vi += 4;
       });
-      // techo plano
+      // techo plano (color liso de la franja de abajo del atlas)
       pos.push(x0, sh, z0, x0, sh, z0 + h, x0 + w, sh, z0 + h, x0 + w, sh, z0);
-      for (var q = 0; q < 4; q++) nor.push(0, 1, 0);
-      uv.push(0, 0, 0, 1, 1, 1, 1, 0); idx.push(vi, vi + 1, vi + 2, vi, vi + 2, vi + 3); groups.push([ii, 6, mats.length]);
-      mats.push(new THREE.MeshLambertMaterial({ color: LAND[b.k] ? 0xC9C2B0 : (ROOFC[b.roof] || 0xD0CBBE) })); lights.push(null);
+      var rv = 1 - (roofY + 4) / AH;
+      for (var q = 0; q < 4; q++) { nor.push(0, 1, 0); uv.push(0.5, rv); }
+      idx.push(vi, vi + 1, vi + 2, vi, vi + 2, vi + 3);
+      var mats = [new THREE.MeshLambertMaterial({ map: texOf(atl), alphaTest: 0.5 })];
+      var lights = [{ parts: parts, w: AW, h: AH }];
       var geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-      geo.setIndex(idx); groups.forEach(function (gp) { geo.addGroup(gp[0], gp[1], gp[2]); });
-      var mesh = new THREE.Mesh(geo, mats); scene.add(mesh);
+      geo.setIndex(idx);
+      var mesh = new THREE.Mesh(geo, mats[0]); scene.add(mesh);
       var rec = { b: b, mesh: mesh, mats: mats, lights: lights, win: false };
       blds.set(b.i, rec); setWindows(rec, PH[hour].win && !dark);
       return rec;
@@ -1425,10 +1440,15 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     function setWindows(rec, on) {
       on = on && rec.b.s % 3 !== 0; if (rec.win === on) return; rec.win = on;
       rec.mats.forEach(function (m, i) {
-        var L = rec.lights[i]; if (!L || !L.l || !L.l.length) return;
+        var L = rec.lights[i]; if (!L || !L.parts.some(function (pt) { return pt.l && pt.l.length; })) return;
         if (on) {
-          var c = mk(L.w, L.h), g = c.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, L.w, L.h); g.scale(L.sc, L.sc);
-          L.l.forEach(function (l) { g.fillStyle = l[4] === 's' ? 'rgb(255,226,160)' : 'rgb(255,196,110)'; g.fillRect(l[0], l[1], l[2], l[3]); });
+          var c = mk(L.w, L.h), g = c.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, L.w, L.h);
+          L.parts.forEach(function (pt) {
+            if (!pt.l || !pt.l.length) return;
+            g.save(); g.translate(pt.ox, pt.y); g.scale(pt.sc, pt.sc);
+            pt.l.forEach(function (l) { g.fillStyle = l[4] === 's' ? 'rgb(255,226,160)' : 'rgb(255,196,110)'; g.fillRect(l[0], l[1], l[2], l[3]); });
+            g.restore();
+          });
           var t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearMipmapLinearFilter; m.emissiveMap = t; m.emissive.setRGB(1, 1, 1);
         } else { if (m.emissiveMap) m.emissiveMap.dispose(); m.emissiveMap = null; m.emissive.setRGB(0, 0, 0); }
         m.needsUpdate = true;
@@ -1511,6 +1531,11 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       }
       cQueue.sort(function (a, c) { return c.d - a.d; });
       chunks.forEach(function (ch, key) { var cx = key % 1000, cy = Math.floor(key / 1000); if (Math.hypot(cx * CSZ + CSZ / 2 - px, cy * CSZ + CSZ / 2 - py) > RDROP + 20) { scene.remove(ch.mesh); ch.mesh.geometry.dispose(); ch.mesh.material.dispose(); ch.tex.dispose(); chunks.delete(key); } });
+      // lo que queda detrás de la niebla no se ve: no lo mandamos a la GPU
+      var vis = scene.fog.far + 6;
+      blds.forEach(function (r) { var b = r.b; r.mesh.visible = Math.hypot(b.x + b.w / 2 - px, b.y + b.h / 2 - py) - Math.max(b.w, b.h) / 2 < vis; });
+      chunks.forEach(function (ch, key) { var cx = key % 1000, cy = Math.floor(key / 1000); ch.mesh.visible = Math.hypot(cx * CSZ + CSZ / 2 - px, cy * CSZ + CSZ / 2 - py) - CSZ * 0.71 < vis; });
+      props.forEach(function (sp) { if (sp) sp.visible = Math.hypot(sp.position.x - px, sp.position.z - py) < vis; });
       for (i = 0; i < propList.length; i++) {
         var o = propList[i], dd2 = Math.hypot(o.tx - px, o.ty - py), has = props.has(o.pi);
         if (!has && dd2 < RLOAD) addProp(o);
@@ -1532,7 +1557,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var ph = PH[hour], sk = SKY[hour]; lastHour = hour;
       hemi.color.setHex(ph.amb); hemi.groundColor.setHex(ph.gnd); hemi.intensity = ph.ambI; sun.color.setHex(ph.sun); sun.intensity = ph.sunI;
       var fogc = new THREE.Color(sk.fog[0] / 255, sk.fog[1] / 255, sk.fog[2] / 255);
-      scene.fog.color.copy(fogc); scene.fog.near = ph.far * 0.22; scene.fog.far = ph.far; renderer.setClearColor(fogc, 1);
+      scene.fog.color.copy(fogc); var farK = MOB ? 0.8 : 1; scene.fog.near = ph.far * farK * 0.22; scene.fog.far = ph.far * farK; renderer.setClearColor(fogc, 1);
       paintDome(sk.top, new THREE.Color(sk.fog[0] / 255, sk.fog[1] / 255, sk.fog[2] / 255));
       stars.visible = hour === 3;
       if (sk.sun) { sunSpr.visible = true; var sa = sk.sun[0], se = 0.12 + sk.sun[1]; sunSpr.userData.dir = [Math.cos(sa), se * 1.2, Math.sin(sa)]; } else sunSpr.visible = false;
@@ -1543,7 +1568,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     }
     function propMatsTint(hex) { Object.keys(propMats).forEach(function (k) { var pm = propMats[k]; if (pm && !pm.lamp) pm.mat.color.setHex(hex); }); props.forEach(function (sp) { if (sp && sp.userData.pm.lamp) sp.material = PH[hour].win ? sp.userData.pm.mn : sp.userData.pm.mat; }); }
 
-    R3.on = true; R3.renderer = renderer; R3.glc = glc;
+    R3.on = true; R3.renderer = renderer; R3.glc = glc; R3.scene = scene; R3.camera = camera;
     R3.stats = function () { return { blds: blds.size, chunks: chunks.size, props: props.size, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures }; };
     R3.resize = function () {
       var w = cv.width, h = cv.height, dpr = window.devicePixelRatio || 1;
@@ -1557,7 +1582,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var vtmp = new THREE.Vector3();
     render3d = function () {
       if (hour !== lastHour) applyPhase();
-      scanT -= 1; if (scanT <= 0) { scanT = 20; scan(); }
+      scanT -= 1; if (scanT <= 0) { scanT = 12; scan(); }
       pump(quality === 2 ? 3 : 5);
       var px = player.x / TS, pz = player.y / TS, a = player.a, ph = PH[hour];
       var bob = Math.abs(Math.sin(walkPh)) * (quality === 2 ? 0.05 : 0.03);
@@ -2740,15 +2765,18 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   setQuality(quality); setHour(1);
   if (R3.on) R3.warm(900);
   for (var s0 = 0; s0 < 14; s0++) spawnWalker(true);
-  var last = performance.now();
+  var last = performance.now(), cap30 = false, capAcc = 0;
   function frame(now) {
-    var raw = Math.max(0, now - last), dt = Math.min(0.05, raw / 1000); last = now;
+    if (cap30) { capAcc += now - last; if (capAcc < 30) { last = now; requestAnimationFrame(frame); return; } }
+    var raw = cap30 ? capAcc : Math.max(0, now - last), dt = Math.min(0.05, raw / 1000); last = now; capAcc = 0;
     update(dt); render();
+    if (cap30) { raw *= 0.5; }
     // si el equipo no da abasto, baja un poco la resolución interna (y la sube cuando sobra)
     avgFt = avgFt * 0.92 + raw * 0.08;
     if (quality !== 2) {
       if (avgFt > (MOB ? 22 : 26)) { slowT += dt; fastT = 0; } else if (avgFt < 17.5) { fastT += dt; slowT = 0; } else { slowT = 0; fastT = 0; }
       if (slowT > 1.2 && dyn > 0.5) { dyn = Math.max(0.5, dyn * 0.85); slowT = 0; fit(); }
+      else if (slowT > 2 && MOB && !cap30) { cap30 = true; slowT = 0; }
       if (fastT > 25 && dyn < 1 && !MOB) { dyn = Math.min(1, dyn * 1.1); fastT = 0; fit(); }
     }
     requestAnimationFrame(frame);
