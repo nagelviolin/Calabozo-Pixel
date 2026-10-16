@@ -350,10 +350,10 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   // ---------------------------------------------------------------- edificios
   var WALLS = D.walls;
   var SHOPK = { tienda: 1, comida: 1, panaderia: 1, licoreria: 1, farmacia: 1, banco: 1, hotel: 1, clinica: 1, mercado: 1, escuela: 1, policia: 1, cultura: 1, alcaldia: 1, catedral: 1, iglesia: 1 };
-  var B = D.b.map(function (a, i) { return { i: i, x: a[0], y: a[1], w: a[2], h: a[3], k: a[4], f: a[5], roof: a[6], c: a[7], fl: a[8], s: a[9], sign: a[10], tex: {} }; });
+  var B = D.b.map(function (a, i) { return { i: i, x: a[0], y: a[1], w: a[2], h: a[3], k: a[4], f: a[4] === 'catedral' ? 'O' : a[5], roof: a[6], c: a[7], fl: a[8], s: a[9], sign: a[10], tex: {} }; });
   B.forEach(function (b) { for (var y = b.y; y < b.y + b.h; y++) for (var x = b.x; x < b.x + b.w; x++) { COLL[y * W + x] = 1; BID[y * W + x] = b.i + 1; } });
   var LAND = {
-    catedral: { wall: '#F1E6C6', trim: '#D3BD88', hw: 4.4, extra: 3.4 },
+    catedral: { wall: '#E9B730', trim: '#F7F2E4', hw: 4.4, extra: 3.4 },
     iglesia: { wall: '#F4EEDC', trim: '#D9C79A', hw: 3.4, extra: 2.6 },
     alcaldia: { wall: '#F5F2EA', trim: '#C9C2B0', hw: 3.4, extra: 1.3 },
     cultura: { wall: '#E9B44C', trim: '#F5EBD2', hw: 2.6 },
@@ -519,8 +519,49 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     }
     return { c: c, th: d.th, lights: lights };
   }
+
+  function paintCatedral(g, b, Wp, Hp, wallTop, gy, lights) {
+    var Y = '#E9B730', Yd = '#D49E22', Wt = '#F7F2E4', Wd = '#D9D2BF', M = '#5A1E1B', Mp = '#7A2A24', K = '#17181A', i, x, y;
+    var base = gy - 12, roofY = Math.round(Hp * 0.34);
+    // cuerpo bajo (naves laterales)
+    fr(g, 0, roofY + 6, Wp, base - roofY - 6, Y); fr(g, 0, roofY + 6, Wp, 4, Wt); fr(g, 0, roofY + 10, Wp, 2, Wd);
+    // fachada central con frontón escalonado
+    var cw = Math.round(Wp * 0.44), cx0 = Math.round(Wp * 0.2), cx1 = cx0 + cw, mid = (cx0 + cx1) / 2;
+    fr(g, cx0, roofY - 18, cw, base - roofY + 18, Y);
+    for (i = 0; i < 5; i++) { var sw = i === 4 ? cw : 60 + i * 62, sy = roofY - 18 - (4 - i) * 12 - 2; fr(g, mid - sw / 2, sy, sw, 16, Y); fr(g, mid - sw / 2, sy, sw, 2, Wt); }
+    fr(g, mid - 3, roofY - 18 - 4 * 12 - 12, 6, 12, Yd); blob(g, mid, roofY - 18 - 4 * 12 - 14, 4, 4, '#F2C75A');
+    fr(g, cx0, roofY - 20, cw, 3, Wt); fr(g, cx0, roofY - 17, cw, 2, Wd);
+    // pilastras blancas con zócalo guinda
+    var pil = [cx0, cx0 + cw * 0.34, cx0 + cw * 0.66, cx1 - 18];
+    pil.forEach(function (px) { px = Math.round(px); fr(g, px, 34, 18, base - 34, Wt); fr(g, px + 15, 34, 3, base - 34, Wd); fr(g, px - 3, base - 30, 24, 30, Mp); fr(g, px - 3, base - 30, 24, 3, '#9A3A33'); fr(g, px - 2, 30, 22, 5, Wt); });
+    // puertas en arco guinda
+    [[cx0 + 24, 56], [mid - 26, 60], [cx1 - 82, 54]].forEach(function (d) {
+      var dx = Math.round(d[0]), dw = d[1], top = base - 104;
+      fr(g, dx - 5, top - 6, dw + 10, 112, Wt);
+      g.fillStyle = M; g.beginPath(); g.moveTo(dx, base); g.lineTo(dx, top + dw / 2); g.arc(dx + dw / 2, top + dw / 2, dw / 2, Math.PI, 0); g.lineTo(dx + dw, base); g.closePath(); g.fill();
+      fr(g, dx + dw / 2 - 1, top + dw / 2, 2, base - top - dw / 2, '#3D1412'); fr(g, dx, base - 8, dw, 8, Mp);
+    });
+    // ventana con balcón y escudo
+    var wx = Math.round(mid - 11), wy = 52;
+    fr(g, wx - 5, wy - 5, 32, 52, Wt); fr(g, wx, wy, 22, 40, '#2E3440'); fr(g, wx, wy, 22, 4, '#4B5566'); for (i = wx + 3; i < wx + 22; i += 5) fr(g, i, wy, 1, 40, K); fr(g, wx - 4, wy + 38, 30, 3, K);
+    lights.push([wx, wy + 4, 22, 36, 'w']);
+    blob(g, cx0 + 40, 60, 10, 12, Wt); blob(g, cx0 + 40, 60, 7, 9, '#C8A04A');
+    [[cx0 + 30, 40], [cx1 - 34, 40], [cx0 + cw * 0.5 - 40, 92], [cx0 + cw * 0.5 + 40, 92]].forEach(function (o) { fr(g, o[0] - 1, o[1] - 4, 2, 8, K); fr(g, o[0] - 4, o[1] - 1, 8, 2, K); });
+    // torre del campanario con cúpula y reloj
+    var tx = Math.round(Wp * 0.7), tw = Math.round(Wp * 0.15), tt = 44;
+    fr(g, tx, tt, tw, base - tt, Y); fr(g, tx, tt, 5, base - tt, Wt); fr(g, tx + tw - 5, tt, 5, base - tt, Wt);
+    fr(g, tx - 4, tt - 6, tw + 8, 8, '#F2A27A'); fr(g, tx - 4, tt + 2, tw + 8, 3, Wt);
+    for (i = 0; i < 3; i++) { var ax = tx + 14 + i * (tw - 40) / 2; fr(g, ax, tt + 14, 14, 24, K); blob(g, ax + 7, tt + 14, 7, 6, K); }
+    fr(g, tx + tw / 2 - 11, tt + 62, 22, 22, Wt); blob(g, tx + tw / 2, tt + 73, 9, 9, '#FFFFFF'); g.strokeStyle = '#3E6FB0'; g.lineWidth = 2; g.beginPath(); g.arc(tx + tw / 2, tt + 73, 9, 0, Math.PI * 2); g.stroke(); fr(g, tx + tw / 2 - 1, tt + 67, 2, 7, K); fr(g, tx + tw / 2, tt + 73, 5, 2, K);
+    g.fillStyle = Wt; g.beginPath(); g.ellipse(tx + tw / 2, tt - 8, tw / 2 + 2, 28, 0, Math.PI, 0); g.fill(); fr(g, tx - 2, tt - 8, tw + 4, 4, '#F2A27A');
+    fr(g, tx + tw / 2 - 1, tt - 52, 2, 18, K); fr(g, tx + tw / 2 - 5, tt - 46, 10, 2, K);
+    // zócalo corrido
+    fr(g, 0, base, Wp, 12, Mp); fr(g, 0, base, Wp, 2, '#9A3A33');
+    if (b.sign) { g.fillStyle = 'rgba(0,0,0,0.0)'; }
+  }
   function paintLandmark(g, b, Wp, Hp, wallTop, gy, l, r, lights) {
     var k = b.k;
+    if (k === 'catedral') { paintCatedral(g, b, Wp, Hp, wallTop, gy, lights); return; }
     fr(g, 0, wallTop, Wp, 5, l.trim);
     for (var px = 10; px < Wp - 10; px += 40) fr(g, px, wallTop + 5, 5, gy - wallTop - 15, l.trim);
     if (k === 'catedral' || k === 'iglesia') {
@@ -2132,7 +2173,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { r3: R3, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { r3: R3, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 
