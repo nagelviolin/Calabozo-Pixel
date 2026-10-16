@@ -148,7 +148,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   html, body { height: 100%; overflow: hidden; }
   body { padding: 0 !important; }
   .wrap { display: block; max-width: none; }
-  header, .keys, .foot, #phoneview { display: none !important; }
+  .wrap > header, .keys, .foot, #phoneview { display: none !important; }
   .stage-row { display: block; }
   .stage, .stage.phone { position: fixed; inset: 0; width: auto; height: auto; border: 0; border-radius: 0; }
   .hud { top: max(10px, env(safe-area-inset-top, 0px)); left: max(10px, env(safe-area-inset-left, 0px)); }
@@ -165,6 +165,11 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 @media (pointer: coarse) and (max-height: 520px), (max-height: 520px) and (max-width: 900px) {
   body.cfg-open .controls { flex-direction: row; flex-wrap: wrap; align-items: center; }
 }
+/* chat: la cabecera con "Cerrar" nunca se recorta, ni en pantallas bajas */
+.chatpanel { max-height: calc(100% - 20px); min-height: 0; overflow: hidden; }
+.chatpanel header, .chatpanel form { flex: 0 0 auto; }
+#chatList { flex: 1 1 auto; min-height: 0; max-height: 260px; }
+@media (max-height: 520px) { #chatList { max-height: 90px; } .chatpanel { max-width: min(560px, 62%); } }
 </style>
 
 <div class="wrap">
@@ -896,7 +901,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   // ---------------------------------------------------------------- tamaño y entrada
   function fit() {
     var r = stage.getBoundingClientRect();
-    cv.width = Math.max(1, Math.floor(r.width)); cv.height = Math.max(1, Math.floor(r.height));
+    var nw = Math.max(1, Math.floor(r.width)), nh = Math.max(1, Math.floor(r.height)); if (cv.width !== nw) cv.width = nw; if (cv.height !== nh) cv.height = nh;
     var qs2 = quality === 2 ? 1 / 2.4 : (quality === 1 ? 0.62 : 1) * dyn;
     RW = Math.round(clamp(cv.width * qs2, 200, MOB ? (quality === 2 ? 300 : (quality === 1 ? 400 : 520)) : (quality === 2 ? 520 : 1400))); RH = Math.max(120, Math.round(RW * cv.height / cv.width));
     buf.width = RW; buf.height = RH; zbuf = new Float32Array(RW); ztop = new Float32Array(RW); bctx.imageSmoothingEnabled = quality !== 2; bctx.imageSmoothingQuality = 'high';
@@ -1749,7 +1754,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (quality !== 2) {
       if (avgFt > (MOB ? 22 : 26)) { slowT += dt; fastT = 0; } else if (avgFt < 17.5) { fastT += dt; slowT = 0; } else { slowT = 0; fastT = 0; }
       if (slowT > 1.2 && dyn > 0.5) { dyn = Math.max(0.5, dyn * 0.85); slowT = 0; fit(); }
-      if (fastT > 5 && dyn < 1) { dyn = Math.min(1, dyn * 1.1); fastT = 0; fit(); }
+      if (fastT > 25 && dyn < 1 && !MOB) { dyn = Math.min(1, dyn * 1.1); fastT = 0; fit(); }
     }
     requestAnimationFrame(frame);
   }
