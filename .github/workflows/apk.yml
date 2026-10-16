@@ -50,6 +50,11 @@ jobs:
           sed -i 's#<style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">#&\n        <item name="android:windowFullscreen">true</item>\n        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>#' $F
           grep -q windowFullscreen $F || { echo "no se pudo aplicar pantalla completa"; cat $F; exit 1; }
 
+      - name: Firma fija (para poder actualizar sin desinstalar)
+        run: |
+          mkdir -p ~/.android
+          cp signing/debug.keystore ~/.android/debug.keystore
+
       - name: Construir el APK
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
