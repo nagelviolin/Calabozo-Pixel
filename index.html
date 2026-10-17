@@ -217,6 +217,24 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .invite p { font-size: 13.5px; }
 .invite .btn { min-height: 32px; font-size: 13px; }
 @media (max-height: 520px) { .chatpanel { max-width: min(400px, 56%); } }
+/* dinero y vidas */
+.hud .eco { display: flex; align-items: center; gap: 9px; margin-top: 2px; font-weight: 700; color: var(--fg); }
+.hud .eco .money { color: #8FE3A0; font: 700 15px/1.1 var(--display); }
+.hud .eco .hearts { display: inline-flex; gap: 2px; letter-spacing: 0; }
+.hud .eco .h { font-size: 15px; line-height: 1; color: #FF4D5E; text-shadow: 0 1px 0 rgba(0,0,0,0.5); }
+.hud .eco .h.off { color: #3C4A43; }
+.hud .eco.bump .money { animation: ecobump 0.6s ease-out; }
+.hud .eco.hit .hearts { animation: ecoshake 0.5s ease-out; }
+@keyframes ecobump { 0% { transform: scale(1.5); color: #FFFFFF; } 100% { transform: scale(1); } }
+@keyframes ecoshake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-4px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+.ecoflash { position: absolute; inset: 0; z-index: 25; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, rgba(215, 38, 61, 0) 35%, rgba(215, 38, 61, 0.55) 100%); }
+.ecoflash.on { animation: ecofl 0.7s ease-out; }
+@keyframes ecofl { 0% { opacity: 1; } 100% { opacity: 0; } }
+.ecomsg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 35; width: min(86%, 380px); background: var(--panel); border: 3px solid #D7263D; border-radius: 10px; padding: 16px 18px; text-align: center; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.ecomsg[hidden] { display: none; }
+.ecomsg b { font: 700 18px/1.2 var(--display); color: #FF6B7B; }
+.ecomsg p { margin: 0; font-size: 14px; color: var(--fg); }
+.stage.map-open .ecoflash, .stage.map-open .ecomsg { display: none; }
 /* mapa a pantalla completa */
 .mini canvas { cursor: pointer; }
 .bigmap { position: absolute; inset: 0; z-index: 30; background: #0E1713; touch-action: none; }
@@ -264,9 +282,11 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       <canvas id="gl" aria-hidden="true"></canvas>
       <button type="button" class="btn inexit" id="inExit">Salir del café</button>
       <canvas id="cv" role="img" aria-label="Vista en primera persona de las calles del centro de Calabozo"></canvas>
-      <div class="chip hud"><b id="hudStreet">Plaza Bolívar</b><span id="hudClock">1:00 pm · 37 °C</span><span id="hudSpeed" hidden></span><span class="warn" id="hudDark" hidden>Sin luz</span><span id="hudNet" style="display:none"></span></div>
+      <div class="chip hud"><b id="hudStreet">Plaza Bolívar</b><span id="hudClock">1:00 pm · 37 °C</span><span id="hudSpeed" hidden></span><span class="eco" id="hudEco" aria-live="polite"></span><span class="warn" id="hudDark" hidden>Sin luz</span><span id="hudNet" style="display:none"></span></div>
       <button type="button" class="gear" id="cfgBtn" aria-label="Ajustes"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
       <div class="chip mini"><canvas id="mm" role="button" tabindex="0" aria-label="Minimapa: tócalo para verlo en grande"></canvas></div>
+      <div class="ecoflash" id="ecoFlash"></div>
+      <div class="ecomsg" id="ecoMsg" hidden role="alertdialog" aria-labelledby="ecoMsgT"><b id="ecoMsgT"></b><p id="ecoMsgP"></p><button type="button" class="btn primary" id="ecoMsgB">Seguir</button></div>
       <div class="bigmap" id="bigmap" hidden role="dialog" aria-label="Mapa de Calabozo"><canvas id="bmc"></canvas><div class="bmtop"><b>Mapa de Calabozo</b><span id="bmWhere"></span></div><div class="bmzoom"><button type="button" class="bmb" id="bmIn" aria-label="Acercar">+</button><button type="button" class="bmb" id="bmOut" aria-label="Alejar">−</button><button type="button" class="bmb" id="bmMe" aria-label="Centrar en mí">◎</button></div><button type="button" class="btn primary bmback" id="bmBack">Volver al juego</button></div>
       <div class="chip place" id="place" data-on="0"><small id="placeType"></small><span id="placeName"></span></div>
       <div class="chip hint" id="hint">Haz clic aquí. Camina con ↑ ↓ o W S, gira con ← → o arrastrando el mouse, y A D para pasos de lado. En el teléfono: la palanca camina y arrastrar el dedo por la imagen gira. Pulsa E frente a las tiendas o una puerta, y T para escribir en el chat.</div>
@@ -1288,7 +1308,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (ok(nx, ny)) { R.x = nx; R.y = ny; }
     else if (ok(nx, R.y)) { R.x = nx; R.v *= 0.92; }                       // roza la pared y sigue
     else if (ok(R.x, ny)) { R.y = ny; R.v *= 0.92; }
-    else { if (Math.abs(R.v) > 70 && audio && soundOn) audio.honk(true); R.v = -R.v * 0.2; }
+    else { var vc = Math.abs(R.v); if (vc > 70 && audio && soundOn) audio.honk(true); R.v = -R.v * 0.2; if (vc > 105) perderVida('te estrellaste con la moto'); }
     R.lean += (-R.steer * clamp(R.v / 120, 0, 1) * 0.32 - R.lean) * Math.min(1, dt * 6);   // se inclina hacia donde gira
     player.x = R.x; player.y = R.y; player.a = R.a;
   }
@@ -2544,6 +2564,67 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     mctx.fillStyle = 'rgba(245,179,1,0.35)'; mctx.beginPath(); mctx.moveTo(mx, my); mctx.arc(mx, my, 22, player.a - FOV / 2, player.a + FOV / 2); mctx.closePath(); mctx.fill();
     mctx.fillStyle = '#FFFFFF'; mctx.strokeStyle = '#0E1713'; mctx.lineWidth = 1.5; mctx.beginPath(); mctx.arc(mx, my, 3.5, 0, Math.PI * 2); mctx.fill(); mctx.stroke();
   }
+  // ---------------------------------------------------------------- dinero y vidas
+  // Cada persona tiene dinero y 5 vidas. Sin vidas: te llevan bien lejos, vuelves con 5 vidas y sin un centavo.
+  var ECO = { money: 100, lives: 5, key: 'calabozo-eco-invitado', hurtT: 0, MAXV: 5, loaded: false };
+  var ECO_FUN = [
+    ['¡Te llevaron al fin del mundo!', 'Sin vidas y sin plata. Te dejaron más lejos que la bomba de gasolina del cuento. Empieza de nuevo y esta vez cuida la moto.'],
+    ['¡Cayó el rey del pueblo!', 'Te quedaste sin vidas, y el dinero se lo llevó el viento (y el cobrador). Toca caminar un rato, compadre.'],
+    ['¡Fuiste sancionado!', 'Cinco golpes y fuera: te mandaron lejísimos y sin un bolívar. Dicen que desde allá se ve la Plaza Bolívar, pero chiquitica.']
+  ];
+  function ecoLoad(uid) {
+    ECO.key = 'calabozo-eco-' + (uid || 'invitado'); ECO.loaded = true;
+    var j = null; try { j = JSON.parse(localStorage.getItem(ECO.key) || 'null'); } catch (e) {}
+    if (j && isFinite(+j.m) && isFinite(+j.l)) { ECO.money = Math.max(0, Math.floor(+j.m)); ECO.lives = clamp(Math.floor(+j.l), 1, ECO.MAXV); }
+    else { ECO.money = (typeof OL !== 'undefined' && OL && OL.profile && isFinite(+OL.profile.coins)) ? Math.max(0, Math.floor(+OL.profile.coins)) : 100; ECO.lives = ECO.MAXV; }
+    ecoUI(0); ecoSave();
+  }
+  function ecoSave() {
+    try { localStorage.setItem(ECO.key, JSON.stringify({ m: ECO.money, l: ECO.lives })); } catch (e) {}
+    // copia en la cuenta (si el servidor lo permite); lo que cuenta para jugar es lo guardado aquí
+    try { if (typeof OL !== 'undefined' && OL && OL.on && OL.sb && OL.user && OL.profile) { OL.profile.coins = ECO.money; var q = OL.sb.from('profiles').update({ coins: ECO.money }).eq('id', OL.user.id); if (q && q.then) q.then(function () {}, function () {}); } } catch (e) {}
+  }
+  function ecoUI(kind) {
+    var e = $('hudEco'); if (!e) return; var h = '';
+    for (var i = 0; i < ECO.MAXV; i++) h += '<span class="h' + (i < ECO.lives ? '' : ' off') + '">♥</span>';
+    e.innerHTML = '<span class="money">$' + ECO.money + '</span><span class="hearts" aria-label="' + ECO.lives + ' de ' + ECO.MAXV + ' vidas">' + h + '</span>';
+    if (kind) { e.classList.remove('bump', 'hit'); void e.offsetWidth; e.classList.add(kind === 1 ? 'bump' : 'hit'); }
+  }
+  function ganar(n, why) {
+    n = Math.floor(+n) || 0; if (!n) return; ECO.money = Math.max(0, ECO.money + n); ecoSave(); ecoUI(n > 0 ? 1 : 2);
+    toast((n > 0 ? '+$' + n : '−$' + (-n)) + (why ? ' · ' + why : ''));
+  }
+  function puedePagar(n) { return ECO.money >= n; }
+  function perderVida(why) {
+    if (ECO.hurtT > time) return; ECO.hurtT = time + 2.2;
+    ECO.lives--; var f = $('ecoFlash'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+    if (ECO.lives <= 0) { ecoMorir(why); return; }
+    ecoSave(); ecoUI(2); toast('♥ −1 vida' + (why ? ' · ' + why : '') + ' · te quedan ' + ECO.lives);
+  }
+  // un sitio bien lejos de la plaza, en calle o acera libre
+  function sitioLejano() {
+    var sx = D.spawn[0], sy = D.spawn[1], best = null, bd = -1;
+    for (var t = 0; t < 6000; t++) {
+      var x = 4 + Math.floor(Math.random() * (W - 8)), y = 4 + Math.floor(Math.random() * (H - 8)), g = G[y * W + x];
+      if (g !== 3 && g !== 4) continue;
+      var d = Math.hypot(x - sx, y - sy); if (d < 420) continue;
+      if (!freeAt(x * TS + 8, y * TS + 8)) continue;
+      if (d > bd) { bd = d; best = [x, y]; if (d > 640) break; }
+    }
+    if (!best) { var f = findFree(W - 12, H - 12, [3, 4, 1]); return [f.x, f.y]; }
+    return [best[0] * TS + 8, best[1] * TS + 8];
+  }
+  function ecoMorir(why) {
+    var perdido = ECO.money; ECO.money = 0; ECO.lives = ECO.MAXV; ecoSave(); ecoUI(2);
+    if (ride) dismountMoto(true); keys = {}; joy.x = joy.y = 0; closeDialog(); if (chatOpen) closeChat(); if (mapOpen) closeMap();
+    var pos = sitioLejano(); player.x = pos[0]; player.y = pos[1]; player.a = Math.random() * Math.PI * 2; player.va = 0;
+    var m = ECO_FUN[Math.floor(Math.random() * ECO_FUN.length)];
+    $('ecoMsgT').textContent = m[0]; $('ecoMsgP').textContent = m[1] + (perdido ? ' Perdiste $' + perdido + '.' : '') + (why ? ' (' + why + ')' : ''); $('ecoMsg').hidden = false;
+    shareMotos();
+  }
+  $('ecoMsgB').addEventListener('click', function () { $('ecoMsg').hidden = true; try { stage.focus({ preventScroll: true }); } catch (e) {} });
+  ecoLoad(null);
+
   // ---- mapa a pantalla completa: arrastrar para moverlo, pellizcar o +/− para acercar, nombres de lugares
   var mapOpen = false, BM = { cx: 0, cy: 0, z: 3, ptrs: {}, pinch: 0, t: 0 }, bmc = $('bmc'), bctx2 = bmc.getContext('2d');
   var MAPKIND = { plaza: 1, parque: 1, catedral: 1, iglesia: 1, mercado: 1, alcaldia: 1, clinica: 1, escuela: 1, policia: 1, cultura: 1, hotel: 1 };
@@ -2772,7 +2853,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function toast(t) { var e = $('toast'); e.textContent = t; e.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { e.hidden = true; }, 3200); }
 
   function initOnline() {
-    $('gSolo').addEventListener('click', function () { OL.solo = true; hideGate(); syncAccountUI(); });
+    $('gSolo').addEventListener('click', function () { OL.solo = true; hideGate(); syncAccountUI(); ecoLoad(null); });
     $('gAuth').addEventListener('submit', function (e) { e.preventDefault(); doAuth('in'); });
     $('gUp').addEventListener('click', function () { doAuth('up'); });
     $('gAvatar').addEventListener('submit', function (e) { e.preventDefault(); saveProfile(); });
@@ -2830,7 +2911,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     }).catch(function (e) { gmsg('gMsgV', errText(e), true); });
   }
   function leaveOnline() {
-    OL.on = false; OL.conn = false; OL.user = null; OL.profile = null;
+    OL.on = false; OL.conn = false; OL.user = null; OL.profile = null; ecoLoad(null);
     try { if (OL.chan) OL.sb.removeChannel(OL.chan); if (OL.chat) OL.sb.removeChannel(OL.chat); if (OL.soc) OL.sb.removeChannel(OL.soc); } catch (e) {}
     clearInterval(OL.pollT); OL.chan = OL.chat = OL.soc = null; players = {}; seenMsg = {}; convos = {}; store = {}; unread = {}; loadedConvo = {}; sentTo = {}; invQ = []; invCur = null; lastTalk = 0; $('inv').hidden = true; $('chatList').innerHTML = ''; $('chatLive').innerHTML = '';
     closeChat(); syncAccountUI(); showGate('gAuth');
@@ -2840,7 +2921,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function myPresence() { return { rid: ride ? ride.mid : -1, park: Object.keys(myParks).map(function (k) { return myParks[k]; }), name: OL.profile.name, avatar: OL.profile.avatar, x: Math.round(player.x), y: Math.round(player.y), talk: lastTalk, inn: (typeof IN !== 'undefined' && IN.active) ? 1 : 0, ix: (typeof IN !== 'undefined' && IN.me) ? IN.me.x : 0, iz: (typeof IN !== 'undefined' && IN.me) ? IN.me.z : 0 }; }
   function enterGame() {
     OL.on = true; OL.solo = false; hideGate(); syncAccountUI(); syncClock();
-    var me = OL.user.id;
+    var me = OL.user.id; ecoLoad(me);
     OL.chan = OL.sb.channel('plaza', { config: { broadcast: { self: false }, presence: { key: me } } });
     OL.chan.on('presence', { event: 'sync' }, onSync).on('broadcast', { event: 'pos' }, onPos).on('broadcast', { event: 'typ' }, onTyp).on('broadcast', { event: 'voz' }, onVoz).on('broadcast', { event: 'ipos' }, onIpos);
     OL.chan.subscribe(function (st) {
@@ -3375,7 +3456,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 
