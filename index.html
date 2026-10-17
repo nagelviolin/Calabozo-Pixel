@@ -223,6 +223,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .hud .eco .hearts { display: inline-flex; gap: 2px; letter-spacing: 0; }
 .hud .eco .h { font-size: 15px; line-height: 1; color: #FF4D5E; text-shadow: 0 1px 0 rgba(0,0,0,0.5); }
 .hud .eco .h.off { color: #3C4A43; }
+.hud .eco .h.half { color: transparent; background: linear-gradient(90deg, #FF4D5E 50%, #3C4A43 50%); -webkit-background-clip: text; background-clip: text; text-shadow: none; }
 .hud .eco.bump .money { animation: ecobump 0.6s ease-out; }
 .hud .eco.hit .hearts { animation: ecoshake 0.5s ease-out; }
 @keyframes ecobump { 0% { transform: scale(1.5); color: #FFFFFF; } 100% { transform: scale(1); } }
@@ -1552,7 +1553,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var moving = false;
     if (ride && (dlg || gateOpen || chatOpen || mapOpen || modOpen)) ride.v = 0;
     if (ride && !dlg && !gateOpen && !chatOpen && !mapOpen && !modOpen && !IN.active) driveMoto(dt);
-    else if (!dlg && !gateOpen && !chatOpen && !mapOpen && !modOpen && !IN.active) {
+    else if (!dlg && !gateOpen && !chatOpen && !mapOpen && !modOpen && !TUMBLE && !IN.active) {
       var turn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
       player.va = (player.va || 0) + (turn * 2.0 - (player.va || 0)) * Math.min(1, dt * 7);
       player.a += player.va * dt;
@@ -1567,7 +1568,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       }
     }
     if (moving && !ride) walkPh += dt * (keys.shift ? 13 : 9);
-    misTick(dt);
+    misTick(dt); atropelloTick(dt); tumbleTick(dt);
     if (audio && audio.motor) { motorT -= dt; if (motorT <= 0) { motorT = 0.1; audio.motor(!!ride && soundOn && !IN.active, ride ? ride.v : 0); } }
     var walkers = 0;
     for (var i = npcs.length - 1; i >= 0; i--) { var nn = npcs[i]; if (nn.stat) continue; walkers++; if (Math.hypot(nn.x - player.x, nn.y - player.y) / TS > 55) { npcs.splice(i, 1); continue; } if (!(dlg && target && target.o === nn)) npcWalk(nn, dt); }
@@ -1914,6 +1915,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         if (p.moving && Math.hypot(dx, dz) > 0.5) e.face += wrapA(Math.atan2(dx, dz) - e.face) * 0.25;
         else if (!p.moving && e.face === 0) e.face = [0, Math.PI, -Math.PI / 2, Math.PI / 2][p.dir || 0];
         R.root.scale.setScalar(VK); R.root.position.set(sx, 0, sz); R.root.rotation.set(0, e.face, 0); R.pose(p.moving ? 'walk' : 'stand', p.t);
+        if (p.tumbleAt !== undefined) { var tt = time - p.tumbleAt; if (tt >= 0 && tt < 2.2) { R.root.position.set(sx, 0, sz); tumbleRig(R, tt, p.tumbleSp || 1, e.face); } }
       });
       avs.forEach(function (e, k) { if (!players[k]) { scene.remove(e.r.root); avs.delete(k); } });
     }
@@ -2114,7 +2116,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         var fv = baseFov + Math.min(8, Math.abs(ride.v) / 20); if (Math.abs(camera.fov - fv) > 0.05) { camera.fov = fv; camera.updateProjectionMatrix(); }
       } else {
         camR.on = false; if (camera.fov !== baseFov) { camera.fov = baseFov; camera.updateProjectionMatrix(); }
-        camera.position.set(px, EYE + bob, pz); camera.rotation.set(0, -a - Math.PI / 2, 0);
+        if (TUMBLE) { var tp = tumblePose(TUMBLE.t, TUMBLE.spin); camera.rotation.order = 'YXZ'; camera.position.set(px, tp.y, pz); camera.rotation.set(tp.pitch, -a - Math.PI / 2 + tp.yaw, tp.roll); }
+        else { if (camera.rotation.order !== 'XYZ') camera.rotation.order = 'XYZ'; camera.position.set(px, EYE + bob, pz); camera.rotation.set(0, -a - Math.PI / 2, 0); }
       }
       dome.position.copy(camera.position); stars.position.copy(camera.position);
       var sd = sunSpr.userData.dir; if (sunSpr.visible && sd) sunSpr.position.set(px + sd[0] * 380, sd[1] * 380, pz + sd[2] * 380);
@@ -2131,7 +2134,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         if (vtmp.z > 1 || vtmp.z < -1 || Math.abs(vtmp.x) > 1.2) return;
         drawRemote({ o: p, scr: [(vtmp.x * 0.5 + 0.5) * cv.width, (-vtmp.y * 0.5 + 0.5) * cv.height + 4], ty: dist }, 1);
       });
-      if (!ride) drawHand();
+      if (!ride && !TUMBLE) drawHand();
       if ((++mmN % 4) === 0) { drawMinimap(); }
     };
     applyPhase();
@@ -2693,7 +2696,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function ecoLoad(uid) {
     ECO.key = 'calabozo-eco-' + (uid || 'invitado'); ECO.loaded = true; ECO.matraca = 0;
     var j = null; try { j = JSON.parse(localStorage.getItem(ECO.key) || 'null'); } catch (e) {}
-    if (j && isFinite(+j.m) && isFinite(+j.l)) { ECO.money = Math.max(0, Math.floor(+j.m)); ECO.lives = clamp(Math.floor(+j.l), 1, ECO.MAXV); ECO.rol = ROLES[j.r] ? j.r : null; }
+    if (j && isFinite(+j.m) && isFinite(+j.l)) { ECO.money = Math.max(0, Math.floor(+j.m)); ECO.lives = clamp(Math.round(+j.l * 2) / 2, 0.5, ECO.MAXV); ECO.rol = ROLES[j.r] ? j.r : null; }
     else { ECO.money = (typeof OL !== 'undefined' && OL && OL.profile && isFinite(+OL.profile.coins)) ? Math.max(0, Math.floor(+OL.profile.coins)) : 100; ECO.lives = ECO.MAXV; ECO.rol = null; }
     if (!ECO.rol) { ECO.rol = nuevoRol(null); ECO.intro = true; }
     if (MS) misCancel();
@@ -2706,7 +2709,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   function ecoUI(kind) {
     var e = $('hudEco'); if (!e) return; var h = '';
-    for (var i = 0; i < ECO.MAXV; i++) h += '<span class="h' + (i < ECO.lives ? '' : ' off') + '">♥</span>';
+    for (var i = 0; i < ECO.MAXV; i++) h += '<span class="h' + (ECO.lives >= i + 1 ? '' : (ECO.lives >= i + 0.5 ? ' half' : ' off')) + '">♥</span>';
     e.innerHTML = '<span class="money">$' + ECO.money + '</span><span class="hearts" aria-label="' + ECO.lives + ' de ' + ECO.MAXV + ' vidas">' + h + '</span>';
     var rr = $('hudRol'); if (rr && ECO.rol && ROLES[ECO.rol]) rr.textContent = ROLES[ECO.rol].emo + ' ' + ROLES[ECO.rol].name;
     if (kind) { e.classList.remove('bump', 'hit'); void e.offsetWidth; e.classList.add(kind === 1 ? 'bump' : 'hit'); }
@@ -2716,11 +2719,11 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     toast((n > 0 ? '+$' + n : '−$' + (-n)) + (why ? ' · ' + why : ''));
   }
   function puedePagar(n) { return ECO.money >= n; }
-  function perderVida(why) {
-    if (ECO.hurtT > time) return; ECO.hurtT = time + 2.2;
-    ECO.lives--; var f = $('ecoFlash'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+  function perderVida(why, amt) {
+    amt = amt || 1; if (ECO.hurtT > time) return; ECO.hurtT = time + 2.2;
+    ECO.lives -= amt; var f = $('ecoFlash'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
     if (ECO.lives <= 0) { ecoMorir(why); return; }
-    ecoSave(); ecoUI(2); toast('♥ −1 vida' + (why ? ' · ' + why : '') + ' · te quedan ' + ECO.lives);
+    ecoSave(); ecoUI(2); toast('♥ −' + (amt === 0.5 ? '½' : amt) + ' vida' + (why ? ' · ' + why : '') + ' · te quedan ' + (ECO.lives % 1 ? ECO.lives.toFixed(1) : ECO.lives));
   }
   // un sitio bien lejos de la plaza, en calle o acera libre
   function sitioLejano() {
@@ -2736,7 +2739,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     return [best[0] * TS + 8, best[1] * TS + 8];
   }
   function ecoMorir(why) {
-    var perdido = ECO.money; ECO.money = 0; ECO.lives = ECO.MAXV; ECO.matraca = 0; misCancel(); ECO.rol = nuevoRol(ECO.rol); ECO.rolNuevo = true; ecoSave(); ecoUI(2); shareRol(); modClose(true);
+    var perdido = ECO.money; ECO.money = 0; ECO.lives = ECO.MAXV; ECO.matraca = 0; TUMBLE = null; misCancel(); ECO.rol = nuevoRol(ECO.rol); ECO.rolNuevo = true; ecoSave(); ecoUI(2); shareRol(); modClose(true);
     if (ride) dismountMoto(true); keys = {}; joy.x = joy.y = 0; closeDialog(); if (chatOpen) closeChat(); if (mapOpen) closeMap();
     var pos = sitioLejano(); player.x = pos[0]; player.y = pos[1]; player.a = Math.random() * Math.PI * 2; player.va = 0;
     var m = ECO_FUN[Math.floor(Math.random() * ECO_FUN.length)];
@@ -2936,6 +2939,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var pd = pend[d.id]; if (!pd || pd.n !== +d.n || pd.exp < Date.now()) return; delete pend[d.id];
       ganar(pd.n, cleanName(d.fn) + ' pagó'); if (pd.a === 'papeles') { ECO.matraca += pd.n; if (ECO.matraca >= 50) toast('Llevas $' + ECO.matraca + ' de matraca… ojo con el Comisario'); }
     } else if (d.t === 'no' && d.to === me) { delete pend[d.id]; toast(cleanName(d.fn) + (d.why === 'poor' ? ' no tiene con qué pagar' : ' no quiso pagar')); }
+    else if (d.t === 'atrop') { var qa = players[d.id]; if (qa) { qa.tumbleAt = time; qa.tumbleSp = d.sp === -1 ? -1 : 1; } }
     else if (d.t === 'chisme' && d.to === me) chismeRecibido(d);
     else if (d.t === 'viral') chismeViral(d);
     else if (d.t === 'desm' && d.to === me) {
@@ -2968,6 +2972,49 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function chismeViral(d) {
     var me = OL.user.id; if (d.orig === me) { delete desmN[d.id]; ganar(15, '¡Tu chisme se hizo viral! 🔥'); }
     else if (Array.isArray(d.hops) && d.hops.indexOf(me) >= 0) ganar(3, 'chisme viral');
+  }
+  // ---- atropellos: si una moto te pasa por encima pierdes media vida y sales revolcado
+  var TUMBLE = null, TUM_DUR = 2.2;
+  function atropellado(dx, dy) {
+    if (TUMBLE || ECO.hurtT > time || gateOpen) return;
+    var l = Math.hypot(dx, dy) || 1, sp = Math.random() < 0.5 ? -1 : 1;
+    if (modOpen) modClose(true); if (mapOpen) closeMap(); if (chatOpen) closeChat(); closeDialog(); keys = {}; joy.x = joy.y = 0;
+    TUMBLE = { t: 0, dx: dx / l, dy: dy / l, spin: sp };
+    perderVida('te atropellaron', 0.5); if (!TUMBLE) return; ECO.hurtT = time + 4.5;
+    if (audio && soundOn && audio.thud) audio.thud();
+    if (enLinea()) ecoSend({ t: 'atrop', id: OL.user.id, sp: sp });
+  }
+  function tumbleTick(dt) {
+    if (!TUMBLE) return; TUMBLE.t += dt; var t = TUMBLE.t;
+    if (t < 0.8) { var v = 150 * (1 - t / 0.8), mx = TUMBLE.dx * v * dt, my = TUMBLE.dy * v * dt; if (freeAt(player.x + mx, player.y)) player.x += mx; if (freeAt(player.x, player.y + my)) player.y += my; }
+    if (t >= TUM_DUR) TUMBLE = null;
+  }
+  function atropelloTick(dt) {
+    var ks = Object.keys(players), hit = null;
+    for (var i = 0; i < ks.length; i++) {
+      var q = players[ks[i]]; if (q.lx === undefined) { q.lx = q.x; q.ly = q.y; q.spd = 0; }
+      if (dt > 0) q.spd = q.spd * 0.6 + 0.4 * Math.hypot(q.x - q.lx, q.y - q.ly) / dt; q.lx = q.x; q.ly = q.y;
+      if (!hit && q.moto && !q.inn && !ride && !TUMBLE && q.spd > 55 && Math.hypot(q.x - player.x, q.y - player.y) < 13) hit = q;
+    }
+    if (hit) { var h = hit.mang || 0; atropellado(Math.cos(h) * 0.8 + (player.x - hit.x) * 0.02, Math.sin(h) * 0.8 + (player.y - hit.y) * 0.02); }
+  }
+  function sm(k) { k = Math.max(0, Math.min(1, k)); return k * k * (3 - 2 * k); }
+  // cámara del que sale volando: salta, cae de espaldas, se queda mareado en el piso y se levanta
+  function tumblePose(t, sp) {
+    var up = sm((t - 1.7) / 0.5), fall = sm((t - 0.3) / 0.6), toss = sm(t / 0.35), roll1 = sm(t / 0.9);
+    var y = t < 0.3 ? 0.82 + 0.5 * Math.sin(Math.PI * t / 0.3) : 0.82 + (0.14 - 0.82) * fall + (0.82 - 0.14) * up;
+    var lying = t > 0.9 && t < 1.7;
+    var pitch = (0.45 * toss * (1 - fall) + 0.14 * fall - 0.35 * Math.sin(Math.PI * Math.min(1, t / 0.9))) * (1 - up) + (lying ? 0.05 * Math.sin((t - 0.9) * 9) : 0);
+    // una vuelta de campana completa mientras vuela y queda tumbado de lado
+    var roll = sp * 1.3 * roll1 * (1 - up) + (t < 0.9 ? sp * 6.283 * roll1 : 0) + (lying ? 0.05 * Math.sin((t - 0.9) * 7) : 0);
+    var yaw = sp * 0.8 * roll1 * (1 - up);
+    return { y: y, pitch: pitch, roll: roll, yaw: yaw };
+  }
+  // los demás ven a tu personaje volar y caer
+  function tumbleRig(R, t, sp, face) {
+    var k = t < 0.9 ? sm(t / 0.7) : (t < 1.7 ? 1 : 1 - sm((t - 1.7) / 0.5)), hop = t < 0.35 ? Math.sin(Math.PI * t / 0.35) * 0.55 : 0, fl = t < 0.9 ? 1 : 0.15;
+    R.root.position.y = hop + 0.05 * k; R.root.rotation.set(-Math.PI / 2 * k, face + sp * 2.2 * sm(t / 0.9) * (t < 1.7 ? 1 : 1 - sm((t - 1.7) / 0.5)), 0);
+    R.armL.rotation.set(Math.sin(t * 16) * 1.5 * fl, 0, 0.9 * k); R.armR.rotation.set(-Math.sin(t * 16) * 1.5 * fl, 0, -0.9 * k); R.legL.rotation.set(Math.sin(t * 14) * 1.1 * fl, 0, 0.2 * k); R.legR.rotation.set(-Math.sin(t * 14) * 1.1 * fl, 0, -0.2 * k);
   }
   // ---- botones y teclas
   $('misBtn').addEventListener('click', function () { openBoard(); });
@@ -3083,6 +3130,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       setMode: function () { var t = ac.currentTime; cic.gain.setTargetAtTime(hour === 3 ? 0 : (hour === 1 ? 0.09 : 0.05), t, 0.4); cri.gain.setTargetAtTime(hour === 3 ? 0.035 : (hour === 2 ? 0.01 : 0), t, 0.4); gen.gain.setTargetAtTime(dark ? 0.05 : 0, t, 0.4); },
       honk: function (moto) { var o = ac.createOscillator(), g = ac.createGain(); o.type = 'square'; o.frequency.value = moto ? 880 : 420; g.gain.value = 0; o.connect(g); g.connect(master); var t = ac.currentTime; g.gain.setValueAtTime(0.06, t); g.gain.setValueAtTime(0, t + 0.18); if (!moto) { g.gain.setValueAtTime(0.06, t + 0.26); g.gain.setValueAtTime(0, t + 0.44); } o.start(t); o.stop(t + 0.5); }
     };
+    api.thud = function () { var t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.28); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4); o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.45); var n2 = ac.createBufferSource(); n2.buffer = nb; var g2 = ac.createGain(); g2.gain.setValueAtTime(0.25, t); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.18); n2.connect(g2); g2.connect(master); n2.start(t); n2.stop(t + 0.2); };
     api.motor = function (on, v) {
       if (!api._m) { var mo = ac.createOscillator(), mo2 = ac.createOscillator(), mf = ac.createBiquadFilter(), mg = ac.createGain(); mo.type = 'sawtooth'; mo2.type = 'square'; mf.type = 'lowpass'; mf.frequency.value = 500; mg.gain.value = 0; mo.connect(mf); mo2.connect(mf); mf.connect(mg); mg.connect(master); mo.start(); mo2.start(); api._m = { o: mo, o2: mo2, g: mg, f: mf }; }
       var m = api._m, t = ac.currentTime, f = 34 + Math.abs(v) * 0.42;
@@ -3813,7 +3861,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 

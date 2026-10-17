@@ -8,6 +8,7 @@ Moneda: **$** (en Calabozo todo se cobra en dólares). Cada persona empieza con 
 - **Vidas**: cada persona tiene 5. Una vida se pierde por un choque fuerte con la moto, o por el **riesgo** de algunas misiones (abajo).
 - **Quedarse sin vidas**: te llevan **bien lejos** (a más de un kilómetro de la plaza), **pierdes todo el dinero** y vuelves con 5 vidas nuevas.
 - **Inmunidad**: después de perder una vida hay 2 segundos en los que no se puede perder otra.
+- **Atropellos**: si una moto en marcha te pasa por encima pierdes **media vida** (el corazón sale partido), sales volando y rodando por el suelo unos 2 segundos sin poder moverte, y los demás te ven tendido. Después tienes unos segundos de protección. Por ahora solo atropellan las motos de otros jugadores.
 - **Vehículos**: las motos y los carros **se compran**; ya no hay motos gratis.
   - Moto: **$150** (con $100 de salida hay que ganar primero unos $50).
   - Carro: **$600** (cuando se pueda conducir).
@@ -75,6 +76,7 @@ Necesita su propia moto ($150).
 - ✅ Misiones para todos: gallinas (ahora se ven), la vuelta al pueblo, el mandado, selfie, turista perdido y carrera en moto.
 - ✅ Misiones de rol que se hacen solo con lugares: ronda del cafecito, harina «prestada», cita en la plaza, cola de la gasolina, harina a precio de oro, cola del Banesco, ronda del chisme, fotocopias, exposición y copiarse en el examen.
 - ✅ Acciones entre jugadores: Pedir papeles (solo a motorizados), Vacunar, Guiñar (con el novio celoso), Cobrar carrera y el chisme en cadena (viral a los 3 saltos, desmentidos).
+- ✅ Atropellos: media vida, revolcón con la pantalla dando vueltas y los demás lo ven.
 - ✅ Riesgos: policía que te ve robar, revisión sorpresa del bachaquero, profesora, Comisario con la matraca.
 - ⏳ Concesionario y compra de moto y carro (las 4 motos de la plaza siguen siendo gratis por ahora).
 - ⏳ Pasajero en la moto (mototaxi), Radio Bemba y Lo que vi.
