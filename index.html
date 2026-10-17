@@ -1312,7 +1312,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   })();
   var ride = null, rideTip = false, motorT = 0, myParks = {};
   function wrapAng(a) { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; }
-  function hitParked(x, y) { for (var i = 0; i < PARKED.length; i++) { var o = PARKED[i]; if (!o.by && Math.hypot(o.x - x, o.y - y) < 11) return true; } return false; }
+  function hitParked(x, y) { var i; for (i = 0; i < PARKED.length; i++) { var o = PARKED[i]; if (!o.by && Math.hypot(o.x - x, o.y - y) < 11) return true; } for (i = 0; i < NPCMOTOS.length; i++) { if (Math.hypot(NPCMOTOS[i].x - x, NPCMOTOS[i].y - y) < 10) return true; } return false; }
   function myLook() { var av = (OL.on && OL.profile && OL.profile.avatar) ? cleanAvatar(OL.profile.avatar) : defAvatar(); return { look: lookFrom(av), sig: JSON.stringify(av) }; }
   function shareMotos() { try { if (OL.on && OL.chan && OL.conn) OL.chan.track(myPresence()); } catch (e) {} }
   function mountMoto(o) {
@@ -1342,6 +1342,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var q = players[ks[i]]; if (q.inn) continue; var r = q.moto ? rMoto : rPed; if (!r) continue;
       var d1 = Math.hypot(x - q.x, y - q.y); if (d1 < r && d1 < Math.hypot(ox - q.x, oy - q.y)) return true;
     }
+    for (var j = 0; j < npcs.length && rPed; j++) { var nn = npcs[j]; if (nn.tum) continue; var d2 = Math.hypot(x - nn.x, y - nn.y); if (d2 < rPed && d2 < Math.hypot(ox - nn.x, oy - nn.y)) return true; }
     return false;
   }
   function driveMoto(dt) {
@@ -1374,15 +1375,24 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
           break;
         }
       }
+      for (var ip = 0; ip < npcs.length && !(R.hitT > time); ip++) {
+        var qn = npcs[ip]; if (qn.tum) continue;
+        if (Math.hypot(qn.x - fxh, qn.y - fyh) < 13) {
+          var vn = Math.abs(R.v); R.hitT = time + 1.2; R.v *= 0.35; if (audio && soundOn && audio.thud) audio.thud();
+          qn.tum = { t0: time, x0: qn.x, y0: qn.y, dx: Math.cos(R.a), dy: Math.sin(R.a), v0: clamp(70 + 0.9 * vn, 110, 215), sp: Math.random() < 0.5 ? -1 : 1 };
+          toast('💥 ¡Atropellaste a ' + qn.name.split(',')[0] + '!');
+        }
+      }
     }
     R.lean += (-R.steer * clamp(R.v / 120, 0, 1) * 0.32 - R.lean) * Math.min(1, dt * 6);   // se inclina hacia donde gira
     player.x = R.x; player.y = R.y; player.a = R.a;
   }
 
   var npcs = [], WALK = [4, 6, 7, 9];
+  var NPCID = 0;
   function newNpc(type, x, y, opts) {
     var r = mulberry(Math.floor(rng() * 1e9));
-    var n = { type: type, name: pick(r, NAMES[type]), x: x, y: y, dir: Math.floor(r() * 4), t: 0, moving: false, sheet: makeChar(LOOKS[type](r)), lines: pick(r, LINES[type]), speed: 20 + r() * 12, tx: x, ty: y, wait: r() * 2, stat: false, sit: false, r: r };
+    var n = { type: type, name: pick(r, NAMES[type]), x: x, y: y, dir: Math.floor(r() * 4), t: 0, moving: false, look: LOOKS[type](r), id: ++NPCID, sheet: null, lines: pick(r, LINES[type]), speed: 20 + r() * 12, tx: x, ty: y, wait: r() * 2, stat: false, sit: false, r: r };
     if (opts) for (var k in opts) n[k] = opts[k];
     return n;
   }
@@ -1401,7 +1411,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var v = findFree(cx + 6, cy - 4, [6, 7]);
     extraProps.push({ k: 'carrito', x: v.x + 18, y: v.y, tx: Math.floor((v.x + 18) / TS), ty: Math.floor(v.y / TS), v: 0 });
     COLL[Math.floor(v.y / TS) * W + Math.floor((v.x + 18) / TS)] = 1;
-    npcs.push(newNpc('señor', v.x - 2, v.y, { stat: true, dir: 0, name: 'Don Pancho, el de los raspados', lines: ['¡Raspado, raspado! De colita, de tamarindo y de leche condensada.', 'Con este sol, un raspado es medicina, mijo.'], fixed: true }));
+    npcs.push(newNpc('señor', v.x - 2, v.y, { stat: true, dir: 0, name: 'Don Pancho, el de los raspados', lines: ['¡Raspado, raspado! De colita, de tamarindo y de leche condensada.', 'Con este sol, un raspado es medicina, mijo.'], fixed: true, vend: 'pancho' }));
     var ch = findFree(cx - 4, cy + 5, [6, 7]); npcs.push(newNpc('chismosa', ch.x, ch.y, { stat: true, dir: 1 }));
     var ll = findFree(cx + 3, cy + 7, [6, 7]); npcs.push(newNpc('llanero', ll.x, ll.y, { stat: true, dir: 2 }));
   })();
@@ -1419,10 +1429,11 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var px = player.x / TS, py = player.y / TS;
     var cands = TL.filter(function (l) { return l.o === 'H' ? (Math.abs(l.c - py) < 40 && l.a < px + 45 && l.b > px - 45) : (Math.abs(l.c - px) < 40 && l.a < py + 45 && l.b > py - 45); });
     if (!cands.length) return;
-    var l = pick(rng, cands), dir = rng() < 0.5 ? 1 : -1, type = rng() < 0.55 ? 'moto' : (rng() < 0.75 ? 'carro' : 'camioneta');
+    var l = pick(rng, cands), dir = rng() < 0.5 ? 1 : -1, type = 'moto';
     var lo = Math.max(l.a, (l.o === 'H' ? px : py) - 42), hi = Math.min(l.b, (l.o === 'H' ? px : py) + 42); if (hi <= lo) return;
     var pos = near ? (lo + rng() * (hi - lo)) * TS : (dir > 0 ? lo : hi) * TS;
-    var c = { l: l, dir: dir, type: type, pos: pos, col: pick(rng, CARCOL), pp: type === 'carro' && rng() < 0.45, rider: pick(rng, ['#E86A2E', '#2E6FB7', '#F2F2F2', '#6E1423', '#2F8F4E']), speed: type === 'moto' ? 70 + rng() * 30 : 46 + rng() * 16, stop: 0, honk: 0, lane: (l.wt * TS) / 4 };
+    if (Math.abs(pos - (l.o === 'H' ? player.x : player.y)) < 150) return;
+    var c = { l: l, dir: dir, type: type, pos: pos, col: pick(rng, CARCOL), pp: type === 'carro' && rng() < 0.45, rider: pick(rng, ['#E86A2E', '#2E6FB7', '#F2F2F2', '#6E1423', '#2F8F4E']), speed: type === 'moto' ? 125 + rng() * 60 : 46 + rng() * 16, stop: 0, honk: 0, lane: (l.wt * TS) / 4 };
     placeCar(c); cars.push(c);
   }
   function placeCar(c) {
@@ -1544,6 +1555,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var t = target, name, lines;
     if (t.kind === 'moto') { mountMoto(t.o); return; }
     if (t.kind === 'unride') { dismountMoto(false); return; }
+    if (t.kind === 'npc' && t.o.vend) { vendorTalk(t.o); return; }
+    if (t.kind === 'npc' && t.o.taxi) { taxiTalk(t.o); return; }
     if (t.kind === 'npc') { name = t.o.name; lines = npcLines(t.o); if (!t.o.sit) t.o.dir = faceTo(t.o, player); t.o.wait = 4; }
     else if (t.kind === 'shop') { if (t.o.sign === 'CAFÉ CALABOZO' && IN.enter) { IN.enter(); return; } name = t.o.sign || (t.o.k === 'casa' ? 'Casa' : 'Negocio'); lines = shopLines(t.o); }
     else if (t.kind === 'statue') { name = 'Simón Bolívar'; lines = ['Estatua del Libertador en la Plaza Bolívar de Calabozo.', 'Todo pueblo de Venezuela tiene su Plaza Bolívar. Aquí se cita la gente: «nos vemos en la plaza».']; }
@@ -1593,22 +1606,27 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     misTick(dt); atropelloTick(dt); tumbleTick(dt);
     if (audio && audio.motor) { motorT -= dt; if (motorT <= 0) { motorT = 0.1; audio.motor(!!ride && soundOn && !IN.active, ride ? ride.v : 0); } }
     var walkers = 0;
-    for (var i = npcs.length - 1; i >= 0; i--) { var nn = npcs[i]; if (nn.stat) continue; walkers++; if (Math.hypot(nn.x - player.x, nn.y - player.y) / TS > 55) { npcs.splice(i, 1); continue; } if (!(dlg && target && target.o === nn)) npcWalk(nn, dt); }
-    var want = hour === 3 ? (dark ? 10 : 16) : (hour === 1 ? 16 : 24);
+    for (var i = npcs.length - 1; i >= 0; i--) { var nn = npcs[i]; if (nn.tum || nn.back) { npcFly(nn, dt); continue; } if (nn.stat) continue; walkers++; if (Math.hypot(nn.x - player.x, nn.y - player.y) / TS > 55) { npcs.splice(i, 1); continue; } if (!(dlg && target && target.o === nn)) npcWalk(nn, dt); }
+    var want = hour === 3 ? (dark ? 3 : 5) : (hour === 1 ? 7 : 9);
     if (walkers < want) spawnWalker(time < 2);
     for (i = cars.length - 1; i >= 0; i--) {
       var c = cars[i], l = c.l, blocked = false;
       var fx = c.x + c.hx * (c.hw + 18), fy = c.y + c.hy * (c.hh2 + 18);
-      if (Math.abs(player.x - fx) < 18 && Math.abs(player.y - fy) < 18) blocked = true;
-      for (var j = 0; j < cars.length && !blocked; j++) { var o = cars[j]; if (o === c || o.l !== l || o.dir !== c.dir) continue; var gap = (o.pos - c.pos) * c.dir; if (gap > 0 && gap < (c.type === 'moto' ? 26 : 44)) blocked = true; }
+      // las motos NO frenan por ti: si estás en su carril, te avisan con la bocina y, si no te mueves, te atropellan
+      if (!ride && !TUMBLE) {
+        var pdx = player.x - c.x, pdy = player.y - c.y, ahead = pdx * c.hx + pdy * c.hy, lat = Math.abs(pdx * c.hy - pdy * c.hx);
+        if (ahead > 8 && ahead < 150 && lat < 20 && c.honk <= 0) { c.honk = 1.6; if (audio && soundOn) audio.honk(true); toast('📣 ¡Piii! Viene una moto'); }
+        if (ahead > -10 && ahead < 15 && lat < 12 && c.stop === 0 && c.speed > 45) { atropellado(c.hx, c.hy, c.speed); }
+      }
+      for (var j = 0; j < cars.length && !blocked; j++) { var o = cars[j]; if (o === c || o.l !== l || o.dir !== c.dir) continue; var gap = (o.pos - c.pos) * c.dir; if (gap > 0 && gap < (c.type === 'moto' ? 44 : 44)) blocked = true; }
       if (blocked) { c.stop += dt; if (c.stop > 1.2 && c.honk <= 0) { c.honk = 1.4; if (audio && soundOn) audio.honk(c.type === 'moto'); } } else { c.stop = 0; c.pos += c.speed * dt * c.dir; }
       if (c.honk > 0) c.honk -= dt;
       placeCar(c);
       var endp = (c.dir > 0 ? l.b : l.a) * TS;
       if ((c.dir > 0 && c.pos > endp) || (c.dir < 0 && c.pos < endp) || Math.hypot(c.x - player.x, c.y - player.y) / TS > 60) cars.splice(i, 1);
     }
-    var wantCars = hour === 3 ? 6 : (hour === 1 ? 9 : 13);
-    // sin tráfico: en el pueblo solo hay 4 motos, para los jugadores
+    var wantCars = hour === 3 ? 2 : (hour === 1 ? 4 : 5);
+    if (cars.length < wantCars && rng() < 0.05 + (time < 1 ? 1 : 0)) spawnCar(time < 1);
 
     // a quién tienes enfrente
     target = null;
@@ -1623,7 +1641,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (!target || target.kind === 'shop') { var bm = null, bd2 = 26; PARKED.forEach(function (o) { if (o.by) return; var d2 = Math.hypot(o.x - player.x, o.y - player.y); if (d2 < bd2) { bd2 = d2; bm = o; } }); if (bm) target = { kind: 'moto', o: bm }; }
     }
     var act = $('act');
-    if (target && !dlg) { act.hidden = false; act.textContent = target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : 'Entrar (E)') : (target.kind === 'statue' ? 'Mirar (E)' : 'Hablar con ' + target.o.name.split(',')[0] + ' (E)'); }
+    if (target && !dlg) { act.hidden = false; act.textContent = target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : 'Entrar (E)') : (target.kind === 'statue' ? 'Mirar (E)' : (target.o.vend ? 'Comprar a ' : (target.o.taxi ? 'Mototaxi: ' : 'Hablar con ')) + target.o.name.split(',')[0] + ' (E)'); }
     else act.hidden = true;
     hudTimer -= dt;
     if (hudTimer <= 0) {
@@ -2098,6 +2116,34 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       }
       GMESH.count = n; GMESH.instanceMatrix.needsUpdate = true;
     }
+    // ---- NPC: caminantes, vendedores y mototaxistas, en voxel
+    var NRIG = {}, NYAW = [0, Math.PI, -Math.PI / 2, Math.PI / 2], UMAT = VOX.mat(), NCAP = 12;
+    var STALL_TABLE = VOX.build([[20, 1.4, 9, 0, 7.2, 0, '#8A5A33'], [1.3, 7.2, 1.3, -8.5, 0, -3.2, '#6B4423', false], [1.3, 7.2, 1.3, 8.5, 0, -3.2, '#6B4423', false], [1.3, 7.2, 1.3, -8.5, 0, 3.2, '#6B4423', false], [1.3, 7.2, 1.3, 8.5, 0, 3.2, '#6B4423', false], [3, 2.6, 3, -6, 8.6, 0, '#E8463C', false], [3, 2, 3, -1.5, 8.6, 1, '#F2B01E', false], [3, 2.6, 3, 3, 8.6, -1, '#4FB36B', false], [2.5, 2, 2.5, 7, 8.6, 1, '#C77DDB', false]], VK);
+    var STALL_UMB = VOX.build([[1, 32, 1, 0, 0, 0, '#D8D8D8', false], [24, 1.4, 24, 0, 30.5, 0, '#FFFFFF'], [19, 1.4, 19, 0, 31.9, 0, '#FFFFFF', false]], VK);
+    var STOOL = VOX.build([[7, 1.4, 7, 0, 5.2, 0, '#8A5A33'], [1.2, 5.2, 1.2, -2.6, 0, -2.6, '#6B4423', false], [1.2, 5.2, 1.2, 2.6, 0, -2.6, '#6B4423', false], [1.2, 5.2, 1.2, -2.6, 0, 2.6, '#6B4423', false], [1.2, 5.2, 1.2, 2.6, 0, 2.6, '#6B4423', false]], VK);
+    var STT = new THREE.InstancedMesh(STALL_TABLE, VXMAT, NCAP), STU = new THREE.InstancedMesh(STALL_UMB, UMAT, NCAP), STO = new THREE.InstancedMesh(STOOL, VXMAT, 24), nM4 = new THREE.Matrix4(), nQ = new THREE.Quaternion(), nP = new THREE.Vector3(), nC = new THREE.Color();
+    [STT, STU, STO].forEach(function (m) { m.count = 0; m.frustumCulled = false; scene.add(m); });
+    function syncNpcs() {
+      var px = player.x / TS, pz = player.y / TS, lim = 34, seen = {}, ns = 0, nst = 0, i;
+      UMAT.color.setHex(PH[hour].prop);
+      for (i = 0; i < npcs.length; i++) {
+        var n = npcs[i]; if (!n.look) continue; var x = n.x / TS, z = n.y / TS; if ((x - px) * (x - px) + (z - pz) * (z - pz) > lim * lim) continue;
+        seen[n.id] = 1; var e = NRIG[n.id];
+        if (!e) { e = NRIG[n.id] = { r: VOX.rig(n.look, VXMAT), face: NYAW[n.dir || 0] }; e.r.root.scale.setScalar(VK); scene.add(e.r.root); }
+        var R = e.r, tum = n.tum ? time - n.tum.t0 : -1; e.face += wrapA(NYAW[n.dir || 0] - e.face) * 0.2;
+        R.root.position.set(x, 0, z); R.root.rotation.set(0, e.face, 0);
+        if (n.sit) { R.pose('sit'); if (nst < 24) { nQ.setFromAxisAngle(motoUp, e.face); nP.set(x, 0, z); nM4.compose(nP, nQ, motoS); STO.setMatrixAt(nst++, nM4); } }
+        else R.pose(n.moving ? 'walk' : 'stand', n.t);
+        if (tum >= 0 && tum < 2.2) tumbleRig(R, tum, n.tum.sp, e.face);
+      }
+      for (var id in NRIG) if (!seen[id]) { scene.remove(NRIG[id].r.root); delete NRIG[id]; }
+      for (i = 0; i < VSTALLS.length && ns < NCAP; i++) {
+        var st = VSTALLS[i], sx = st.x / TS, sz = st.y / TS; if ((sx - px) * (sx - px) + (sz - pz) * (sz - pz) > lim * lim) continue;
+        nQ.setFromAxisAngle(motoUp, Math.abs(st.hx) > 0 ? Math.PI / 2 : 0); nP.set(sx, 0, sz); nM4.compose(nP, nQ, motoS); STT.setMatrixAt(ns, nM4);
+        nP.set(sx - st.hx * 0.22, 0, sz - st.hy * 0.22); nM4.compose(nP, nQ, motoS); STU.setMatrixAt(ns, nM4); STU.setColorAt(ns, nC.set(st.col || '#F2F2F2')); ns++;
+      }
+      STT.count = ns; STU.count = ns; STO.count = nst; STT.instanceMatrix.needsUpdate = true; STU.instanceMatrix.needsUpdate = true; STO.instanceMatrix.needsUpdate = true; if (STU.instanceColor) STU.instanceColor.needsUpdate = true;
+    }
     // tu propio personaje, sentado en la moto que conduces
     var myRig = null, mySig = '';
     function syncMotos() {
@@ -2111,6 +2157,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         if (cnt[vi] < 32) { riderQ.setFromAxisAngle(motoUp, Math.atan2(c.hx, c.hy)); riderP.set(x - c.hx * RBACK, SEAT - HIP, z - c.hy * RBACK); riderM4.compose(riderP, riderQ, motoS); RIDERS[vi].setMatrixAt(cnt[vi]++, riderM4); }
       }
       for (i = 0; i < PARKED.length; i++) { var o = PARKED[i]; if (o.by) continue; var ox = o.x / TS, oz = o.y / TS, od = Math.hypot(ox - px, oz - pz); if (od <= vis) putMoto(ox, oz, o.hx, o.hy, 0, od); }
+      for (i = 0; i < NPCMOTOS.length; i++) { var nm = NPCMOTOS[i], nx = nm.x / TS, nz = nm.y / TS, nd = Math.hypot(nx - px, nz - pz); if (nd <= vis) putMoto(nx, nz, nm.hx, nm.hy, 0, nd); }
       Object.keys(players).forEach(function (k) { var p = players[k]; if (!p.moto || p.inn) return; var x2 = p.x / TS, z2 = p.y / TS; putMoto(x2, z2, Math.cos(p.mang || 0), Math.sin(p.mang || 0), 0, Math.hypot(x2 - px, z2 - pz)); });
       if (ride) {
         var ca = Math.cos(ride.a), sa = Math.sin(ride.a), rx = ride.x / TS, rz = ride.y / TS; putMoto(rx, rz, ca, sa, ride.lean, 0);
@@ -2146,7 +2193,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var sd = sunSpr.userData.dir; if (sunSpr.visible && sd) sunSpr.position.set(px + sd[0] * 380, sd[1] * 380, pz + sd[2] * 380);
       for (var i = 0; i < cloudObjs.length; i++) { var c = CLOUDS[i], ang = c.a + time * 0.004, rr = 320 - c.e * 60; cloudObjs[i].position.set(px + Math.cos(ang) * rr, 60 + c.e * 140, pz + Math.sin(ang) * rr); }
       sun.position.set(px + ph.dir[0] * 60, ph.dir[1] * 60, pz + ph.dir[2] * 60); sun.target.position.set(px, 0, pz);
-      syncPlayers(camera.position); syncMotos(); syncCars(); syncGallinas();
+      syncPlayers(camera.position); syncMotos(); syncCars(); syncGallinas(); syncNpcs();
       renderer.render(scene, camera);
       // capa 2D: mano, nombres, minimapa
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
@@ -2828,7 +2875,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     else if (k === 'super') r = byName('supermercado la criolla');
     else if (k === 'banesco') r = byName('banesco', [645.5, 388.5]);
     else if (k === 'torres') r = byName('centro comercial torres');
-    else if (k === 'escuela') r = byName('coromoto');
+    else if (k === 'escuela') r = byName('colegio nuestra senora de coromoto');
     else if (k === 'mercado') r = byName('dragon china');
     else if (k === 'rio') {
       var bx = -1, by = -1, bd = 1e9; for (var y = 2; y < H - 2; y++) for (var x = 2; x < W - 2; x++) if (G[y * W + x] === 8) { var dd = (x - sp[0]) * (x - sp[0]) + (y - sp[1]) * (y - sp[1]); if (dd < bd) { bd = dd; bx = x; by = y; } }
@@ -3045,6 +3092,83 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     R.root.position.y = hop + 0.05 * k; R.root.rotation.set(-Math.PI / 2 * k + flip, face + sp * 2.2 * sm(t / 0.9) * (t < 1.7 ? 1 : 1 - sm((t - 1.7) / 0.5)), 0);
     R.armL.rotation.set(Math.sin(t * 16) * 1.5 * fl, 0, 0.9 * k); R.armR.rotation.set(-Math.sin(t * 16) * 1.5 * fl, 0, -0.9 * k); R.legL.rotation.set(Math.sin(t * 14) * 1.1 * fl, 0, 0.2 * k); R.legR.rotation.set(-Math.sin(t * 14) * 1.1 * fl, 0, -0.2 * k);
   }
+  // ---- vendedores con puesto: te venden comida para recuperar vida
+  var NPCMOTOS = [], VSTALLS = [];
+  var VEND = {
+    pancho: { line: '¡Raspado, raspado! De colita, de tamarindo y de leche condensada.', items: [['Raspado de colita', 6, 0.5], ['Raspado «El Gigante»', 11, 1]] },
+    chela: { line: 'Estampitas, velitas y agüita bendita. Para el que sufre y para el que quiere sufrir menos.', items: [['Estampita de la Virgen', 5, 0.5], ['Vela milagrosa', 12, 1]] },
+    carmen: { line: '¡Empanadas calentitas! De queso, de carne y de lo que sobre.', items: [['Empanada de queso', 7, 0.5], ['Arepa reina pepiada', 13, 1]] },
+    catire: { line: 'Mango de bocao, parchita y lechosa. Todo de la mata, mi vida.', items: [['Mango de bocao', 5, 0.5], ['Batido de lechosa', 10, 1]] },
+    chamo: { line: 'Cafecito, malta y chucherías. Pregunte sin pena, que cobrar es lo que me da pena.', items: [['Cafecito', 4, 0.5], ['Malta con pan', 9, 1]] },
+    tomas: { line: 'Jugo de naranja recién exprimido. La cola del banco da sed, ¿verdad?', items: [['Jugo de naranja', 5, 0.5], ['Jugo de parchita grande', 10, 1]] }
+  };
+  function roadDir(tx, ty) {
+    var D4 = [[0, 1, 0], [0, -1, 1], [-1, 0, 2], [1, 0, 3]], best = 99, bd = null;
+    D4.forEach(function (d) { for (var q = 1; q <= 8; q++) { if (gk(tx + d[0] * q, ty + d[1] * q) === 3) { if (q < best) { best = q; bd = d; } break; } } });
+    return bd || D4[0];
+  }
+  function addVend(id, type, name, anchor, col) {
+    var f = findFree(Math.round(anchor[0]), Math.round(anchor[1]), [4, 6, 7]), rd = roadDir(Math.floor(f.x / TS), Math.floor(f.y / TS));
+    var n = newNpc(type, f.x, f.y, { stat: true, fixed: true, dir: rd[2], name: name, lines: [VEND[id].line], vend: id }); n.home = [f.x, f.y]; npcs.push(n);
+    var sx = f.x + rd[0] * 12, sy = f.y + rd[1] * 12; VSTALLS.push({ x: sx, y: sy, hx: rd[0], hy: rd[1], col: col });
+    var tx = Math.floor(sx / TS), ty = Math.floor(sy / TS); if ([4, 6, 7].indexOf(gk(tx, ty)) >= 0) COLL[ty * W + tx] = 1;
+  }
+  function addTaxi(name, anchor) {
+    var f = findFree(Math.round(anchor[0]), Math.round(anchor[1]), [4, 6, 7]), rd = roadDir(Math.floor(f.x / TS), Math.floor(f.y / TS));
+    var n = newNpc('mototaxi', f.x, f.y, { stat: true, fixed: true, dir: rd[2], name: name, lines: ['¿Pa\' dónde va, mi amor? Yo lo llevo rapidito.'], taxi: true }); n.home = [f.x, f.y]; npcs.push(n);
+    NPCMOTOS.push({ x: f.x - rd[1] * 14, y: f.y + rd[0] * 14, hx: -rd[1], hy: rd[0] });
+  }
+  function setupVendors() {
+    addVend('chela', 'señora', 'Doña Chela, estampitas y velas', placeXY('catedral'), '#7A4AB0');
+    addVend('carmen', 'señora', 'Doña Carmen, empanadas', placeXY('panaderia'), '#E8463C');
+    addVend('catire', 'llanero', 'El Catire, frutas', placeXY('mercado'), '#F2B01E');
+    addVend('chamo', 'joven', 'Chamo, café y chucherías', placeXY('escuela'), '#2E6FB7');
+    addVend('tomas', 'señor', 'Don Tomás, jugos', placeXY('banesco'), '#4FB36B');
+    addTaxi('Wilmer, mototaxista', placeXY('poliguarico'));
+    addTaxi('Moto 23, mototaxista', placeXY('torres'));
+  }
+  function fmtVida(v) { return v % 1 ? v.toFixed(1) : String(v); }
+  function vendorTalk(n) {
+    var V = VEND[n.vend]; n.dir = faceTo(n, player); n.wait = 3;
+    var node = el('div', 'modb'); node.appendChild(el('p', null, '«' + V.line + '»')); node.appendChild(el('p', 'lema', 'Tienes $' + ECO.money + ' y ' + fmtVida(ECO.lives) + ' de ' + ECO.MAXV + ' vidas.'));
+    modShow({ title: '🛒 ' + n.name.split(',')[0], node: node, col: true, btns: V.items.map(function (it) {
+      return { t: it[0] + ' · $' + it[1] + ' · +' + (it[2] === 0.5 ? '½' : it[2]) + ' vida', cls: 'primary', fn: function () { comprar(it); } };
+    }).concat([{ t: 'Nada, gracias' }]) });
+  }
+  function comprar(it) {
+    if (ECO.lives >= ECO.MAXV) { toast('Estás lleno de vida: no necesitas comer ahora'); return; }
+    if (ECO.money < it[1]) { toast('No te alcanza el dinero ($' + it[1] + ')'); return; }
+    ECO.lives = Math.min(ECO.MAXV, ECO.lives + it[2]); ganar(-it[1], it[0] + ' · +' + (it[2] === 0.5 ? '½' : it[2]) + ' vida');
+  }
+  var TAXIDEST = ['plaza', 'catedral', 'alcaldia', 'poliguarico', 'panaderia', 'super', 'banesco', 'torres', 'escuela', 'mercado', 'rio', 'aeropuerto'];
+  function taxiTalk(n) {
+    if (ride) { toast('Bájate de tu moto para tomar el mototaxi'); return; }
+    n.dir = faceTo(n, player); n.wait = 3; var px = player.x / TS, py = player.y / TS;
+    var list = TAXIDEST.map(function (k) { var q = placeXY(k), d = Math.hypot(q[0] - px, q[1] - py); return { k: k, d: d, fare: Math.max(3, Math.round(d / 30)) }; }).filter(function (o) { return o.d > 25; }).sort(function (a, b) { return a.d - b.d; });
+    var node = el('div', 'modb'); node.appendChild(el('p', null, '«¡Pa\' dónde va, mi amor! Cobro $1 cada 30 casillas, mínimo $3.»')); node.appendChild(el('p', 'lema', 'Tienes $' + ECO.money + '.'));
+    modShow({ title: '🏍️ ' + n.name.split(',')[0], node: node, col: true, btns: list.map(function (o) { return { t: PN[o.k].replace(/^el /, 'El ').replace(/^la /, 'La ') + ' · $' + o.fare, cls: 'primary', fn: function () { viajar(o); } }; }).concat([{ t: 'Mejor no' }]) });
+  }
+  function viajar(o) {
+    if (ECO.money < o.fare) { toast('No te alcanza para esa carrera ($' + o.fare + ')'); return; }
+    ganar(-o.fare, 'mototaxi a ' + PN[o.k].replace(/^(el|la) /, ''));
+    var q = placeXY(o.k), f = findFree(Math.round(q[0]), Math.round(q[1]), [3, 4, 6, 7]);
+    var m = el('div', 'modb'); m.appendChild(el('p', null, '🏍️ Agárrate fuerte… ¡brrrum!'));
+    modShow({ title: 'En camino', node: m, btns: [] });
+    setTimeout(function () { player.x = f.x; player.y = f.y; player.a = Math.atan2(q[1] - f.y / TS, q[0] - f.x / TS); modClose(true); toast('Llegaste a ' + PN[o.k]); }, 1500);
+  }
+  // un NPC golpeado vuela como un jugador y luego vuelve a su sitio
+  function npcFly(n, dt) {
+    if (n.tum) {
+      var t = time - n.tum.t0;
+      if (t < 2.2) { var dd = vueloDist(n.tum.v0, t), nx = n.tum.x0 + n.tum.dx * dd, ny = n.tum.y0 + n.tum.dy * dd; if (freeAt(nx, ny)) { n.x = nx; n.y = ny; } n.moving = false; return; }
+      n.tum = null; n.wait = 2; if (n.home) n.back = true; return;
+    }
+    if (n.back) {
+      var dx = n.home[0] - n.x, dy = n.home[1] - n.y, d = Math.hypot(dx, dy);
+      if (d < 2) { n.back = false; n.x = n.home[0]; n.y = n.home[1]; n.moving = false; return; }
+      var sp = Math.min(d, 34 * dt); n.x += dx / d * sp; n.y += dy / d * sp; n.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 3 : 2) : (dy > 0 ? 0 : 1); n.moving = true; n.t += dt;
+    }
+  }
   // ---- botones y teclas
   $('misBtn').addEventListener('click', function () { openBoard(); });
   $('rolAct').addEventListener('click', function () { rolAction(); });
@@ -3055,6 +3179,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       mctx2.fillStyle = '#FFD23F'; mctx2.strokeStyle = '#0E1713'; mctx2.lineWidth = 1.5; mctx2.beginPath(); mctx2.moveTo(cx, cy - (out ? 3 : 5)); mctx2.lineTo(cx + (out ? 3 : 5), cy); mctx2.lineTo(cx, cy + (out ? 3 : 5)); mctx2.lineTo(cx - (out ? 3 : 5), cy); mctx2.closePath(); mctx2.fill(); mctx2.stroke();
     });
   }
+  setupVendors();
   ecoLoad(null);
 
   // ---- mapa a pantalla completa: arrastrar para moverlo, pellizcar o +/− para acercar, nombres de lugares
@@ -3866,12 +3991,11 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     Object.keys(players).forEach(function (k) { var p = players[k], x = p.x / TS - sx, y = p.y / TS - sy; if (x < 0 || y < 0 || x > 160 || y > 120) return; mctx.fillStyle = '#8FD9A8'; mctx.strokeStyle = '#0E1713'; mctx.lineWidth = 1; mctx.beginPath(); mctx.arc(x, y, 3, 0, Math.PI * 2); mctx.fill(); mctx.stroke(); });
   }
 
-  npcs.length = 0; npcs.push = function () { return 0; };
   initOnline();
   // ---------------------------------------------------------------- arranque
   setQuality(quality); setHour(1);
   if (R3.on) R3.warm(900);
-  for (var s0 = 0; s0 < 14; s0++) spawnWalker(true);
+  for (var s0 = 0; s0 < 8; s0++) spawnWalker(true);
   var last = performance.now(), cap30 = false, capAcc = 0;
   function frame(now) {
     if (cap30) { capAcc += now - last; if (capAcc < 30) { last = now; requestAnimationFrame(frame); return; } }
@@ -3890,7 +4014,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 
