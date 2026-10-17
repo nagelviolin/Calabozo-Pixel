@@ -235,6 +235,43 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .ecomsg b { font: 700 18px/1.2 var(--display); color: #FF6B7B; }
 .ecomsg p { margin: 0; font-size: 14px; color: var(--fg); }
 .stage.map-open .ecoflash, .stage.map-open .ecomsg { display: none; }
+/* roles y misiones */
+.hud .rol { font-size: 12.5px; color: var(--accent); font-weight: 700; }
+.place { margin-top: 36px; }
+.misbtn { position: absolute; top: 10px; right: 160px; width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--line); background: rgba(10, 17, 14, 0.85); color: var(--fg); font-size: 20px; line-height: 1; padding: 0; cursor: pointer; z-index: 6; display: inline-flex; align-items: center; justify-content: center; }
+.misbtn[hidden] { display: none; }
+.misbtn.on { border-color: var(--accent); }
+.rolact { bottom: 196px; background: var(--accent); color: var(--accent-ink); border-color: #FFFFFF; }
+.rolact[hidden] { display: none; }
+.mtrk { position: absolute; top: max(10px, env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); max-width: calc(100% - 520px); min-width: 150px; background: rgba(10, 17, 14, 0.9); border: 2px solid var(--accent); border-radius: 6px; padding: 5px 10px; display: flex; flex-direction: column; gap: 1px; z-index: 6; pointer-events: none; text-align: center; }
+.mtrk[hidden] { display: none; }
+.mtrk b { font: 700 13px/1.2 var(--display); color: var(--accent); }
+.mtrk span { font-size: 12.5px; line-height: 1.3; }
+@media (max-width: 820px) { .mtrk { top: calc(max(10px, env(safe-area-inset-top, 0px)) + 104px); left: max(10px, env(safe-area-inset-left, 0px)); transform: none; max-width: calc(100% - 20px); text-align: left; } .stage.mission-on .place { margin-top: 92px; } }
+.mod { position: absolute; inset: 0; z-index: 40; background: rgba(6, 12, 9, 0.8); display: flex; align-items: center; justify-content: center; padding: 10px; }
+.mod[hidden] { display: none; }
+.modc { width: min(94%, 470px); max-height: 94%; overflow: auto; background: var(--panel); border: 3px solid var(--fg); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.modc h2 { margin: 0; font: 700 18px/1.2 var(--display); }
+.modb { display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.modb p { margin: 0; line-height: 1.4; }
+.modb .lema { color: var(--accent); font-weight: 700; }
+.modbtns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.modbtns.col { flex-direction: column; align-items: stretch; }
+.mi { border: 2px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel-2); display: flex; flex-direction: column; gap: 5px; }
+.mi .t { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.mi .t b { font: 700 14.5px/1.2 var(--display); }
+.mi .pay { color: #8FE3A0; font-weight: 700; white-space: nowrap; }
+.mi p { margin: 0; color: var(--muted); font-size: 12.5px; }
+.mi.risk .t b::after { content: ' ⚠'; color: var(--accent); }
+.mi.soon { opacity: 0.55; }
+.modsec { font: 700 11.5px/1 var(--body); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.stage.map-open .mtrk, .stage.map-open .misbtn, .stage.map-open .rolact { display: none !important; }
+.stage.dialog-open .misbtn { display: none; }
+@media (max-width: 520px) {
+  .stage .misbtn { top: calc(max(10px, env(safe-area-inset-top, 0px)) + 112px); right: max(10px, env(safe-area-inset-right, 0px)); }
+  .stage .mtrk { top: calc(max(10px, env(safe-area-inset-top, 0px)) + 168px); }
+  .stage.mission-on .place { margin-top: 140px; }
+}
 /* mapa a pantalla completa */
 .mini canvas { cursor: pointer; }
 .bigmap { position: absolute; inset: 0; z-index: 30; background: #0E1713; touch-action: none; }
@@ -258,6 +295,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .stage.dialog-open .mic, .stage.chat-open .mic, .stage.kb .mic { display: none; }
 @media (pointer: coarse), (max-width: 760px), (max-height: 560px) {
   .fab { bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 126px); }
+  .rolact { bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 186px); }
+  .misbtn { top: max(10px, env(safe-area-inset-top, 0px)); right: calc(max(10px, env(safe-area-inset-right, 0px)) + 206px); }
   .mic { right: max(10px, env(safe-area-inset-right, 0px)); bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 64px); }
 }
 /* teclado abierto: el chat se pega justo encima del teclado */
@@ -282,9 +321,13 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       <canvas id="gl" aria-hidden="true"></canvas>
       <button type="button" class="btn inexit" id="inExit">Salir del café</button>
       <canvas id="cv" role="img" aria-label="Vista en primera persona de las calles del centro de Calabozo"></canvas>
-      <div class="chip hud"><b id="hudStreet">Plaza Bolívar</b><span id="hudClock">1:00 pm · 37 °C</span><span id="hudSpeed" hidden></span><span class="eco" id="hudEco" aria-live="polite"></span><span class="warn" id="hudDark" hidden>Sin luz</span><span id="hudNet" style="display:none"></span></div>
+      <div class="chip hud"><b id="hudStreet">Plaza Bolívar</b><span id="hudClock">1:00 pm · 37 °C</span><span id="hudSpeed" hidden></span><span class="eco" id="hudEco" aria-live="polite"></span><span class="rol" id="hudRol"></span><span class="warn" id="hudDark" hidden>Sin luz</span><span id="hudNet" style="display:none"></span></div>
       <button type="button" class="gear" id="cfgBtn" aria-label="Ajustes"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
       <div class="chip mini"><canvas id="mm" role="button" tabindex="0" aria-label="Minimapa: tócalo para verlo en grande"></canvas></div>
+      <div class="mtrk" id="mtrk" hidden><b id="mtT"></b><span id="mtS"></span></div>
+      <button type="button" class="misbtn" id="misBtn" aria-label="Misiones" hidden>📋</button>
+      <button type="button" class="fab rolact" id="rolAct" hidden></button>
+      <div class="mod" id="mod" hidden role="dialog" aria-modal="true" aria-labelledby="modT"><div class="modc"><h2 id="modT"></h2><div class="modb" id="modB"></div><div class="modbtns" id="modBtns"></div></div></div>
       <div class="ecoflash" id="ecoFlash"></div>
       <div class="ecomsg" id="ecoMsg" hidden role="alertdialog" aria-labelledby="ecoMsgT"><b id="ecoMsgT"></b><p id="ecoMsgP"></p><button type="button" class="btn primary" id="ecoMsgB">Seguir</button></div>
       <div class="bigmap" id="bigmap" hidden role="dialog" aria-label="Mapa de Calabozo"><canvas id="bmc"></canvas><div class="bmtop"><b>Mapa de Calabozo</b><span id="bmWhere"></span></div><div class="bmzoom"><button type="button" class="bmb" id="bmIn" aria-label="Acercar">+</button><button type="button" class="bmb" id="bmOut" aria-label="Alejar">−</button><button type="button" class="bmb" id="bmMe" aria-label="Centrar en mí">◎</button></div><button type="button" class="btn primary bmback" id="bmBack">Volver al juego</button></div>
@@ -1392,7 +1435,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function clockText() { var m = Math.floor(gameMin) % 1440, h = Math.floor(m / 60), mm = m % 60, ap = h >= 12 ? 'pm' : 'am', h12 = h % 12 || 12; return h12 + ':' + (mm < 10 ? '0' : '') + mm + ' ' + ap + ' · ' + ([28, 37, 34, 28][hour] + Math.round(Math.sin(gameMin / 50))) + ' °C'; }
   var KEYMAP = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', w: 'up', W: 'up', s: 'down', S: 'down', a: 'sl', A: 'sl', d: 'sr', D: 'sr' };
   function begin() { if (!started) { started = true; $('hint').hidden = true; } }
-  function inStage() { var a = document.activeElement; if (gateOpen || chatOpen || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return false; return a === stage || a === document.body || stage.contains(a); }
+  function inStage() { var a = document.activeElement; if (gateOpen || chatOpen || modOpen || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return false; return a === stage || a === document.body || stage.contains(a); }
   window.addEventListener('keydown', function (e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     var k = KEYMAP[e.key];
@@ -1507,9 +1550,9 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function update(dt) {
     time += dt; gameMin = calaboMin(); if (hourOf(gameMin) !== hour) { hour = hourOf(gameMin); updateSitters(); if (audio) audio.setMode(); } onlineTick(dt);
     var moving = false;
-    if (ride && (dlg || gateOpen || chatOpen || mapOpen)) ride.v = 0;
-    if (ride && !dlg && !gateOpen && !chatOpen && !mapOpen && !IN.active) driveMoto(dt);
-    else if (!dlg && !gateOpen && !chatOpen && !mapOpen && !IN.active) {
+    if (ride && (dlg || gateOpen || chatOpen || mapOpen || modOpen)) ride.v = 0;
+    if (ride && !dlg && !gateOpen && !chatOpen && !mapOpen && !modOpen && !IN.active) driveMoto(dt);
+    else if (!dlg && !gateOpen && !chatOpen && !mapOpen && !modOpen && !IN.active) {
       var turn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
       player.va = (player.va || 0) + (turn * 2.0 - (player.va || 0)) * Math.min(1, dt * 7);
       player.a += player.va * dt;
@@ -1524,6 +1567,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       }
     }
     if (moving && !ride) walkPh += dt * (keys.shift ? 13 : 9);
+    misTick(dt);
     if (audio && audio.motor) { motorT -= dt; if (motorT <= 0) { motorT = 0.1; audio.motor(!!ride && soundOn && !IN.active, ride ? ride.v : 0); } }
     var walkers = 0;
     for (var i = npcs.length - 1; i >= 0; i--) { var nn = npcs[i]; if (nn.stat) continue; walkers++; if (Math.hypot(nn.x - player.x, nn.y - player.y) / TS > 55) { npcs.splice(i, 1); continue; } if (!(dlg && target && target.o === nn)) npcWalk(nn, dt); }
@@ -2010,6 +2054,25 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       for (i = 0; i < PCARS.length; i++) { var o = PCARS[i]; put(o.x / TS, o.y / TS, o.hx, o.hy, o.col, false, o.pp); }
       [[CBODY, nc], [CDET, nc], [CPP, np], [TBODY, nt], [TDET, nt]].forEach(function (q) { q[0].count = q[1]; q[0].visible = q[1] > 0; q[0].instanceMatrix.needsUpdate = true; if (q[0].instanceColor) q[0].instanceColor.needsUpdate = true; });
     }
+    // ---- rayos de luz que marcan los destinos de la misión
+    var beams = [];
+    (function () {
+      var geo = new THREE.CylinderGeometry(0.32, 0.32, 20, 10, 1, true); geo.translate(0, 10, 0);
+      for (var i = 0; i < 6; i++) { var bm = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xFFD23F, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide, fog: false })); bm.visible = false; bm.frustumCulled = false; scene.add(bm); beams.push(bm); }
+    })();
+    R3.setBeams = function (list) { for (var i = 0; i < beams.length; i++) { var q = list && list[i]; beams[i].visible = !!q; if (q) beams[i].position.set(q[0], 0, q[1]); } };
+    // ---- gallinas (voxel) en los solares, para la misión de atraparlas
+    var GALL_BOXES = [[5, 4, 7, 0, 3, 0, '#F4F1E6'], [3, 3, 3, 0, 6.5, 3.6, '#F4F1E6'], [1, 1.4, 2, 0, 9.3, 3.6, '#D8283A', false], [1.2, 1, 1.4, 0, 7.2, 5.8, '#F2B01E', false], [0.5, 0.5, 0.4, -1.2, 7.8, 5.2, '#111111', false], [0.5, 0.5, 0.4, 1.2, 7.8, 5.2, '#111111', false], [3, 4, 2, 0, 4, -3.6, '#E4DFD0'], [0.7, 3, 0.7, -1.2, 0, 0.2, '#F2B01E', false], [0.7, 3, 0.7, 1.2, 0, 0.2, '#F2B01E', false]];
+    var GCAP = 96, GMESH = new THREE.InstancedMesh(VOX.build(GALL_BOXES, VK * 0.8), VXMAT, GCAP), gM4 = new THREE.Matrix4(), gQ = new THREE.Quaternion(), gP = new THREE.Vector3();
+    GMESH.count = 0; GMESH.frustumCulled = false; scene.add(GMESH);
+    function syncGallinas() {
+      var GL = gallinas(); if (!GL) return; var px = player.x / TS, pz = player.y / TS, vis = Math.min(scene.fog.far, 70), n = 0, tt = time;
+      for (var i = 0; i < GL.length && n < GCAP; i++) {
+        if (GHIDE[i] && GHIDE[i] > tt) continue; var dx = GL[i][0] - px, dz = GL[i][1] - pz; if (dx * dx + dz * dz > vis * vis) continue;
+        gQ.setFromAxisAngle(motoUp, GL[i][2] + Math.sin(tt * 0.7 + i) * 0.4); gP.set(GL[i][0], Math.abs(Math.sin(tt * 5 + i * 1.7)) * 0.01, GL[i][1]); gM4.compose(gP, gQ, motoS); GMESH.setMatrixAt(n++, gM4);
+      }
+      GMESH.count = n; GMESH.instanceMatrix.needsUpdate = true;
+    }
     // tu propio personaje, sentado en la moto que conduces
     var myRig = null, mySig = '';
     function syncMotos() {
@@ -2057,7 +2120,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var sd = sunSpr.userData.dir; if (sunSpr.visible && sd) sunSpr.position.set(px + sd[0] * 380, sd[1] * 380, pz + sd[2] * 380);
       for (var i = 0; i < cloudObjs.length; i++) { var c = CLOUDS[i], ang = c.a + time * 0.004, rr = 320 - c.e * 60; cloudObjs[i].position.set(px + Math.cos(ang) * rr, 60 + c.e * 140, pz + Math.sin(ang) * rr); }
       sun.position.set(px + ph.dir[0] * 60, ph.dir[1] * 60, pz + ph.dir[2] * 60); sun.target.position.set(px, 0, pz);
-      syncPlayers(camera.position); syncMotos(); syncCars();
+      syncPlayers(camera.position); syncMotos(); syncCars(); syncGallinas();
       renderer.render(scene, camera);
       // capa 2D: mano, nombres, minimapa
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
@@ -2559,26 +2622,85 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var sc = 1, sw = 160 / sc, sh = 120 / sc, sx = clamp(player.x / TS - sw / 2, 0, W - sw), sy = clamp(player.y / TS - sh / 2, 0, H - sh);
     mctx.imageSmoothingEnabled = false; mctx.drawImage(mmBase, sx, sy, sw, sh, 0, 0, 160, 120);
     if (hour === 3) { mctx.fillStyle = dark ? 'rgba(4,6,16,0.6)' : 'rgba(10,14,40,0.4)'; mctx.fillRect(0, 0, 160, 120); }
-    drawPlayersMini(sx, sy);
+    drawPlayersMini(sx, sy); misMarcas(sx, sy, sc, mctx);
     var mx = (player.x / TS - sx) * sc, my = (player.y / TS - sy) * sc;
     mctx.fillStyle = 'rgba(245,179,1,0.35)'; mctx.beginPath(); mctx.moveTo(mx, my); mctx.arc(mx, my, 22, player.a - FOV / 2, player.a + FOV / 2); mctx.closePath(); mctx.fill();
     mctx.fillStyle = '#FFFFFF'; mctx.strokeStyle = '#0E1713'; mctx.lineWidth = 1.5; mctx.beginPath(); mctx.arc(mx, my, 3.5, 0, Math.PI * 2); mctx.fill(); mctx.stroke();
   }
+  // ---------------------------------------------------------------- roles y misiones
+  var ROLEIDS = ['policia', 'malandro', 'coqueta', 'mototaxi', 'bachaquero', 'chismosa', 'estudiante'];
+  var ROLES = {
+    policia: { name: 'Policía Matraquero', emo: '👮', lema: '«El reglamento dice… depende».', act: 'papeles', misiones: ['ronda'], pronto: [],
+      explica: ['Eres la ley… cuando te conviene. Acércate a un motorizado y pulsa «Pedir papeles»: si quiere, te paga «el cafecito» ($10 a $25).', 'Haz la ronda del cafecito para ganar plata honrada. Ojo: si juntas más de $50 de matraca, el Comisario puede pillarte: pierdes la matraca y 1 vida.'] },
+    malandro: { name: 'Malandro', emo: '🕶️', lema: '«Aquí se hace lo que yo diga».', act: 'vacuna', misiones: ['harina_m'], pronto: [],
+      explica: ['Acércate a alguien y pulsa «Vacunar»: le cobras $5 de vacuna si se deja.', 'Roba harina en el Supermercado La Criolla 22 (quédate 5 s) y huye al río. Si hay un policía cerca cuando la agarras, te agarran a ti: pierdes 1 vida.'] },
+    coqueta: { name: 'Coqueta del Pueblo', emo: '💋', lema: '«La más buscada de la plaza».', act: 'guinar', misiones: ['cita'], pronto: [],
+      explica: ['Acércate a la gente y pulsa «Guiñar»: si le gustas, te invita un raspado ($8).', 'Ojo con el novio celoso: si le guiñas a la misma persona dos veces seguidas, pierdes 1 vida. Y una cita de 60 s en la plaza vale $25.'] },
+    mototaxi: { name: 'Mototaxista', emo: '🏍️', lema: '«¿Pa\' dónde va, mi amor?»', act: 'cobrar', misiones: ['gasolina'], pronto: ['Pasajero en la moto (pronto)'],
+      explica: ['Con tu moto lleva a la gente adonde quiera. Cuando termines la carrera, pulsa «Cobrar carrera» ($5, $10 o $15) a quien llevaste.', 'Mientras no haya clientes, haz la cola de la gasolina en la Av. Aeropuerto y saca $12.'] },
+    bachaquero: { name: 'Bachaquero', emo: '🛒', lema: '«Revendo hasta mi sombra».', act: null, misiones: ['harina_b', 'cola'], pronto: [],
+      explica: ['Compra harina en La Criolla ($10) y revéndela en el Super Mercado Dragon China 38 ($18).', 'Cuidado con la revisión sorpresa: 1 de cada 4 veces te quitan la mercancía y pierdes 1 vida. También puedes hacer cola en el Banesco y vender tu puesto.'] },
+    chismosa: { name: 'Chismosa', emo: '🗣️', lema: '«Yo no soy chismosa, yo me entero».', act: 'chismear', misiones: ['ronda_c'], pronto: ['Radio Bemba (pronto)', 'Lo que vi (pronto)'],
+      explica: ['Pulsa «Chismear» cerca de alguien: sueltas un chisme sobre otra persona conectada. Si pasa por 3 jugadores se hace viral: tú ganas $15 y cada uno que lo pasó $3.', 'Si dos jugadores lo desmienten, te quedó el chisme chimbo: pierdes 1 vida.'] },
+    estudiante: { name: 'Estudiante', emo: '🎒', lema: '«Mañana lo estudio, hoy lo vivo».', act: null, misiones: ['fotocopias', 'exposicion', 'copiar'], pronto: [],
+      explica: ['Compra fotocopias en el C.C. Torres y llévalas a la escuela, o expón en clase con compañeros cerca.', 'Cópiate de alguien, pero si pasa la profesora (1 de cada 4 veces) pierdes 1 vida: «¡Cero en el examen!».'] }
+  };
+  var ACTS = {
+    papeles: { label: 'Pedir papeles', moto: true, amts: [10, 15, 20, 25] },
+    vacuna: { label: 'Vacunar', amts: [5] },
+    guinar: { label: 'Guiñar', amts: [8] },
+    cobrar: { label: 'Cobrar carrera', amts: [5, 10, 15] },
+    chismear: { label: 'Chismear', chisme: true }
+  };
+  function actText(a, name, n) {
+    if (a === 'papeles') return ['👮 ' + name + ' te paró en la alcabala', '«Papeles… o el cafecito». Te pide $' + n + '.'];
+    if (a === 'vacuna') return ['🕶️ ' + name + ' te acorrala', '«Aquí se paga vacuna, hermano». Te pide $' + n + '.'];
+    if (a === 'guinar') return ['💋 ' + name + ' te guiña el ojo', '¿Le invitas un raspado? Son $' + n + '.'];
+    return ['🏍️ ' + name + ', el mototaxista', 'Te cobra la carrera: $' + n + '.'];
+  }
+  var CHISMES = ['se compró una moto con la plata de la vuelta', 'le debe $50 al bachaquero', 'le tiene miedo a las gallinas', 'se quedó dormido en plena Plaza Bolívar', 'le dijo «mi amor» a su moto', 'paga con billetes de Monopoly', 'se perdió en la Calle 6 buscando la Calle 6'];
+  var PN = { plaza: 'la Plaza Bolívar', catedral: 'la Catedral', alcaldia: 'el Palacio Municipal', poliguarico: 'la Poliguárico', panaderia: 'la Panadería La Criolla', super: 'el Supermercado La Criolla 22', banesco: 'el Banesco', torres: 'el C.C. Torres', escuela: 'el Colegio Coromoto', mercado: 'el Super Mercado Dragon China 38', rio: 'el río', aeropuerto: 'la Av. Aeropuerto' };
+  // Misiones. Pasos: goto (llegar), stay (quedarse), visit (visitar varios), collect (gallinas), escort (acompañar), near (pegarse a alguien).
+  var MIS = {
+    gallinas: { name: 'Atrapa gallinas', desc: 'Atrapa 5 gallinas sueltas del pueblo (se atrapan solas al acercarte).', pay: 20, steps: [{ t: 'collect', n: 5, txt: 'Atrapa las gallinas (acércate a ellas)' }] },
+    vuelta: { name: 'La vuelta al pueblo', desc: 'Visita la Plaza Bolívar, la Catedral, el Supermercado La Criolla 22, el Banesco, el río y el C.C. Torres.', pay: 40, steps: [{ t: 'visit', places: ['plaza', 'catedral', 'super', 'banesco', 'rio', 'torres'], txt: 'Visita los 6 lugares' }] },
+    mandado: { name: 'El mandado', desc: 'Compra pan en la Panadería La Criolla y llévalo al Palacio Municipal.', pay: 8, steps: [{ t: 'goto', p: 'panaderia', msg: 'Compraste el pan 🥖' }, { t: 'goto', p: 'alcaldia', txt: 'Lleva el pan al Palacio Municipal' }] },
+    selfie: { name: 'Selfie en la plaza', desc: 'Posa 10 s en la Plaza Bolívar con 2 jugadores cerca.', pay: 10, steps: [{ t: 'stay', p: 'plaza', secs: 10, others: 2, txt: 'Posa en la Plaza Bolívar con 2 jugadores cerca' }] },
+    turista: { name: 'Turista perdido', desc: 'Acompaña a otro jugador 60 s caminando con él (80 casillas o más).', pay: 12, steps: [{ t: 'escort', secs: 60, dist: 80, txt: 'Camina junto a otro jugador' }] },
+    carrera: { name: 'Carrera del pueblo', desc: 'En moto: de la Poliguárico a la Av. Aeropuerto en menos de 3 minutos.', pay: 25, moto: true, steps: [{ t: 'goto', p: 'poliguarico', txt: 'Ve a la Poliguárico (en moto)' }, { t: 'goto', p: 'aeropuerto', limit: 180, txt: '¡Corre a la Av. Aeropuerto!' }] },
+    ronda: { name: 'La ronda del cafecito', desc: 'Compra el café en la Panadería La Criolla y vuelve a la Poliguárico en 2 minutos.', pay: 12, rol: 'policia', steps: [{ t: 'goto', p: 'panaderia', msg: 'Compraste el cafecito ☕', txt: 'Compra el cafecito en la Panadería La Criolla' }, { t: 'goto', p: 'poliguarico', limit: 120, txt: 'Llévalo a la Poliguárico' }] },
+    harina_m: { name: 'La harina «prestada»', desc: 'Agarra harina en el Supermercado (quédate 5 s) y huye al río en 90 s para +$20.', pay: 0, rol: 'malandro', risk: true, steps: [{ t: 'goto', p: 'super', txt: 'Ve al Supermercado La Criolla 22' }, { t: 'stay', p: 'super', secs: 5, r: 9, txt: 'Agarra la harina sin que te vean', check: 'policia', pay: 25, msg: 'La harina «prestada»' }, { t: 'goto', p: 'rio', limit: 90, soft: true, pay: 20, msg: 'Fuga exitosa', txt: '¡Huye al río!' }] },
+    cita: { name: 'La cita en la plaza', desc: 'Quédate 60 s en la Plaza Bolívar con alguien cerca.', pay: 25, rol: 'coqueta', steps: [{ t: 'stay', p: 'plaza', secs: 60, others: 1, txt: 'Una cita de 60 s en la Plaza Bolívar (con alguien cerca)' }] },
+    gasolina: { name: 'La cola de la gasolina', desc: 'En moto, ve a la Av. Aeropuerto y espera 20 s en la cola.', pay: 12, rol: 'mototaxi', moto: true, steps: [{ t: 'goto', p: 'aeropuerto', txt: 'Ve a la Av. Aeropuerto' }, { t: 'stay', p: 'aeropuerto', secs: 20, r: 14, txt: 'Haz la cola de la gasolina' }] },
+    harina_b: { name: 'Harina a precio de oro', desc: 'Compra harina en La Criolla ($10) y revéndela en el Dragon China 38 ($18). 1 de cada 4 veces hay revisión sorpresa.', pay: 0, rol: 'bachaquero', risk: true, cost: 10, steps: [{ t: 'goto', p: 'super', pay: -10, msg: 'Compraste harina', txt: 'Compra harina en el Supermercado La Criolla 22' }, { t: 'goto', p: 'mercado', limit: 300, alcabala: 0.25, pay: 18, msg: 'Vendiste la harina', txt: 'Revéndela en el Super Mercado Dragon China 38' }] },
+    cola: { name: 'La cola del Banesco', desc: 'Haz cola 30 s en el Banesco y vende tu puesto por $10.', pay: 10, rol: 'bachaquero', steps: [{ t: 'goto', p: 'banesco' }, { t: 'stay', p: 'banesco', secs: 30, r: 10, txt: 'Haz la cola en el Banesco' }] },
+    ronda_c: { name: 'La ronda del chisme', desc: 'Pasa por la Panadería, la Plaza y el Supermercado y vende la información.', pay: 20, rol: 'chismosa', steps: [{ t: 'visit', places: ['panaderia', 'plaza', 'super'], txt: 'Escucha los chismes en 3 sitios' }] },
+    fotocopias: { name: 'Fotocopias al rescate', desc: 'Compra los apuntes en el C.C. Torres ($5) y llévalos a la escuela en 3 minutos.', pay: 14, rol: 'estudiante', cost: 5, steps: [{ t: 'goto', p: 'torres', pay: -5, msg: 'Compraste las fotocopias', txt: 'Compra las fotocopias en el C.C. Torres' }, { t: 'goto', p: 'escuela', limit: 180, txt: 'Llévalas a la escuela' }] },
+    exposicion: { name: 'Exposición en clase', desc: 'Quédate 45 s en la escuela «exponiendo» con 2 compañeros cerca.', pay: 20, rol: 'estudiante', steps: [{ t: 'goto', p: 'escuela' }, { t: 'stay', p: 'escuela', secs: 45, others: 2, r: 10, txt: 'Expón en clase con 2 compañeros cerca' }] },
+    copiar: { name: 'Copiarse en el examen', desc: 'Pégate a otro jugador 5 s para copiarte. 1 de cada 4 veces pasa la profesora.', pay: 15, rol: 'estudiante', risk: true, steps: [{ t: 'near', secs: 5, r: 5, profesora: 0.25, txt: 'Pégate a otro jugador para copiarte' }] }
+  };
+  var GENERALES = ['gallinas', 'vuelta', 'mandado', 'selfie', 'turista', 'carrera'];
+  var MS = null, modOpen = false, modQ = [], modCur = null, GALLS = null, GHIDE = {}, misT = 0, _plc = {}, pend = {}, desmN = {}, lastGuino = null;
+  function nrm(x) { return String(x).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  function nuevoRol(excl) { var l = ROLEIDS.filter(function (r) { return r !== excl; }); return l[Math.floor(Math.random() * l.length)]; }
+
   // ---------------------------------------------------------------- dinero y vidas
   // Cada persona tiene dinero y 5 vidas. Sin vidas: te llevan bien lejos, vuelves con 5 vidas y sin un centavo.
-  var ECO = { money: 100, lives: 5, key: 'calabozo-eco-invitado', hurtT: 0, MAXV: 5, loaded: false };
+  var ECO = { money: 100, lives: 5, key: 'calabozo-eco-invitado', hurtT: 0, MAXV: 5, loaded: false, rol: null, intro: false, rolNuevo: false, matraca: 0, evT: 20 };
   var ECO_FUN = [
     ['¡Chávez te jaló las patas!', 'Te mandaron pal 2017. Comienza otra vez y no la cagues, ¡la patria sigue!']
   ];
   function ecoLoad(uid) {
-    ECO.key = 'calabozo-eco-' + (uid || 'invitado'); ECO.loaded = true;
+    ECO.key = 'calabozo-eco-' + (uid || 'invitado'); ECO.loaded = true; ECO.matraca = 0;
     var j = null; try { j = JSON.parse(localStorage.getItem(ECO.key) || 'null'); } catch (e) {}
-    if (j && isFinite(+j.m) && isFinite(+j.l)) { ECO.money = Math.max(0, Math.floor(+j.m)); ECO.lives = clamp(Math.floor(+j.l), 1, ECO.MAXV); }
-    else { ECO.money = (typeof OL !== 'undefined' && OL && OL.profile && isFinite(+OL.profile.coins)) ? Math.max(0, Math.floor(+OL.profile.coins)) : 100; ECO.lives = ECO.MAXV; }
-    ecoUI(0); ecoSave();
+    if (j && isFinite(+j.m) && isFinite(+j.l)) { ECO.money = Math.max(0, Math.floor(+j.m)); ECO.lives = clamp(Math.floor(+j.l), 1, ECO.MAXV); ECO.rol = ROLES[j.r] ? j.r : null; }
+    else { ECO.money = (typeof OL !== 'undefined' && OL && OL.profile && isFinite(+OL.profile.coins)) ? Math.max(0, Math.floor(+OL.profile.coins)) : 100; ECO.lives = ECO.MAXV; ECO.rol = null; }
+    if (!ECO.rol) { ECO.rol = nuevoRol(null); ECO.intro = true; }
+    if (MS) misCancel();
+    ecoUI(0); ecoSave(); shareRol();
   }
   function ecoSave() {
-    try { localStorage.setItem(ECO.key, JSON.stringify({ m: ECO.money, l: ECO.lives })); } catch (e) {}
+    try { localStorage.setItem(ECO.key, JSON.stringify({ m: ECO.money, l: ECO.lives, r: ECO.rol })); } catch (e) {}
     // copia en la cuenta (si el servidor lo permite); lo que cuenta para jugar es lo guardado aquí
     try { if (typeof OL !== 'undefined' && OL && OL.on && OL.sb && OL.user && OL.profile) { OL.profile.coins = ECO.money; var q = OL.sb.from('profiles').update({ coins: ECO.money }).eq('id', OL.user.id); if (q && q.then) q.then(function () {}, function () {}); } } catch (e) {}
   }
@@ -2586,6 +2708,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var e = $('hudEco'); if (!e) return; var h = '';
     for (var i = 0; i < ECO.MAXV; i++) h += '<span class="h' + (i < ECO.lives ? '' : ' off') + '">♥</span>';
     e.innerHTML = '<span class="money">$' + ECO.money + '</span><span class="hearts" aria-label="' + ECO.lives + ' de ' + ECO.MAXV + ' vidas">' + h + '</span>';
+    var rr = $('hudRol'); if (rr && ECO.rol && ROLES[ECO.rol]) rr.textContent = ROLES[ECO.rol].emo + ' ' + ROLES[ECO.rol].name;
     if (kind) { e.classList.remove('bump', 'hit'); void e.offsetWidth; e.classList.add(kind === 1 ? 'bump' : 'hit'); }
   }
   function ganar(n, why) {
@@ -2613,14 +2736,249 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     return [best[0] * TS + 8, best[1] * TS + 8];
   }
   function ecoMorir(why) {
-    var perdido = ECO.money; ECO.money = 0; ECO.lives = ECO.MAXV; ecoSave(); ecoUI(2);
+    var perdido = ECO.money; ECO.money = 0; ECO.lives = ECO.MAXV; ECO.matraca = 0; misCancel(); ECO.rol = nuevoRol(ECO.rol); ECO.rolNuevo = true; ecoSave(); ecoUI(2); shareRol(); modClose(true);
     if (ride) dismountMoto(true); keys = {}; joy.x = joy.y = 0; closeDialog(); if (chatOpen) closeChat(); if (mapOpen) closeMap();
     var pos = sitioLejano(); player.x = pos[0]; player.y = pos[1]; player.a = Math.random() * Math.PI * 2; player.va = 0;
     var m = ECO_FUN[Math.floor(Math.random() * ECO_FUN.length)];
     $('ecoMsgT').textContent = m[0]; $('ecoMsgP').textContent = m[1] + (perdido ? ' Perdiste $' + perdido + '.' : ''); $('ecoMsg').hidden = false;
     shareMotos();
   }
-  $('ecoMsgB').addEventListener('click', function () { $('ecoMsg').hidden = true; try { stage.focus({ preventScroll: true }); } catch (e) {} });
+  $('ecoMsgB').addEventListener('click', function () { $('ecoMsg').hidden = true; try { stage.focus({ preventScroll: true }); } catch (e) {} if (ECO.rolNuevo) { ECO.rolNuevo = false; roleIntro(true); } });
+  // ---------------------------------------------------------------- motor de misiones
+  function esc(x) { return String(x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function shareRol() { try { if (typeof OL !== 'undefined' && OL && OL.on && OL.chan && OL.conn) OL.chan.track(myPresence()); } catch (e) {} }
+  // ---- ventanas
+  function modShow(o) {
+    if (modOpen) { modQ.push(o); return; }
+    modOpen = true; modCur = o; keys = {}; joy.x = joy.y = 0;
+    $('modT').textContent = o.title; var b = $('modB'); b.innerHTML = ''; if (o.node) b.appendChild(o.node);
+    var bt = $('modBtns'); bt.innerHTML = ''; bt.className = 'modbtns' + (o.col ? ' col' : '');
+    (o.btns || []).forEach(function (x) {
+      var e = el('button', 'btn' + (x.cls ? ' ' + x.cls : ''), x.t); e.type = 'button';
+      e.addEventListener('click', function () { var cur = modCur; if (!x.keep) modClose(); if (x.fn) x.fn(cur); }); bt.appendChild(e);
+    });
+    $('mod').hidden = false; stage.classList.add('mod-open');
+    if (o.life) setTimeout(function () { if (modCur === o) { modClose(); if (o.onExpire) o.onExpire(); } }, o.life);
+  }
+  function modClose(all) {
+    modOpen = false; modCur = null; $('mod').hidden = true; stage.classList.remove('mod-open');
+    if (all) modQ = [];
+    try { stage.focus({ preventScroll: true }); } catch (e) {}
+    var n; while ((n = modQ.shift())) { if (!n.exp || n.exp > Date.now()) { modShow(n); break; } else if (n.onExpire) n.onExpire(); }
+  }
+  function paras(list) { var n = el('div'); list.forEach(function (t) { n.appendChild(el('p', null, t)); }); return n; }
+  function roleIntro(nuevo) {
+    var R = ROLES[ECO.rol], n = el('div', 'modb');
+    n.appendChild(el('p', 'lema', R.lema)); R.explica.forEach(function (t) { n.appendChild(el('p', null, t)); });
+    var ms = R.misiones.map(function (id) { return MIS[id].name; }); n.appendChild(el('p', null, 'Misiones de tu rol: ' + ms.join(', ') + '. Toca 📋 (o pulsa J) para verlas y empezar.'));
+    modShow({ title: (nuevo ? '¡Nuevo rol! ' : '¡Tu rol! ') + R.emo + ' ' + R.name, node: n, btns: [{ t: '¡A trabajar!', cls: 'primary' }] });
+  }
+  function misItem(id, lock) {
+    var m = MIS[id], n = el('div', 'mi' + (m.risk ? ' risk' : ''));
+    var t = el('div', 't'); t.appendChild(el('b', null, m.name)); t.appendChild(el('span', 'pay', m.pay ? '$' + m.pay : 'varios $')); n.appendChild(t); n.appendChild(el('p', null, m.desc));
+    var b = el('button', 'btn primary', MS ? 'Ya tienes una misión' : 'Empezar'); b.type = 'button'; b.disabled = !!MS || !!lock;
+    b.addEventListener('click', function () { modClose(true); misStart(id); }); n.appendChild(b); return n;
+  }
+  function openBoard() {
+    if (gateOpen || mapOpen) return; var R = ROLES[ECO.rol], n = el('div', 'modb');
+    if (MS) { var cur = el('div', 'mi risk'); var tt = el('div', 't'); tt.appendChild(el('b', null, 'En curso: ' + MIS[MS.id].name)); cur.appendChild(tt); var cb = el('button', 'btn', 'Cancelar misión'); cb.type = 'button'; cb.addEventListener('click', function () { modClose(true); misCancel(); toast('Misión cancelada'); }); cur.appendChild(cb); n.appendChild(cur); }
+    n.appendChild(el('div', 'modsec', 'Tu rol: ' + R.emo + ' ' + R.name)); R.explica.forEach(function (t) { n.appendChild(el('p', null, t)); });
+    if (ACTS[R.act]) n.appendChild(el('p', 'lema', 'Botón de rol: «' + ACTS[R.act].label + '» (abajo a la derecha).'));
+    n.appendChild(el('div', 'modsec', 'Misiones de tu rol')); R.misiones.forEach(function (id) { n.appendChild(misItem(id)); });
+    R.pronto.forEach(function (t) { var s = el('div', 'mi soon'); s.appendChild(el('b', null, t)); n.appendChild(s); });
+    n.appendChild(el('div', 'modsec', 'Misiones para todos')); GENERALES.forEach(function (id) { n.appendChild(misItem(id)); });
+    modShow({ title: 'Misiones', node: n, btns: [{ t: 'Cerrar' }] });
+  }
+  // ---- lugares
+  function placeXY(k) {
+    if (_plc[k]) return _plc[k]; var r = null, sp = D.spawn;
+    function byName(sub, near) { var q = D.pois.filter(function (p) { return nrm(p[2]).indexOf(sub) >= 0; }); if (near) q.sort(function (a, b) { return Math.hypot(a[0] - near[0], a[1] - near[1]) - Math.hypot(b[0] - near[0], b[1] - near[1]); }); return q[0] ? [q[0][0], q[0][1]] : null; }
+    function byKind(kind) { var q = D.pois.filter(function (p) { return p[3] === kind; }).sort(function (a, b) { return Math.hypot(a[0] - sp[0], a[1] - sp[1]) - Math.hypot(b[0] - sp[0], b[1] - sp[1]); }); return q[0] ? [q[0][0], q[0][1]] : null; }
+    if (k === 'plaza') r = [sp[0], sp[1]];
+    else if (k === 'catedral') r = byKind('catedral');
+    else if (k === 'alcaldia') r = byKind('alcaldia');
+    else if (k === 'poliguarico') r = byName('poliguarico');
+    else if (k === 'panaderia') r = byName('panaderia la criolla');
+    else if (k === 'super') r = byName('supermercado la criolla');
+    else if (k === 'banesco') r = byName('banesco', [645.5, 388.5]);
+    else if (k === 'torres') r = byName('centro comercial torres');
+    else if (k === 'escuela') r = byName('coromoto');
+    else if (k === 'mercado') r = byName('dragon china');
+    else if (k === 'rio') {
+      var bx = -1, by = -1, bd = 1e9; for (var y = 2; y < H - 2; y++) for (var x = 2; x < W - 2; x++) if (G[y * W + x] === 8) { var dd = (x - sp[0]) * (x - sp[0]) + (y - sp[1]) * (y - sp[1]); if (dd < bd) { bd = dd; bx = x; by = y; } }
+      r = [bx, by]; for (var rad = 1; rad <= 10; rad++) { var f = false; for (var yy = -rad; yy <= rad && !f; yy++) for (var xx = -rad; xx <= rad && !f; xx++) if (freeAt((bx + xx) * TS + 8, (by + yy) * TS + 8)) { r = [bx + xx + 0.5, by + yy + 0.5]; f = true; } if (f) break; }
+    } else if (k === 'aeropuerto') {
+      var ls = SEGS.filter(function (s2) { return s2.n === 'Avenida Aeropuerto'; });
+      if (ls.length) { var cx = 0, cy = 0; ls.forEach(function (s2) { cx += (s2.x1 + s2.x2) / 2; cy += (s2.y1 + s2.y2) / 2; }); cx /= ls.length; cy /= ls.length; ls.sort(function (a, b) { return Math.hypot((a.x1 + a.x2) / 2 - cx, (a.y1 + a.y2) / 2 - cy) - Math.hypot((b.x1 + b.x2) / 2 - cx, (b.y1 + b.y2) / 2 - cy); }); r = [(ls[0].x1 + ls[0].x2) / 2, (ls[0].y1 + ls[0].y2) / 2]; }
+    }
+    return (_plc[k] = r || [sp[0], sp[1]]);
+  }
+  function dT(p) { return Math.hypot(p[0] - player.x / TS, p[1] - player.y / TS); }
+  function otros(r, f) {
+    var out = [], px = player.x, py = player.y; Object.keys(players).forEach(function (id) { var q = players[id]; if (q.inn || (f && !f(q))) return; var d = Math.hypot(q.x - px, q.y - py) / TS; if (d <= r) { out.push({ id: id, p: q, d: d }); } });
+    out.sort(function (a, b) { return a.d - b.d; }); return out;
+  }
+  // ---- gallinas
+  function gallinas() { if (!GALLS) GALLS = PROPS.filter(function (o) { return o.k === 'gallinas'; }).map(function (o) { return [o.tx + 0.5, o.ty + 0.5, ((o.tx * 7 + o.ty * 13) % 628) / 100]; }); return GALLS; }
+  // ---- misión: estados
+  function stepTxt(st) {
+    if (st.txt) return st.txt;
+    if (st.t === 'goto') return 'Ve a ' + PN[st.p];
+    if (st.t === 'stay') return 'Quédate ' + st.secs + ' s en ' + PN[st.p];
+    return '';
+  }
+  function misInit() {
+    var st = MIS[MS.id].steps[MS.i]; MS.st = 0; MS.acc = 0; MS.mv = 0; MS.last = [player.x, player.y];
+    if (st.t === 'collect') { var g = gallinas(), px = player.x / TS, py = player.y / TS; MS.got = 0; MS.tg = g.map(function (q, i) { return i; }).filter(function (i) { return !(GHIDE[i] > time); }).sort(function (a, b) { return Math.hypot(g[a][0] - px, g[a][1] - py) - Math.hypot(g[b][0] - px, g[b][1] - py); }).slice(0, st.n); }
+    if (st.t === 'visit') MS.vis = {};
+    misBeams(); misHud(true); toast('📋 ' + stepTxt(st));
+  }
+  function misStart(id) {
+    var m = MIS[id]; if (MS || !m) return; if (m.cost && ECO.money < m.cost) { toast('Necesitas $' + m.cost + ' para esta misión'); return; }
+    if (m.moto && !ride) { toast('Necesitas ir en moto para esta misión'); return; }
+    MS = { id: id, i: 0, t: 0, st: 0, acc: 0, mv: 0, last: null, vis: {}, tg: null, got: 0 }; stage.classList.add('mission-on'); misInit();
+  }
+  function misCancel() { MS = null; stage.classList.remove('mission-on'); var t = $('mtrk'); if (t) t.hidden = true; misBeams(); }
+  function misFail(msg, vida) { var m = MIS[MS.id]; toast('✖ ' + m.name + ': ' + msg); misCancel(); if (vida) perderVida(msg); }
+  function misDone() { var m = MIS[MS.id], n = m.name; misCancel(); if (m.pay) ganar(m.pay, '¡Misión cumplida! ' + n); else toast('✔ Misión cumplida: ' + n); }
+  function misNext() {
+    var m = MIS[MS.id], st = m.steps[MS.i];
+    if (st.check === 'policia' && otros(14, function (q) { return q.rol === 'policia'; }).length) { misFail('¡Un policía te vio! Te agarraron', true); return; }
+    if (st.alcabala && Math.random() < st.alcabala) { misFail('¡Revisión sorpresa! Te quitaron la mercancía', true); return; }
+    if (st.profesora && Math.random() < st.profesora) { misFail('¡Pasó la profesora! Cero en el examen', true); return; }
+    if (st.pay) ganar(st.pay, st.msg || ''); else if (st.msg) toast(st.msg);
+    MS.i++;
+    if (MS.i >= m.steps.length) { if (m.moto && !ride && m.id !== 'x' && MS.id === 'carrera') { misFail('Tenías que llegar en moto', false); return; } misDone(); return; }
+    misInit();
+  }
+  function misTargets() {
+    if (!MS) return []; var m = MIS[MS.id], st = m.steps[MS.i], out = [];
+    if (st.t === 'goto' || st.t === 'stay') out.push(placeXY(st.p));
+    else if (st.t === 'visit') st.places.forEach(function (k) { if (!MS.vis[k]) out.push(placeXY(k)); });
+    else if (st.t === 'collect' && MS.tg) { var g = gallinas(); MS.tg.forEach(function (i) { out.push([g[i][0], g[i][1]]); }); }
+    return out;
+  }
+  function misBeams() { try { if (R3 && R3.setBeams) R3.setBeams(misTargets()); } catch (e) {} }
+  var ARROWS = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+  function misHud(force) {
+    var t = $('mtrk'); if (!MS) { t.hidden = true; return; } var m = MIS[MS.id], st = m.steps[MS.i], tg = misTargets(), txt = stepTxt(st), extra = '';
+    if (tg.length) { var best = tg[0], bd = 1e9; tg.forEach(function (q) { var d = dT(q); if (d < bd) { bd = d; best = q; } }); var rel = Math.atan2(best[1] - player.y / TS, best[0] - player.x / TS) - player.a; extra = ARROWS[((Math.round(rel / (Math.PI / 4)) % 8) + 8) % 8] + ' ' + Math.round(bd * 2) + ' m'; }
+    if (st.t === 'stay') { var q2 = Math.min(st.secs, Math.floor(MS.acc)); extra += (extra ? ' · ' : '') + q2 + '/' + st.secs + ' s' + (st.others ? ' · con ' + st.others + '+ cerca (' + otros(8).length + ')' : ''); }
+    if (st.t === 'visit') extra = Object.keys(MS.vis).length + '/' + st.places.length + ' · ' + extra;
+    if (st.t === 'collect') extra = MS.got + '/' + st.n + ' gallinas · ' + extra;
+    if (st.t === 'escort') extra = Math.min(st.secs, Math.floor(MS.acc)) + '/' + st.secs + ' s · ' + Math.round(MS.mv) + '/' + st.dist + ' casillas';
+    if (st.t === 'near') extra = Math.min(st.secs, Math.floor(MS.acc)) + '/' + st.secs + ' s pegado a alguien';
+    if (st.limit) extra += (extra ? ' · ' : '') + '⏱ ' + Math.max(0, Math.ceil(st.limit - MS.st)) + ' s';
+    $('mtT').textContent = '📋 ' + m.name; $('mtS').textContent = txt + (extra ? ' — ' + extra : ''); t.hidden = false;
+  }
+  function misTick(dt) {
+    var vb = $('misBtn'), ra = $('rolAct'); if (vb) { vb.hidden = gateOpen; vb.classList.toggle('on', !!MS); }
+    var a = ACTS[ROLES[ECO.rol] && ROLES[ECO.rol].act]; if (ra) { ra.hidden = gateOpen || !a; if (a) ra.textContent = a.label; }
+    if (ECO.intro && !gateOpen && !modOpen && !mapOpen && !dlg && ECO.loaded) { ECO.intro = false; roleIntro(false); }
+    // el Comisario pilla al policía con la matraca
+    ECO.evT -= dt; if (ECO.evT <= 0) { ECO.evT = 20; if (ECO.rol === 'policia' && ECO.matraca >= 50 && Math.random() < 0.2) { var q = Math.min(ECO.money, ECO.matraca); ECO.matraca = 0; if (q) ganar(-q, 'el Comisario te quitó la matraca'); perderVida('¡Llegó el Comisario!'); } }
+    if (!MS || gateOpen) return;
+    var m = MIS[MS.id], st = m.steps[MS.i], px = player.x / TS, py = player.y / TS, pos, near, i;
+    MS.t += dt; MS.st += dt;
+    if (st.limit && MS.st > st.limit) { if (st.soft) { toast('Se acabó el tiempo… pero la harina ya era tuya'); misCancel(); } else misFail('se acabó el tiempo', false); return; }
+    if (st.t === 'goto') { pos = placeXY(st.p); if (Math.hypot(pos[0] - px, pos[1] - py) <= (st.r || 9)) { misNext(); return; } }
+    else if (st.t === 'stay') {
+      pos = placeXY(st.p); var inside = Math.hypot(pos[0] - px, pos[1] - py) <= (st.r || 10) && (!st.others || otros(8).length >= st.others);
+      MS.acc = inside ? MS.acc + dt : Math.max(0, MS.acc - dt * 2); if (MS.acc >= st.secs) { misNext(); return; }
+    } else if (st.t === 'visit') {
+      st.places.forEach(function (k) { if (!MS.vis[k] && Math.hypot(placeXY(k)[0] - px, placeXY(k)[1] - py) <= 9) { MS.vis[k] = 1; toast('✔ ' + PN[k].replace(/^(el|la) /, '')); misBeams(); } });
+      if (Object.keys(MS.vis).length >= st.places.length) { misNext(); return; }
+    } else if (st.t === 'collect') {
+      var g = gallinas(); MS.tg = MS.tg.filter(function (gi) { if (Math.hypot(g[gi][0] - px, g[gi][1] - py) <= 2.6) { GHIDE[gi] = time + 90; MS.got++; toast('🐔 ¡Atrapaste una gallina! ' + MS.got + '/' + st.n); misBeams(); return false; } return true; });
+      if (MS.got >= st.n || !MS.tg.length) { misNext(); return; }
+    } else if (st.t === 'escort' || st.t === 'near') {
+      near = otros(st.t === 'near' ? st.r : 8);
+      if (near.length) { MS.acc += dt; if (st.t === 'escort') { MS.mv += Math.hypot(player.x - MS.last[0], player.y - MS.last[1]) / TS; } } else MS.acc = Math.max(0, MS.acc - dt);
+      MS.last = [player.x, player.y];
+      if (MS.acc >= st.secs && (st.t === 'near' || MS.mv >= st.dist)) { misNext(); return; }
+    }
+    misT -= dt; if (misT <= 0) { misT = 0.25; misHud(); }
+  }
+  // ---- acciones entre jugadores
+  function enLinea() { return typeof OL !== 'undefined' && OL && OL.on && OL.chan && OL.conn && OL.user; }
+  function ecoSend(d) { try { OL.chan.send({ type: 'broadcast', event: 'eco', payload: d }); return true; } catch (e) { return false; } }
+  function rid() { return Math.random().toString(36).slice(2, 10); }
+  function listaJugadores(titulo, lista, onPick) {
+    var n = el('div', 'modb'); n.appendChild(el('p', null, 'Elige a quién (los que tienes cerca):'));
+    var btns = lista.slice(0, 6).map(function (o) { return { t: (o.p.moto ? '🏍️ ' : '') + (o.p.name || 'Vecino') + ' · ' + Math.round(o.d * 2) + ' m', cls: 'primary', fn: function () { onPick(o); } }; });
+    btns.push({ t: 'Cancelar' }); modShow({ title: titulo, node: n, btns: btns, col: true });
+  }
+  function rolAction() {
+    var a = ACTS[ROLES[ECO.rol].act]; if (!a || gateOpen) return;
+    if (!enLinea()) { toast('Entra con tu cuenta para jugar con otras personas'); return; }
+    var lista = otros(10, a.moto ? function (q) { return q.moto; } : null);
+    if (!lista.length) { toast(a.moto ? 'No hay motorizados cerca' : 'No hay nadie cerca: acércate a alguien'); return; }
+    var act = ROLES[ECO.rol].act;
+    listaJugadores(a.label, lista, function (o) {
+      if (a.chisme) { chismear(o); return; }
+      if (act === 'guinar') { if (lastGuino === o.id) { lastGuino = null; toast('💢 ¡Llegó el novio celoso!'); perderVida('el novio celoso'); return; } lastGuino = o.id; }
+      if (a.amts.length === 1) { pedir(act, o, a.amts[0]); return; }
+      var n = el('div', 'modb'); n.appendChild(el('p', null, '¿Cuánto le pides a ' + (o.p.name || 'Vecino') + '?'));
+      modShow({ title: a.label, node: n, btns: a.amts.map(function (v) { return { t: '$' + v, cls: 'primary', fn: function () { pedir(act, o, v); } }; }).concat([{ t: 'Cancelar' }]), col: true });
+    });
+  }
+  function pedir(act, o, n) {
+    var id = rid(); pend[id] = { n: n, a: act, to: o.id, exp: Date.now() + 25000 };
+    if (ecoSend({ t: 'pide', id: id, from: OL.user.id, fn: (OL.profile && OL.profile.name) || 'Alguien', to: o.id, a: act, n: n })) toast('Le pediste $' + n + ' a ' + (o.p.name || 'Vecino') + '…');
+  }
+  function onEco(m) {
+    var d = m && m.payload; if (!d || typeof d !== 'object' || !enLinea()) return; var me = OL.user.id;
+    if (d.t === 'pide' && d.to === me) {
+      var a = ACTS[d.a], n = +d.n; if (!a || !a.amts || a.amts.indexOf(n) < 0) return; var nm = cleanName(d.fn), tx = actText(d.a, nm, n), nodo = el('div', 'modb'); nodo.appendChild(el('p', null, tx[1]));
+      var resp = function (ok) { if (ok) { if (ECO.money < n) { toast('No te alcanza el dinero'); ecoSend({ t: 'no', id: d.id, to: d.from, fn: (OL.profile && OL.profile.name) || 'Alguien', why: 'poor' }); return; } ganar(-n, 'pagaste a ' + nm); ecoSend({ t: 'pago', id: d.id, to: d.from, n: n, fn: (OL.profile && OL.profile.name) || 'Alguien' }); } else ecoSend({ t: 'no', id: d.id, to: d.from, fn: (OL.profile && OL.profile.name) || 'Alguien' }); };
+      modShow({ title: tx[0], node: nodo, exp: Date.now() + 18000, life: 18000, onExpire: function () { resp(false); }, btns: [{ t: 'Pagar $' + n, cls: 'primary', fn: function () { resp(true); } }, { t: 'Negarte', fn: function () { resp(false); } }] });
+    } else if (d.t === 'pago' && d.to === me) {
+      var pd = pend[d.id]; if (!pd || pd.n !== +d.n || pd.exp < Date.now()) return; delete pend[d.id];
+      ganar(pd.n, cleanName(d.fn) + ' pagó'); if (pd.a === 'papeles') { ECO.matraca += pd.n; if (ECO.matraca >= 50) toast('Llevas $' + ECO.matraca + ' de matraca… ojo con el Comisario'); }
+    } else if (d.t === 'no' && d.to === me) { delete pend[d.id]; toast(cleanName(d.fn) + (d.why === 'poor' ? ' no tiene con qué pagar' : ' no quiso pagar')); }
+    else if (d.t === 'chisme' && d.to === me) chismeRecibido(d);
+    else if (d.t === 'viral') chismeViral(d);
+    else if (d.t === 'desm' && d.to === me) {
+      desmN[d.id] = (desmN[d.id] || 0) + 1; toast('✖ ' + cleanName(d.fn) + ' desmintió tu chisme');
+      if (desmN[d.id] >= 2) { delete desmN[d.id]; perderVida('Te quedó el chisme chimbo'); }
+    }
+  }
+  // ---- chisme en cadena
+  function chismeTexto(d) { var ti = Math.floor(+d.ti); if (!(ti >= 0 && ti < CHISMES.length)) return null; return 'Dicen que ' + cleanName(d.sj) + ' ' + CHISMES[ti]; }
+  function chismear(o) {
+    var otras = Object.keys(players).filter(function (id) { return id !== o.id && !players[id].inn; }).map(function (id) { return players[id]; });
+    if (!otras.length) { toast('Necesitas a otra persona conectada de quien chismear'); return; }
+    var sj = otras[Math.floor(Math.random() * otras.length)].name || 'Vecino', ti = Math.floor(Math.random() * CHISMES.length), id = rid();
+    desmN[id] = 0; ecoSend({ t: 'chisme', id: id, orig: OL.user.id, rn: (OL.profile && OL.profile.name) || 'Alguien', to: o.id, ti: ti, sj: sj, hops: [o.id] });
+    toast('🗣️ Soltaste un chisme sobre ' + cleanName(sj));
+  }
+  function chismeRecibido(d) {
+    var tx = chismeTexto(d), hops = Array.isArray(d.hops) ? d.hops.filter(function (x) { return typeof x === 'string'; }).slice(0, 4) : []; if (!tx) return; var me = OL.user.id;
+    if (hops.length >= 3) { var v = { t: 'viral', id: d.id, orig: d.orig, hops: hops }; ecoSend(v); chismeViral(v); return; }
+    var n = el('div', 'modb'); n.appendChild(el('p', null, '«' + tx + '»')); n.appendChild(el('p', null, 'Te lo cuenta ' + cleanName(d.rn) + '. Si lo pasas a ' + (3 - hops.length) + ' persona(s) más, se hace viral.'));
+    modShow({ title: '🗣️ ¡Chisme!', node: n, exp: Date.now() + 40000, life: 40000, btns: [
+      { t: 'Pasar el chisme', cls: 'primary', fn: function () {
+        var lista = otros(10, function (q) { return q.id !== d.orig; }).filter(function (o) { return hops.indexOf(o.id) < 0 && o.id !== d.orig && o.id !== me; });
+        if (!lista.length) { toast('No hay nadie nuevo cerca a quien pasárselo'); return; }
+        listaJugadores('Pasar el chisme', lista, function (o) { ecoSend({ t: 'chisme', id: d.id, orig: d.orig, rn: d.rn, to: o.id, ti: d.ti, sj: d.sj, hops: hops.concat([o.id]) }); toast('Le pasaste el chisme a ' + (o.p.name || 'Vecino')); });
+      } },
+      { t: 'Desmentir', fn: function () { ecoSend({ t: 'desm', id: d.id, to: d.orig, fn: (OL.profile && OL.profile.name) || 'Alguien' }); toast('Desmentiste el chisme'); } },
+      { t: 'Ignorar' }] });
+  }
+  function chismeViral(d) {
+    var me = OL.user.id; if (d.orig === me) { delete desmN[d.id]; ganar(15, '¡Tu chisme se hizo viral! 🔥'); }
+    else if (Array.isArray(d.hops) && d.hops.indexOf(me) >= 0) ganar(3, 'chisme viral');
+  }
+  // ---- botones y teclas
+  $('misBtn').addEventListener('click', function () { openBoard(); });
+  $('rolAct').addEventListener('click', function () { rolAction(); });
+  window.addEventListener('keydown', function (e) { if ((e.key === 'j' || e.key === 'J') && !modOpen && !mapOpen && !gateOpen && inStage()) { e.preventDefault(); openBoard(); } });
+  function misMarcas(sx, sy, sc, mctx2) {
+    misTargets().forEach(function (t) {
+      var x = (t[0] - sx) * sc, y = (t[1] - sy) * sc, cx = clamp(x, 4, 156), cy = clamp(y, 4, 116), out = x !== cx || y !== cy;
+      mctx2.fillStyle = '#FFD23F'; mctx2.strokeStyle = '#0E1713'; mctx2.lineWidth = 1.5; mctx2.beginPath(); mctx2.moveTo(cx, cy - (out ? 3 : 5)); mctx2.lineTo(cx + (out ? 3 : 5), cy); mctx2.lineTo(cx, cy + (out ? 3 : 5)); mctx2.lineTo(cx - (out ? 3 : 5), cy); mctx2.closePath(); mctx2.fill(); mctx2.stroke();
+    });
+  }
   ecoLoad(null);
 
   // ---- mapa a pantalla completa: arrastrar para moverlo, pellizcar o +/− para acercar, nombres de lugares
@@ -2672,6 +3030,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         g.save(); g.translate(q[0], q[1]); if (sg.o === 'V') g.rotate(-Math.PI / 2); g.fillStyle = 'rgba(255,255,255,0.92)'; g.strokeStyle = 'rgba(14,23,19,0.85)'; g.lineWidth = 3 * d; g.textAlign = 'center'; g.textBaseline = 'middle'; g.strokeText(sg.n, 0, 0); g.fillText(sg.n, 0, 0); g.restore();
       });
     }
+    misTargets().forEach(function (t) { var q = bmToScr(t[0], t[1]); dot(q[0], q[1], '#FFD23F', 6); label(q[0], q[1], '★ Misión', '#FFD23F', true); });
     // tú: flecha hacia donde miras
     g.save(); g.translate(me[0], me[1]); g.rotate(player.a); g.fillStyle = '#F5B301'; g.strokeStyle = '#0E1713'; g.lineWidth = 2 * d; g.beginPath(); g.moveTo(11 * d, 0); g.lineTo(-7 * d, 7 * d); g.lineTo(-3 * d, 0); g.lineTo(-7 * d, -7 * d); g.closePath(); g.fill(); g.stroke(); g.restore();
     used.length = 0;
@@ -2916,12 +3275,12 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
 
   // ---- en el pueblo
-  function myPresence() { return { rid: ride ? ride.mid : -1, park: Object.keys(myParks).map(function (k) { return myParks[k]; }), name: OL.profile.name, avatar: OL.profile.avatar, x: Math.round(player.x), y: Math.round(player.y), talk: lastTalk, inn: (typeof IN !== 'undefined' && IN.active) ? 1 : 0, ix: (typeof IN !== 'undefined' && IN.me) ? IN.me.x : 0, iz: (typeof IN !== 'undefined' && IN.me) ? IN.me.z : 0 }; }
+  function myPresence() { return { rol: ECO.rol, rid: ride ? ride.mid : -1, park: Object.keys(myParks).map(function (k) { return myParks[k]; }), name: OL.profile.name, avatar: OL.profile.avatar, x: Math.round(player.x), y: Math.round(player.y), talk: lastTalk, inn: (typeof IN !== 'undefined' && IN.active) ? 1 : 0, ix: (typeof IN !== 'undefined' && IN.me) ? IN.me.x : 0, iz: (typeof IN !== 'undefined' && IN.me) ? IN.me.z : 0 }; }
   function enterGame() {
     OL.on = true; OL.solo = false; hideGate(); syncAccountUI(); syncClock();
     var me = OL.user.id; ecoLoad(me);
     OL.chan = OL.sb.channel('plaza', { config: { broadcast: { self: false }, presence: { key: me } } });
-    OL.chan.on('presence', { event: 'sync' }, onSync).on('broadcast', { event: 'pos' }, onPos).on('broadcast', { event: 'typ' }, onTyp).on('broadcast', { event: 'voz' }, onVoz).on('broadcast', { event: 'ipos' }, onIpos);
+    OL.chan.on('presence', { event: 'sync' }, onSync).on('broadcast', { event: 'pos' }, onPos).on('broadcast', { event: 'typ' }, onTyp).on('broadcast', { event: 'voz' }, onVoz).on('broadcast', { event: 'ipos' }, onIpos).on('broadcast', { event: 'eco' }, onEco);
     OL.chan.subscribe(function (st) {
       if (st === 'SUBSCRIBED') { OL.conn = true; try { OL.chan.track(myPresence()); } catch (e) {} setNet(); }
       else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT' || st === 'CLOSED') { OL.conn = false; setNet(); }
@@ -2949,7 +3308,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var arr = st[k], m = arr && arr[arr.length - 1]; if (!m || k === me) return; seen[k] = 1;
       var av = cleanAvatar(m.avatar), sig = JSON.stringify(av), p = players[k];
       if (!p) { var x = isFinite(+m.x) ? +m.x : spawn.x, y = isFinite(+m.y) ? +m.y : spawn.y; p = players[k] = { id: k, remote: true, type: 'jugador', x: x, y: y, tx: x, ty: y, dir: 0, moving: false, t: 0, sit: false, sig: '', bubble: '', bubbleUntil: 0, typUntil: 0, talk: 0 }; }
-      p.name = cleanName(m.name); p.talk = m.talk ? 1 : 0;
+      p.name = cleanName(m.name); p.talk = m.talk ? 1 : 0; p.rol = ROLES[m.rol] ? m.rol : null;
       var wasIn = p.inn; p.inn = m.inn ? 1 : 0; if (p.inn && !wasIn) { p.ix = p.itx = isFinite(+m.ix) ? +m.ix : -3.5; p.iz = p.itz = isFinite(+m.iz) ? +m.iz : 2.5; }
       if (p.sig !== sig) { p.sig = sig; p.sheet = makeChar(lookFrom(av)); p.look = lookFrom(av); }
     });
@@ -3454,7 +3813,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 

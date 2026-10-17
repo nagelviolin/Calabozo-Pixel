@@ -69,8 +69,13 @@ Necesita su propia moto ($150).
 
 ## Lo que ya está hecho y lo que falta
 
-- ✅ Dinero y vidas visibles, guardados en el teléfono; choques fuertes con la moto restan vida; sin vidas te llevan lejos y pierdes el dinero.
-- ⏳ Elegir rol y que las misiones funcionen.
-- ⏳ Concesionario y compra de moto y carro.
-- ⏳ Pasajero en la moto (para el mototaxi).
-- ⏳ Que el servidor guarde el dinero (ahora se guarda en el teléfono, así que alguien con ganas puede tramparlo).
+- ✅ Dinero y 5 vidas visibles; sin vidas te llevan lejos y pierdes el dinero.
+- ✅ **Rol al azar** al empezar, con su explicación; al morir te toca **otro rol distinto**. El rol se guarda.
+- ✅ **Panel de misiones** (botón 📋 o tecla J), seguimiento arriba con la distancia y la flecha, rayo de luz en el destino y marca en los mapas.
+- ✅ Misiones para todos: gallinas (ahora se ven), la vuelta al pueblo, el mandado, selfie, turista perdido y carrera en moto.
+- ✅ Misiones de rol que se hacen solo con lugares: ronda del cafecito, harina «prestada», cita en la plaza, cola de la gasolina, harina a precio de oro, cola del Banesco, ronda del chisme, fotocopias, exposición y copiarse en el examen.
+- ✅ Acciones entre jugadores: Pedir papeles (solo a motorizados), Vacunar, Guiñar (con el novio celoso), Cobrar carrera y el chisme en cadena (viral a los 3 saltos, desmentidos).
+- ✅ Riesgos: policía que te ve robar, revisión sorpresa del bachaquero, profesora, Comisario con la matraca.
+- ⏳ Concesionario y compra de moto y carro (las 4 motos de la plaza siguen siendo gratis por ahora).
+- ⏳ Pasajero en la moto (mototaxi), Radio Bemba y Lo que vi.
+- ⏳ Que el servidor guarde el dinero (ahora se guarda en el teléfono).
