@@ -2875,7 +2875,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     else if (k === 'super') r = byName('supermercado la criolla');
     else if (k === 'banesco') r = byName('banesco', [645.5, 388.5]);
     else if (k === 'torres') r = byName('centro comercial torres');
-    else if (k === 'escuela') r = byName('colegio nuestra senora de coromoto');
+    else if (k === 'escuela') r = [638.5, 342.2];   // la puerta del colegio da a la calle (sur); el centro del edificio queda detrás de las paredes
     else if (k === 'mercado') r = byName('dragon china');
     else if (k === 'rio') {
       var bx = -1, by = -1, bd = 1e9; for (var y = 2; y < H - 2; y++) for (var x = 2; x < W - 2; x++) if (G[y * W + x] === 8) { var dd = (x - sp[0]) * (x - sp[0]) + (y - sp[1]) * (y - sp[1]); if (dd < bd) { bd = dd; bx = x; by = y; } }
