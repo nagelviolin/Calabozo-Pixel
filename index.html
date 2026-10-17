@@ -110,7 +110,7 @@ h1 { margin: 0; font: 700 clamp(26px, 5vw, 36px)/1.05 var(--display); letter-spa
 .gmsg.err { color: #FF9C8A; }
 .avwrap { display: grid; grid-template-columns: 124px 1fr; gap: 14px; align-items: start; }
 @media (max-width: 460px) { .avwrap { grid-template-columns: 1fr; justify-items: center; } .avwrap .avopts { justify-self: stretch; } }
-#avPrev { width: 124px; height: 186px; background: linear-gradient(#9BC6E6 0 62%, #CDB78A 62%); border: 2px solid var(--line); border-radius: 6px; image-rendering: pixelated; }
+#avPrev { width: 124px; height: 186px; background: linear-gradient(#9BC6E6 0 62%, #CDB78A 62%); border: 2px solid var(--line); border-radius: 6px; }
 .avopts { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .ag { display: flex; flex-direction: column; gap: 4px; }
 .ag > span { font-size: 12.5px; color: var(--muted); }
@@ -252,7 +252,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       <canvas id="gl" aria-hidden="true"></canvas>
       <button type="button" class="btn inexit" id="inExit">Salir del café</button>
       <canvas id="cv" role="img" aria-label="Vista en primera persona de las calles del centro de Calabozo"></canvas>
-      <div class="chip hud"><b id="hudStreet">Plaza Bolívar</b><span id="hudClock">1:00 pm · 37 °C</span><span class="warn" id="hudDark" hidden>Sin luz</span><span id="hudNet" style="display:none"></span></div>
+      <div class="chip hud"><b id="hudStreet">Plaza Bolívar</b><span id="hudClock">1:00 pm · 37 °C</span><span id="hudSpeed" hidden></span><span class="warn" id="hudDark" hidden>Sin luz</span><span id="hudNet" style="display:none"></span></div>
       <button type="button" class="gear" id="cfgBtn" aria-label="Ajustes"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
       <div class="chip mini"><canvas id="mm" aria-label="Minimapa con tu posición y hacia dónde miras"></canvas></div>
       <div class="chip place" id="place" data-on="0"><small id="placeType"></small><span id="placeName"></span></div>
@@ -872,42 +872,99 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   // ---------------------------------------------------------------- personajes
   var SKINS = ['#F1C9A5', '#E0AC84', '#C68B60', '#A86F48', '#8A5534', '#6B3F25'];
   var HAIRS = ['#1E1712', '#2B1B14', '#3B2A20', '#5A3A22', '#8A6A3A', '#D8D0C0'];
-  // conductor de moto: mismo estilo que makeChar pero sentado, con las manos en el manillar.
-  // Una columna por conductor y 4 filas (frente, espalda, perfil izq., perfil der.), como los personajes.
-  var RIDERCOL = ['#E86A2E', '#2E6FB7', '#F2F2F2', '#6E1423', '#2F8F4E'];
-  function makeRiders() {
-    var FW = 20, FH = 30, V = RIDERCOL.length * 2, sheet = mk(FW * V, FH * 4), sx = sheet.getContext('2d');
-    for (var v = 0; v < V; v++) {
-      var rnd = mulberry(9100 + v), o = { top: RIDERCOL[v >> 1], casco: v % 2 === 1, skin: SKINS[Math.floor(rnd() * SKINS.length)], hair: HAIRS[Math.floor(rnd() * 5)], bottom: ['#2B3550', '#3A3A3A', '#5A4632', '#24324A'][Math.floor(rnd() * 4)], shoe: '#1E1A16', hatc: ['#1E1E1E', '#C8302E', '#F2F2F2', '#2E6FB7'][Math.floor(rnd() * 4)] };
-      for (var d = 0; d < 3; d++) {
-        var c = mk(FW, FH), g = c.getContext('2d');
-        var p = function (x, y, w, h, col) { if (w > 0 && h > 0) { g.fillStyle = col; g.fillRect(x + 1, y + 5, w, h); } };
-        if (d < 2) {
-          p(4, 15, 4, 3, o.bottom); p(11, 15, 4, 3, o.bottom); p(3, 17, 3, 4, o.bottom); p(13, 17, 3, 4, o.bottom); p(3, 21, 3, 1, o.shoe); p(13, 21, 3, 1, o.shoe);
-          p(4, 9, 11, 7, o.top); p(2, 10, 2, 4, o.top); p(15, 10, 2, 4, o.top); p(1, 13, 2, 2, o.skin); p(16, 13, 2, 2, o.skin);
-        } else {
-          p(2, 15, 8, 3, o.bottom); p(2, 17, 3, 4, o.bottom); p(1, 21, 4, 1, o.shoe);
-          p(6, 9, 8, 7, o.top); p(3, 11, 6, 2, o.top); p(1, 11, 2, 2, o.skin);
-        }
-        p(5, 2, 9, 7, o.skin);
-        if (o.casco) { p(4, 0, 11, 6, o.hatc); if (d === 0) p(6, 3, 7, 2, '#8CC4E6'); if (d === 2) p(4, 3, 3, 2, '#8CC4E6'); }
-        else {
-          p(5, 1, 9, 3, o.hair); if (d === 0) { p(5, 3, 1, 2, o.hair); p(13, 3, 1, 2, o.hair); } if (d === 1) p(5, 1, 9, 7, o.hair); if (d === 2) p(9, 3, 5, 4, o.hair);
-        }
-        if (d === 0) { p(7, 5, 1, 1, '#1A1A1A'); p(11, 5, 1, 1, '#1A1A1A'); }
-        if (d === 2 && !o.casco) p(6, 5, 1, 1, '#1A1A1A');
-        var data = g.getImageData(0, 0, FW, FH).data, out = [];
-        for (var y = 0; y < FH; y++) for (var x = 0; x < FW; x++) {
-          if (data[(y * FW + x) * 4 + 3] > 0) continue;
-          if ((x > 0 && data[(y * FW + x - 1) * 4 + 3] > 0) || (x < FW - 1 && data[(y * FW + x + 1) * 4 + 3] > 0) || (y > 0 && data[((y - 1) * FW + x) * 4 + 3] > 0) || (y < FH - 1 && data[((y + 1) * FW + x) * 4 + 3] > 0)) out.push(x, y);
-        }
-        g.fillStyle = '#16120F'; for (var i = 0; i < out.length; i += 2) g.fillRect(out[i], out[i + 1], 1, 1);
-        sx.drawImage(c, v * FW, d * FH);
-        if (d === 2) { sx.save(); sx.translate(v * FW + FW, 3 * FH); sx.scale(-1, 1); sx.drawImage(c, 0, 0); sx.restore(); } // perfil derecho = espejo
+  // ---------------------------------------------------------------- personajes voxel
+  // Personajes hechos de cajas (estilo bloques), con contorno oscuro y la sombra pintada en cada cara.
+  // Unidades: 1 = un píxel de los personajes planos de antes (la cara mide 9 x 7). Miran hacia +z.
+  var VOX = (function () {
+    if (typeof THREE === 'undefined') return null;
+    var C = new THREE.Color(), INK = new THREE.Color('#16120F'), cache = {};
+    function acc() { return { p: [], c: [], i: [] }; }
+    function add(g, b, hex, ink) {
+      var p = b.attributes.position.array, n = b.attributes.normal.array, ix = b.index.array, base = g.p.length / 3, i;
+      if (!ink) C.set(hex);
+      for (i = 0; i < p.length / 3; i++) {
+        g.p.push(p[i * 3], p[i * 3 + 1], p[i * 3 + 2]);
+        if (ink) { g.c.push(INK.r, INK.g, INK.b); continue; }
+        var ny = n[i * 3 + 1], nz = n[i * 3 + 2], k = ny > 0.5 ? 1.08 : (ny < -0.5 ? 0.55 : (Math.abs(nz) > 0.5 ? 1 : 0.78));
+        g.c.push(Math.min(1, C.r * k), Math.min(1, C.g * k), Math.min(1, C.b * k));
       }
+      for (i = 0; i < ix.length; i += 3) { if (ink) g.i.push(base + ix[i], base + ix[i + 2], base + ix[i + 1]); else g.i.push(base + ix[i], base + ix[i + 1], base + ix[i + 2]); }
+      b.dispose();
     }
-    return { img: upscale(sheet, 3), V: V, FW: FW * 3, FH: FH * 3, HIP: 20 * 3 };
-  }
+    // caja w x h x d con la base en y; el contorno es la misma caja un poco más grande, vuelta del revés
+    function box(g, w, h, d, x, y, z, hex, ol) {
+      var b = new THREE.BoxGeometry(w, h, d); b.translate(x, y + h / 2, z); add(g, b, hex, false);
+      if (ol !== false) { var e = 0.5, o = new THREE.BoxGeometry(w + e * 2, h + e * 2, d + e * 2); o.translate(x, y + h / 2, z); add(g, o, null, true); }
+    }
+    function geo(g) { var b = new THREE.BufferGeometry(); b.setAttribute('position', new THREE.Float32BufferAttribute(g.p, 3)); b.setAttribute('color', new THREE.Float32BufferAttribute(g.c, 3)); b.setIndex(g.i); b.computeBoundingSphere(); return b; }
+    function parts(o) {
+      var sig = JSON.stringify(o); if (cache[sig]) return cache[sig];
+      var body = acc(), leg = acc(), arm = acc(), sk = o.skin, top = o.top, bot = o.bottom, shoe = o.shoe || '#2B2B2B', hair = o.hair, hc = o.hatc, q;
+      // piernas: pivote en la cadera
+      if (o.dress) box(leg, 2.6, 5, 2.6, 0, -5.4, 0, sk);
+      else if (o.shorts) { box(leg, 4, 3, 4, 0, -3, 0, bot); box(leg, 3.4, 2.4, 3.4, 0, -5.4, 0, sk); }
+      else box(leg, 4, 5.4, 4, 0, -5.4, 0, bot);
+      box(leg, 4, 1.2, 5, 0, -6.6, 0.4, shoe);
+      // brazos: pivote en el hombro
+      box(arm, 2.4, 5, 3, 0, -5, 0, top); box(arm, 2.4, 1.6, 3, 0, -6.6, 0, sk);
+      // cuerpo
+      box(body, 11, 7, 6, 0, 6.6, 0, top);
+      if (o.vest) { box(body, 11.4, 6, 6.4, 0, 7.4, 0, o.vest, false); box(body, 11.6, 0.8, 6.6, 0, 10, 0, '#F2F2F2', false); }
+      if (o.dress) { box(body, 12, 4.4, 7.4, 0, 3.6, 0, bot); if (o.pattern) for (q = 0; q < 5; q++) box(body, 1, 1, 0.3, -4 + q * 2, 5 + (q % 2) * 1.6, 3.8, o.pattern, false); }
+      if (o.bag) box(body, 2.4, 4, 3, 9.4, 7, 0, o.bag);
+      // cabeza y cara
+      box(body, 9, 7, 8, 0, 13.6, 0, sk);
+      box(body, 1, 1.2, 0.4, -2, 16.6, 4.1, '#1A1A1A', false); box(body, 1, 1.2, 0.4, 2, 16.6, 4.1, '#1A1A1A', false);
+      box(body, 2.6, 0.7, 0.4, 0, 14.9, 4.1, '#5A2E22', false);
+      if (o.mous) box(body, 4, 0.9, 0.5, 0, 15.6, 4.15, hair, false);
+      var hs = o.hs || 'corto';
+      if (hs === 'calvo') { box(body, 0.8, 3, 4, -4.6, 15.4, -1.5, hair, false); box(body, 0.8, 3, 4, 4.6, 15.4, -1.5, hair, false); box(body, 9.2, 3, 1, 0, 15.4, -4.2, hair, false); }
+      else {
+        box(body, 9.4, 2.4, 8.4, 0, 19, 0, hair, false); box(body, 9.4, 6, 1.4, 0, 14.6, -3.9, hair, false);
+        box(body, 0.8, 3.6, 5, -4.6, 16.4, -1.4, hair, false); box(body, 0.8, 3.6, 5, 4.6, 16.4, -1.4, hair, false);
+        if (hs === 'largo') { box(body, 9.6, 10, 1.6, 0, 10.4, -4, hair); box(body, 1, 7, 5, -4.7, 12.6, -1.6, hair, false); box(body, 1, 7, 5, 4.7, 12.6, -1.6, hair, false); }
+        if (hs === 'rolos') { box(body, 2, 2, 2, -2.6, 21.4, 0, '#F28CB1'); box(body, 2, 2, 2, 0.4, 21.4, -1, '#8CC4E6'); box(body, 2, 2, 2, 3, 21.4, 0.6, '#F28CB1'); }
+      }
+      if (o.hat === 'gorra') { var gc = hc || '#C8302E'; box(body, 9.8, 3, 8.8, 0, 19.6, 0, gc); box(body, 8.6, 0.8, 4, 0, 19.6, 5.6, shade(gc, 0.85)); }
+      if (o.hat === 'llanero') { var lc = hc || '#D8C08A'; box(body, 16, 0.8, 16, 0, 19.8, 0, lc); box(body, 9.4, 3.8, 9.4, 0, 20.4, 0, lc); box(body, 9.6, 0.9, 9.6, 0, 20.6, 0, '#6B4A2A', false); }
+      if (o.hat === 'casco') { box(body, 10.6, 6.6, 9.6, 0, 16.2, -0.2, hc || '#222222'); box(body, 7.6, 2.2, 0.5, 0, 16.4, 4.65, '#8CC4E6', false); }
+      return (cache[sig] = { body: geo(body), leg: geo(leg), arm: geo(arm), s: o.kid ? 0.78 : 1 });
+    }
+    // personaje articulado: brazos y piernas giran en hombros y caderas
+    function rig(o, mat) {
+      var P = parts(o), root = new THREE.Group(), inner = new THREE.Group(); root.add(inner); inner.scale.setScalar(P.s); root.rotation.order = 'YXZ';
+      inner.add(new THREE.Mesh(P.body, mat));
+      function limb(g, x, y) { var piv = new THREE.Group(); piv.position.set(x, y, 0); piv.add(new THREE.Mesh(g, mat)); inner.add(piv); return piv; }
+      var r = { root: root, inner: inner, s: P.s, legL: limb(P.leg, -2.3, 6.6), legR: limb(P.leg, 2.3, 6.6), armL: limb(P.arm, -6.9, 13.2), armR: limb(P.arm, 6.9, 13.2) };
+      r.pose = function (kind, t) {
+        if (kind === 'walk') { var w = Math.sin((t || 0) * 9); r.legL.rotation.set(w * 0.6, 0, 0); r.legR.rotation.set(-w * 0.6, 0, 0); r.armL.rotation.set(-w * 0.5, 0, 0.06); r.armR.rotation.set(w * 0.5, 0, -0.06); }
+        else if (kind === 'sit') { r.legL.rotation.set(-1.45, 0, 0); r.legR.rotation.set(-1.45, 0, 0); r.armL.rotation.set(-0.5, 0, 0.05); r.armR.rotation.set(-0.5, 0, -0.05); }
+        else if (kind === 'ride') { r.legL.rotation.set(-1.15, 0, -0.18); r.legR.rotation.set(-1.15, 0, 0.18); r.armL.rotation.set(-1.15, 0, -0.12); r.armR.rotation.set(-1.15, 0, 0.12); }
+        else { r.legL.rotation.set(0, 0, 0); r.legR.rotation.set(0, 0, 0); r.armL.rotation.set(0, 0, 0.05); r.armR.rotation.set(0, 0, -0.05); }
+      };
+      r.pose('stand'); return r;
+    }
+    // un personaje ya posado en una sola geometría (para dibujar muchos iguales con instancias)
+    function baked(o, kind, scale) {
+      var r = rig(o, undefined), out = acc(), v = new THREE.Vector3(); r.pose(kind); r.root.scale.setScalar(scale); r.root.updateMatrixWorld(true);
+      r.root.traverse(function (m) {
+        if (!m.isMesh) return; var g = m.geometry, pa = g.attributes.position, ca = g.attributes.color, ix = g.index.array, base = out.p.length / 3, i;
+        for (i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i).applyMatrix4(m.matrixWorld); out.p.push(v.x, v.y, v.z); out.c.push(ca.getX(i), ca.getY(i), ca.getZ(i)); }
+        for (i = 0; i < ix.length; i++) out.i.push(base + ix[i]);
+      });
+      return geo(out);
+    }
+    return { rig: rig, baked: baked, mat: function (hex) { return new THREE.MeshBasicMaterial({ vertexColors: true, color: hex === undefined ? 0xFFFFFF : hex }); } };
+  })();
+  // conductores de las motos que circulan: 5 colores de camisa, con y sin casco
+  var RIDERCOL = ['#E86A2E', '#2E6FB7', '#F2F2F2', '#6E1423', '#2F8F4E'], RIDERLOOKS = [];
+  (function () {
+    for (var v = 0; v < RIDERCOL.length * 2; v++) {
+      var r = mulberry(9100 + v);
+      RIDERLOOKS.push({ skin: SKINS[Math.floor(r() * SKINS.length)], hair: HAIRS[Math.floor(r() * 5)], hs: 'corto', top: RIDERCOL[v >> 1], bottom: ['#2B3550', '#3A3A3A', '#5A4632', '#24324A'][Math.floor(r() * 4)], shoe: '#1E1A16',
+        hat: v % 2 ? 'casco' : (r() < 0.35 ? 'gorra' : null), hatc: ['#1E1E1E', '#C8302E', '#F2F2F2', '#2E6FB7'][Math.floor(r() * 4)] });
+    }
+  })();
   function makeChar(o) {
     var FW = 20, FH = 30, sheet = mk(FW * 3, FH * 4), sx = sheet.getContext('2d');
     for (var d = 0; d < 4; d++) for (var f = 0; f < 3; f++) {
@@ -1006,6 +1063,51 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   var cat = B.find(function (b) { return b.k === 'catedral'; });
   var player = { x: spawn.x, y: spawn.y, a: cat ? Math.atan2((cat.y + cat.h) * TS - spawn.y, (cat.x + cat.w / 2) * TS - spawn.x) : 0 };
   var startA = player.a;
+  // ---- motos: las aparcadas del mapa (y las que deja el jugador) se pueden montar
+  var PARKED = PROPS.filter(function (o) { return o.k === 'moto'; }).map(function (o) { var d = [[0, 1], [0, -1], [-1, 0], [1, 0]][o.dir || 0]; o.hx = d[0]; o.hy = d[1]; return o; });
+  var ride = null, rideTip = false, motorT = 0;
+  function wrapAng(a) { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; }
+  function hitParked(x, y) { for (var i = 0; i < PARKED.length; i++) { var o = PARKED[i]; if (o.user && !o.taken && Math.hypot(o.x - x, o.y - y) < 11) return true; } return false; }
+  function myLook() { var av = (OL.on && OL.profile && OL.profile.avatar) ? cleanAvatar(OL.profile.avatar) : defAvatar(); return { look: lookFrom(av), sig: JSON.stringify(av) }; }
+  function mountMoto(o) {
+    o.taken = true; if (!o.user) COLL[o.ty * W + o.tx] = 0;
+    var L = myLook(); ride = { x: o.x, y: o.y, a: Math.atan2(o.hy, o.hx), v: 0, steer: 0, lean: 0, look: L.look, sig: L.sig, src: o };
+    player.x = o.x; player.y = o.y; player.a = ride.a; keys = {}; $('act').hidden = true; stage.classList.add('riding');
+    if (!rideTip) { rideTip = true; toast(MOB ? 'Palanca arriba: acelera · abajo: frena · a los lados: gira' : '↑ acelera · ↓ frena · ← → giran · E para bajarte'); }
+  }
+  function dismountMoto(force) {
+    if (!ride) return true;
+    var ca = Math.cos(ride.a), sa = Math.sin(ride.a), spots = [[-sa * 16, ca * 16], [sa * 16, -ca * 16], [-ca * 20, -sa * 20], [ca * 20, sa * 20]], at = null;
+    for (var i = 0; i < spots.length; i++) { var x = ride.x + spots[i][0], y = ride.y + spots[i][1]; if (freeAt(x, y) && !hitVehicle(x, y) && !hitParked(x, y)) { at = [x, y]; break; } }
+    if (!at && !force) { toast('No hay espacio para bajarte aquí'); return false; }
+    var src = ride.src;
+    if (src && !src.user && Math.hypot(src.x - ride.x, src.y - ride.y) < 4) { src.taken = false; COLL[src.ty * W + src.tx] = 1; }
+    else { PARKED = PARKED.filter(function (o) { return !(o.user && o.taken); }); PARKED.push({ x: ride.x, y: ride.y, hx: ca, hy: sa, user: true }); }
+    if (at) { player.x = at[0]; player.y = at[1]; }
+    player.a = ride.a; ride = null; stage.classList.remove('riding');
+    return true;
+  }
+  function driveMoto(dt) {
+    var R = ride, thr = (keys.up ? 1 : 0) - (keys.down ? 1 : 0), st = (keys.right ? 1 : 0) - (keys.left ? 1 : 0) + (keys.sr ? 1 : 0) - (keys.sl ? 1 : 0);
+    if (Math.hypot(joy.x, joy.y) > 0.14) { thr += -joy.y; st += joy.x; }
+    thr = clamp(thr, -1, 1); st = clamp(st, -1, 1);
+    var MAXV = keys.shift ? 190 : 150;                                  // 150 px/s ≈ 67 km/h
+    if (thr > 0.05) R.v += thr * (R.v < 0 ? 260 : 95) * dt;
+    else if (thr < -0.05) R.v += thr * (R.v > 0 ? 230 : 70) * dt;       // frena y, ya parado, da marcha atrás despacito
+    else R.v -= Math.sign(R.v) * Math.min(Math.abs(R.v), 40 * dt);
+    R.v = clamp(R.v, -35, MAXV);
+    R.steer += (st - R.steer) * Math.min(1, dt * 8);
+    var grip = clamp(Math.abs(R.v) / 40, 0, 1) * (1 - Math.min(0.45, Math.abs(R.v) / 400));
+    R.a += R.steer * grip * 2.3 * dt * (R.v >= 0 ? 1 : -1);
+    var ca = Math.cos(R.a), sa = Math.sin(R.a), nx = R.x + ca * R.v * dt, ny = R.y + sa * R.v * dt, sg = R.v >= 0 ? 1 : -1;
+    function ok(x, y) { var fx = x + ca * 9 * sg, fy = y + sa * 9 * sg; return freeAt(x, y) && freeAt(fx, fy) && !hitVehicle(fx, fy) && !hitParked(fx, fy); }
+    if (ok(nx, ny)) { R.x = nx; R.y = ny; }
+    else if (ok(nx, R.y)) { R.x = nx; R.v *= 0.92; }                       // roza la pared y sigue
+    else if (ok(R.x, ny)) { R.y = ny; R.v *= 0.92; }
+    else { if (Math.abs(R.v) > 70 && audio && soundOn) audio.honk(true); R.v = -R.v * 0.2; }
+    R.lean += (-R.steer * clamp(R.v / 120, 0, 1) * 0.32 - R.lean) * Math.min(1, dt * 6);   // se inclina hacia donde gira
+    player.x = R.x; player.y = R.y; player.a = R.a;
+  }
 
   var npcs = [], WALK = [4, 6, 7, 9];
   function newNpc(type, x, y, opts) {
@@ -1123,7 +1225,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   $('blackout').addEventListener('click', function () { dark = !dark; darkSince = gameMin; this.setAttribute('aria-pressed', dark ? 'true' : 'false'); $('hudDark').hidden = !dark; updateSitters(); if (audio) audio.setMode(); });
   $('sound').addEventListener('click', function () { soundOn = !soundOn; this.setAttribute('aria-pressed', soundOn ? 'true' : 'false'); if (soundOn && !audio) audio = makeAudio(); if (audio) audio.setOn(soundOn); });
   $('phoneview').addEventListener('click', function () { var on = this.getAttribute('aria-pressed') !== 'true'; this.setAttribute('aria-pressed', on ? 'true' : 'false'); stage.classList.toggle('phone', on); fit(); });
-  $('home').addEventListener('click', function () { closeDialog(); player.x = spawn.x; player.y = spawn.y; player.a = startA; });
+  $('home').addEventListener('click', function () { closeDialog(); if (ride) dismountMoto(true); player.x = spawn.x; player.y = spawn.y; player.a = startA; });
   $('act').addEventListener('click', action); $('dnext').addEventListener('click', action);
   if (window.ResizeObserver) new ResizeObserver(fit).observe(stage); else window.addEventListener('resize', fit);
 
@@ -1170,6 +1272,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (dlg) { dlg.i++; if (dlg.i >= dlg.lines.length) closeDialog(); else showLine(); return; }
     if (!target) return;
     var t = target, name, lines;
+    if (t.kind === 'moto') { mountMoto(t.o); return; }
+    if (t.kind === 'unride') { dismountMoto(false); return; }
     if (t.kind === 'npc') { name = t.o.name; lines = npcLines(t.o); if (!t.o.sit) t.o.dir = faceTo(t.o, player); t.o.wait = 4; }
     else if (t.kind === 'shop') { if (t.o.sign === 'CAFÉ CALABOZO' && IN.enter) { IN.enter(); return; } name = t.o.sign || (t.o.k === 'casa' ? 'Casa' : 'Negocio'); lines = shopLines(t.o); }
     else if (t.kind === 'statue') { name = 'Simón Bolívar'; lines = ['Estatua del Libertador en la Plaza Bolívar de Calabozo.', 'Todo pueblo de Venezuela tiene su Plaza Bolívar. Aquí se cita la gente: «nos vemos en la plaza».']; }
@@ -1199,7 +1303,9 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function update(dt) {
     time += dt; gameMin = calaboMin(); if (hourOf(gameMin) !== hour) { hour = hourOf(gameMin); updateSitters(); if (audio) audio.setMode(); } onlineTick(dt);
     var moving = false;
-    if (!dlg && !gateOpen && !chatOpen && !IN.active) {
+    if (ride && (dlg || gateOpen || chatOpen)) ride.v = 0;
+    if (ride && !dlg && !gateOpen && !chatOpen && !IN.active) driveMoto(dt);
+    else if (!dlg && !gateOpen && !chatOpen && !IN.active) {
       var turn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
       player.va = (player.va || 0) + (turn * 2.0 - (player.va || 0)) * Math.min(1, dt * 7);
       player.a += player.va * dt;
@@ -1209,11 +1315,12 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (fwd || str) {
         var sp = ((keys.shift || jm > 0.95) ? 80 : 44) * dt * (jOn ? Math.min(1, jm / 0.85) : 1), ca = Math.cos(player.a), sa = Math.sin(player.a);
         var mx = (ca * fwd - sa * str), my = (sa * fwd + ca * str), n = Math.hypot(mx, my); mx = mx / n * sp; my = my / n * sp;
-        if (freeAt(player.x + mx, player.y) && !hitVehicle(player.x + mx, player.y)) { player.x += mx; moving = true; }
-        if (freeAt(player.x, player.y + my) && !hitVehicle(player.x, player.y + my)) { player.y += my; moving = true; }
+        if (freeAt(player.x + mx, player.y) && !hitVehicle(player.x + mx, player.y) && !hitParked(player.x + mx, player.y)) { player.x += mx; moving = true; }
+        if (freeAt(player.x, player.y + my) && !hitVehicle(player.x, player.y + my) && !hitParked(player.x, player.y + my)) { player.y += my; moving = true; }
       }
     }
-    if (moving) walkPh += dt * (keys.shift ? 13 : 9);
+    if (moving && !ride) walkPh += dt * (keys.shift ? 13 : 9);
+    if (audio && audio.motor) { motorT -= dt; if (motorT <= 0) { motorT = 0.1; audio.motor(!!ride && soundOn && !IN.active, ride ? ride.v : 0); } }
     var walkers = 0;
     for (var i = npcs.length - 1; i >= 0; i--) { var nn = npcs[i]; if (nn.stat) continue; walkers++; if (Math.hypot(nn.x - player.x, nn.y - player.y) / TS > 55) { npcs.splice(i, 1); continue; } if (!(dlg && target && target.o === nn)) npcWalk(nn, dt); }
     var want = hour === 3 ? (dark ? 10 : 16) : (hour === 1 ? 16 : 24);
@@ -1234,16 +1341,18 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 
     // a quién tienes enfrente
     target = null;
-    if (!dlg) {
+    if (ride && !dlg) target = { kind: 'unride' };
+    else if (!dlg) {
       var ca2 = Math.cos(player.a), sa2 = Math.sin(player.a), best = 40;
       npcs.forEach(function (n) { var dx = n.x - player.x, dy = n.y - player.y, d = Math.hypot(dx, dy); if (d < best && d > 0.1 && (dx * ca2 + dy * sa2) / d > 0.55) { best = d; target = { kind: 'npc', o: n }; } });
       if (!target) {
         for (var s = 4; s <= 30; s += 2) { var tx = Math.floor((player.x + ca2 * s) / TS), ty = Math.floor((player.y + sa2 * s) / TS), bid = (tx >= 0 && ty >= 0 && tx < W && ty < H) ? BID[ty * W + tx] : 0; if (bid) { target = { kind: 'shop', o: B[bid - 1] }; break; } if (COLL[ty * W + tx]) break; }
       }
       PROPS.forEach(function (p) { if (p.k === 'estatua' && Math.hypot(p.x - player.x, p.y - player.y) < 52) target = target || { kind: 'statue', o: p }; });
+      if (!target || target.kind === 'shop') { var bm = null, bd2 = 26; PARKED.forEach(function (o) { if (o.taken) return; var d2 = Math.hypot(o.x - player.x, o.y - player.y); if (d2 < bd2) { bd2 = d2; bm = o; } }); if (bm) target = { kind: 'moto', o: bm }; }
     }
     var act = $('act');
-    if (target && !dlg) { act.hidden = false; act.textContent = target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : 'Entrar (E)') : (target.kind === 'statue' ? 'Mirar (E)' : 'Hablar con ' + target.o.name.split(',')[0] + ' (E)'); }
+    if (target && !dlg) { act.hidden = false; act.textContent = target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : 'Entrar (E)') : (target.kind === 'statue' ? 'Mirar (E)' : 'Hablar con ' + target.o.name.split(',')[0] + ' (E)'); }
     else act.hidden = true;
     hudTimer -= dt;
     if (hudTimer <= 0) {
@@ -1252,6 +1361,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (gk(Math.floor(player.x / TS), Math.floor(player.y / TS)) === 6 || gk(Math.floor(player.x / TS), Math.floor(player.y / TS)) === 2) { var pl = null, bd = 40; POIS.forEach(function (p) { if (p[3] !== 'plaza') return; var d = Math.hypot(p[0] - player.x / TS, p[1] - player.y / TS); if (d < bd) { bd = d; pl = p; } }); if (pl) stn = pl[2]; }
       if (stn !== lastStreet) { $('hudStreet').textContent = stn; lastStreet = stn; }
       $('hudClock').textContent = clockText();
+      var hsp = $('hudSpeed'); if (ride) { hsp.hidden = false; hsp.textContent = 'En moto · ' + Math.round(Math.abs(ride.v) * 0.45) + ' km/h'; } else hsp.hidden = true;
       if (dark) { var mins = Math.max(0, Math.floor(gameMin - darkSince)); $('hudDark').textContent = 'Sin luz desde hace ' + (mins >= 60 ? Math.floor(mins / 60) + ' h ' : '') + (mins % 60) + ' min'; }
       var near = null;
       if (target && target.kind === 'shop' && (target.o.sign || target.o.k !== 'casa')) near = [0, 0, target.o.sign || POI_LABEL[target.o.k], target.o.k];
@@ -1536,29 +1646,28 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       s.userData.pm = pm; scene.add(s); props.set(o.pi, s);
     }
 
-    // ---- jugadores remotos
-    var avs = new Map();
-    function playerMesh(p) {
-      var sh = p.sheet, t = new THREE.CanvasTexture(sh.img); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; t.repeat.set(1 / 3, 1 / 4);
-      var k2 = 0.95 / (26 * sh.U) * (sh.scale || 1), hgt = sh.FH * k2, wid = sh.FW * k2, base = -(sh.FH - sh.oy - sh.U) * k2;
-      var mat = new THREE.MeshBasicMaterial({ map: t, alphaTest: 0.5, side: THREE.DoubleSide });
-      var geo = new THREE.PlaneGeometry(wid, hgt); geo.translate(0, hgt / 2, 0);
-      var m = new THREE.Mesh(geo, mat); m.userData = { sheet: sh, base: base, hgt: hgt, tex: t }; scene.add(m); return m;
-    }
+    // ---- jugadores remotos: personajes voxel que caminan (o van en moto)
+    var avs = new Map(), VXMAT = VOX.mat(), VK = 0.95 / 26, MOTO_K = 0.6, RIDE_S = 0.85, SEAT = 0.38 * MOTO_K / 0.5, HIP = 6.6 * VK * RIDE_S, RBACK = 0.19; // moto un 20 % mayor que la real para que encaje con los personajes
+    function wrapA(a) { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; }
     function syncPlayers(cam) {
       Object.keys(players).forEach(function (k) {
-        var p = players[k]; if (!p.sheet) return;
-        var e = avs.get(k); if (e) e.m.visible = !p.inn; if (p.inn) return;
-        if (e && e.sheet !== p.sheet) { scene.remove(e.m); e.m.geometry.dispose(); e.m.material.dispose(); e.m.userData.tex.dispose(); avs.delete(k); e = null; }
-        if (!e) { e = { m: playerMesh(p), sheet: p.sheet }; avs.set(k, e); }
-        var m = e.m, sx = p.x / TS, sz = p.y / TS;
-        m.position.set(sx, m.userData.base, sz); m.lookAt(cam.x, m.position.y, cam.z);
-        var fdir = [[0, 1], [0, -1], [-1, 0], [1, 0]][p.dir || 0], vx = cam.x - sx, vz = cam.z - sz, vl = Math.hypot(vx, vz) || 1; vx /= vl; vz /= vl;
-        var dot = fdir[0] * vx + fdir[1] * vz, cross = fdir[0] * vz - fdir[1] * vx, row = dot > 0.7 ? 0 : (dot < -0.7 ? 1 : (cross > 0 ? 3 : 2)), fr2 = p.moving ? 1 + (Math.floor(p.t * 7) % 2) : 0;
-        m.userData.tex.offset.set(fr2 / 3, 1 - (row + 1) / 4);
-        m.material.color.setHex(PH[hour].prop);
+        var p = players[k]; if (!p.look) return;
+        var e = avs.get(k);
+        if (e && e.sig !== p.sig) { scene.remove(e.r.root); avs.delete(k); e = null; }
+        if (!e) { e = { r: VOX.rig(p.look, VXMAT), sig: p.sig, face: 0 }; e.r.root.scale.setScalar(VK); scene.add(e.r.root); avs.set(k, e); }
+        var R = e.r; R.root.visible = !p.inn; if (p.inn) return;
+        var sx = p.x / TS, sz = p.y / TS;
+        if (p.moto) {
+          var ca = Math.cos(p.mang || 0), sa = Math.sin(p.mang || 0);
+          R.root.scale.setScalar(VK * RIDE_S); R.root.position.set(sx - ca * RBACK, SEAT - HIP, sz - sa * RBACK); R.root.rotation.set(0, Math.atan2(ca, sa), 0); R.pose('ride');
+          return;
+        }
+        var dx = p.tx - p.x, dz = p.ty - p.y;
+        if (p.moving && Math.hypot(dx, dz) > 0.5) e.face += wrapA(Math.atan2(dx, dz) - e.face) * 0.25;
+        else if (!p.moving && e.face === 0) e.face = [0, Math.PI, -Math.PI / 2, Math.PI / 2][p.dir || 0];
+        R.root.scale.setScalar(VK); R.root.position.set(sx, 0, sz); R.root.rotation.set(0, e.face, 0); R.pose(p.moving ? 'walk' : 'stand', p.t);
       });
-      avs.forEach(function (e, k) { if (!players[k]) { scene.remove(e.m); e.m.geometry.dispose(); e.m.material.dispose(); e.m.userData.tex.dispose(); avs.delete(k); } });
+      avs.forEach(function (e, k) { if (!players[k]) { scene.remove(e.r.root); avs.delete(k); } });
     }
 
     // ---- carga progresiva alrededor del jugador
@@ -1618,6 +1727,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     }
     function propMatsTint(hex) { Object.keys(propMats).forEach(function (k) { var pm = propMats[k]; if (pm && !pm.lamp) pm.mat.color.setHex(hex); }); props.forEach(function (sp) { if (sp && sp.userData.pm.lamp) sp.material = PH[hour].win ? sp.userData.pm.mn : sp.userData.pm.mat; }); }
 
+    var baseFov = 60, camR = { on: false, x: 0, y: 0, z: 0 };
     R3.on = true; R3.renderer = renderer; R3.glc = glc; R3.scene = scene; R3.camera = camera; R3.syncMotos = function () { syncMotos(); };
     R3.stats = function () { return { blds: blds.size, chunks: chunks.size, props: props.size, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures }; };
     R3.resize = function () {
@@ -1626,14 +1736,15 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       renderer.setPixelRatio(ratio); renderer.setSize(w, h, false);
       glc.style.imageRendering = ratio < 0.99 ? 'pixelated' : 'auto';
       camera.aspect = w / h;
-      var vf = 2 * Math.atan(Math.tan(FOV / 2) / camera.aspect); camera.fov = clamp(vf * 180 / Math.PI, 38, 88); camera.updateProjectionMatrix();
+      var vf = 2 * Math.atan(Math.tan(FOV / 2) / camera.aspect); camera.fov = baseFov = clamp(vf * 180 / Math.PI, 38, 88); camera.updateProjectionMatrix();
     };
     R3.warm = function (ms) { scan(); pump(ms); };
     var vtmp = new THREE.Vector3();
-    // ---- motos que circulan: modelo 3D (modelos/moto-azul.glb, colores por vértice), todas en una sola llamada
-    var motoIM = null, motoM4 = new THREE.Matrix4(), motoQ = new THREE.Quaternion(), motoP = new THREE.Vector3(), motoS = new THREE.Vector3(1, 1, 1), motoUp = new THREE.Vector3(0, 1, 0);
-    (function loadMoto() {
-      fetch('modelos/moto-azul.glb').then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(function (buf) {
+    // ---- motos: modelo 3D de cerca (11k triángulos) y versión ligera de lejos, todas con instancias
+    var MOTO_CAP = 96, MOTO_NEAR = 14, motoNear = null, motoFar = null, nN = 0, nF = 0;
+    var motoM4 = new THREE.Matrix4(), motoQ = new THREE.Quaternion(), motoQ2 = new THREE.Quaternion(), motoP = new THREE.Vector3(), motoS = new THREE.Vector3(1, 1, 1), motoUp = new THREE.Vector3(0, 1, 0), motoX = new THREE.Vector3(1, 0, 0);
+    function loadMoto(url, cb) {
+      fetch(url).then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(function (buf) {
         var dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl))), bo = 20 + jl + 8;
         var NC = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 }, TY = { 5126: [Float32Array, 'getFloat32'], 5123: [Uint16Array, 'getUint16'], 5125: [Uint32Array, 'getUint32'] };
         function attr(i) {
@@ -1648,41 +1759,45 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         geo.setAttribute('normal', new THREE.BufferAttribute(attr(pr.attributes.NORMAL), 3));
         geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
         geo.setIndex(new THREE.BufferAttribute(attr(pr.indices), 1));
-        // 1,9 m de largo = 0,95 casillas; las ruedas tocan el suelo
-        var k2 = 0.5; geo.scale(k2, k2, k2); geo.computeBoundingBox(); geo.translate(0, -geo.boundingBox.min.y, 0);
-        motoIM = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }), 32);
-        motoIM.count = 0; motoIM.frustumCulled = false; scene.add(motoIM);
+        // 1,15 casillas de largo; las ruedas tocan el suelo
+        var k2 = MOTO_K; geo.scale(k2, k2, k2); geo.computeBoundingBox(); geo.translate(0, -geo.boundingBox.min.y, 0);
+        var m = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }), MOTO_CAP); m.count = 0; m.frustumCulled = false; scene.add(m); cb(m);
       }).catch(function () {});
-    })();
-    var riderIM = null, RS = null, riderUV = null, riderM4 = new THREE.Matrix4(), riderQ = new THREE.Quaternion(), riderP = new THREE.Vector3();
-    (function () {
-      RS = makeRiders();
-      var t = new THREE.CanvasTexture(RS.img); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; t.repeat.set(1 / RS.V, 1 / 4);
-      var k2 = 0.95 / (26 * 3) * 0.78, wid = RS.FW * k2, hgt = RS.FH * k2, SEAT = 0.38; // un poco más pequeño que un peatón para que quepa en la moto
-      var geo = new THREE.PlaneGeometry(wid, hgt); geo.translate(0, hgt / 2 + SEAT - (RS.FH - RS.HIP) * k2, 0);
-      riderUV = new THREE.InstancedBufferAttribute(new Float32Array(64), 2); geo.setAttribute('uvo', riderUV);
-      var mat = new THREE.MeshBasicMaterial({ map: t, alphaTest: 0.5, side: THREE.DoubleSide });
-      mat.onBeforeCompile = function (sh) { sh.vertexShader = 'attribute vec2 uvo;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n\tvUv += uvo;'); };
-      riderIM = new THREE.InstancedMesh(geo, mat, 32); riderIM.count = 0; riderIM.frustumCulled = false; scene.add(riderIM);
-    })();
+    }
+    loadMoto('modelos/moto-azul.glb', function (m) { motoNear = m; });
+    loadMoto('modelos/moto-azul-lejos.glb', function (m) { motoFar = m; });
+    // conductores del tráfico: un voxel sentado por variante, todos con instancias
+    var RIDERS = RIDERLOOKS.map(function (o) { var m = new THREE.InstancedMesh(VOX.baked(o, 'ride', VK * RIDE_S), VXMAT, 32); m.count = 0; m.visible = false; m.frustumCulled = false; scene.add(m); return m; });
+    var riderM4 = new THREE.Matrix4(), riderQ = new THREE.Quaternion(), riderP = new THREE.Vector3();
+    // el faro del modelo mira hacia -X: para ir en la dirección (hx, hz) se gira atan2(hz, -hx)
+    function putMoto(x, z, hx, hz, lean, dist) {
+      motoQ.setFromAxisAngle(motoUp, Math.atan2(hz, -hx)); if (lean) { motoQ2.setFromAxisAngle(motoX, lean); motoQ.multiply(motoQ2); }
+      motoP.set(x, 0, z); motoM4.compose(motoP, motoQ, motoS);
+      if (dist < MOTO_NEAR || !motoFar) { if (motoNear && nN < MOTO_CAP) motoNear.setMatrixAt(nN++, motoM4); }
+      else if (nF < MOTO_CAP) motoFar.setMatrixAt(nF++, motoM4);
+    }
+    // tu propio personaje, sentado en la moto que conduces
+    var myRig = null, mySig = '';
     function syncMotos() {
-      if (!motoIM) return;
-      var px = player.x / TS, pz = player.y / TS, vis = scene.fog.far + 4, n = 0;
-      for (var i = 0; i < cars.length && n < 32; i++) {
+      var px = player.x / TS, pz = player.y / TS, vis = scene.fog.far + 4, i, cnt = RIDERS.map(function () { return 0; });
+      nN = 0; nF = 0; VXMAT.color.setHex(PH[hour].prop);
+      for (i = 0; i < cars.length; i++) {
         var c = cars[i]; if (c.type !== 'moto') continue;
-        var x = c.x / TS, z = c.y / TS; if (Math.hypot(x - px, z - pz) > vis) continue;
-        motoQ.setFromAxisAngle(motoUp, Math.atan2(c.hy, -c.hx)); // el faro del modelo mira hacia -X
-        motoP.set(x, 0, z); motoM4.compose(motoP, motoQ, motoS); motoIM.setMatrixAt(n, motoM4);
-        // conductor: mira a la cámara y elige frente/espalda/perfil según hacia dónde va la moto
-        var hx = c.hx, hz = c.hy, vx = camera.position.x - x, vz = camera.position.z - z, vl = Math.hypot(vx, vz) || 1; vx /= vl; vz /= vl;
-        var dot = hx * vx + hz * vz, cross = hx * vz - hz * vx, row = dot > 0.7 ? 0 : (dot < -0.7 ? 1 : (cross > 0 ? 3 : 2));
+        var x = c.x / TS, z = c.y / TS, d = Math.hypot(x - px, z - pz); if (d > vis) continue;
+        putMoto(x, z, c.hx, c.hy, 0, d);
         var vi = Math.max(0, RIDERCOL.indexOf(c.rider)) * 2 + (Math.floor(c.speed * 10) % 2);
-        riderP.set(x - hx * 0.16, 0, z - hz * 0.16); riderQ.setFromAxisAngle(motoUp, Math.atan2(vx, vz)); // sobre el asiento, detrás del depósito
-        riderM4.compose(riderP, riderQ, motoS); riderIM.setMatrixAt(n, riderM4); riderUV.setXY(n, vi / RS.V, 1 - (row + 1) / 4);
-        n++;
+        if (cnt[vi] < 32) { riderQ.setFromAxisAngle(motoUp, Math.atan2(c.hx, c.hy)); riderP.set(x - c.hx * RBACK, SEAT - HIP, z - c.hy * RBACK); riderM4.compose(riderP, riderQ, motoS); RIDERS[vi].setMatrixAt(cnt[vi]++, riderM4); }
       }
-      motoIM.count = n; motoIM.instanceMatrix.needsUpdate = true;
-      riderIM.count = n; riderIM.instanceMatrix.needsUpdate = true; riderUV.needsUpdate = true; riderIM.material.color.setHex(PH[hour].prop);
+      for (i = 0; i < PARKED.length; i++) { var o = PARKED[i]; if (o.taken) continue; var ox = o.x / TS, oz = o.y / TS, od = Math.hypot(ox - px, oz - pz); if (od <= vis) putMoto(ox, oz, o.hx, o.hy, 0, od); }
+      Object.keys(players).forEach(function (k) { var p = players[k]; if (!p.moto || p.inn) return; var x2 = p.x / TS, z2 = p.y / TS; putMoto(x2, z2, Math.cos(p.mang || 0), Math.sin(p.mang || 0), 0, Math.hypot(x2 - px, z2 - pz)); });
+      if (ride) {
+        var ca = Math.cos(ride.a), sa = Math.sin(ride.a), rx = ride.x / TS, rz = ride.y / TS; putMoto(rx, rz, ca, sa, ride.lean, 0);
+        if (!myRig || mySig !== ride.sig) { if (myRig) scene.remove(myRig.root); myRig = VOX.rig(ride.look, VXMAT); myRig.root.scale.setScalar(VK * RIDE_S); myRig.pose('ride'); scene.add(myRig.root); mySig = ride.sig; }
+        myRig.root.visible = true; myRig.root.position.set(rx - ca * RBACK, SEAT - HIP, rz - sa * RBACK); myRig.root.rotation.set(0, Math.atan2(ca, sa), -ride.lean);
+      } else if (myRig) myRig.root.visible = false;
+      if (motoNear) { motoNear.count = nN; motoNear.instanceMatrix.needsUpdate = true; }
+      if (motoFar) { motoFar.count = nF; motoFar.instanceMatrix.needsUpdate = true; }
+      RIDERS.forEach(function (R, j) { R.count = cnt[j]; R.visible = cnt[j] > 0; R.instanceMatrix.needsUpdate = true; });
     }
 
     render3d = function () {
@@ -1691,7 +1806,19 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       pump(quality === 2 ? 3 : 5);
       var px = player.x / TS, pz = player.y / TS, a = player.a, ph = PH[hour];
       var bob = Math.abs(Math.sin(walkPh)) * (quality === 2 ? 0.05 : 0.03);
-      camera.position.set(px, EYE + bob, pz); camera.rotation.set(0, -a - Math.PI / 2, 0);
+      if (ride) {
+        // tercera persona detrás de la moto; se acerca si hay una pared detrás
+        var cA = Math.cos(a), sA = Math.sin(a), back = 2.5;
+        for (var bk = 0.6; bk <= 2.5; bk += 0.2) { var bx = Math.floor(px - cA * bk), by = Math.floor(pz - sA * bk); if (bx < 0 || by < 0 || bx >= W || by >= H || BID[by * W + bx]) { back = Math.max(0.6, bk - 0.3); break; } }
+        var tX = px - cA * back, tZ = pz - sA * back, tY = 1.15 + back * 0.16;
+        if (!camR.on) { camR.x = tX; camR.y = tY; camR.z = tZ; camR.on = true; }
+        camR.x += (tX - camR.x) * 0.2; camR.y += (tY - camR.y) * 0.2; camR.z += (tZ - camR.z) * 0.2;
+        camera.position.set(camR.x, camR.y, camR.z); camera.lookAt(px + cA * 2.6, 0.4, pz + sA * 2.6);
+        var fv = baseFov + Math.min(8, Math.abs(ride.v) / 20); if (Math.abs(camera.fov - fv) > 0.05) { camera.fov = fv; camera.updateProjectionMatrix(); }
+      } else {
+        camR.on = false; if (camera.fov !== baseFov) { camera.fov = baseFov; camera.updateProjectionMatrix(); }
+        camera.position.set(px, EYE + bob, pz); camera.rotation.set(0, -a - Math.PI / 2, 0);
+      }
       dome.position.copy(camera.position); stars.position.copy(camera.position);
       var sd = sunSpr.userData.dir; if (sunSpr.visible && sd) sunSpr.position.set(px + sd[0] * 380, sd[1] * 380, pz + sd[2] * 380);
       for (var i = 0; i < cloudObjs.length; i++) { var c = CLOUDS[i], ang = c.a + time * 0.004, rr = 320 - c.e * 60; cloudObjs[i].position.set(px + Math.cos(ang) * rr, 60 + c.e * 140, pz + Math.sin(ang) * rr); }
@@ -1702,12 +1829,12 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
       ctx.textAlign = 'center';
       Object.keys(players).forEach(function (k) {
-        var p = players[k]; if (!p.sheet || p.inn) return;
-        vtmp.set(p.x / TS, 1.05, p.y / TS); var dx = vtmp.x - px, dz = vtmp.z - pz, dist = Math.hypot(dx, dz); vtmp.project(camera);
+        var p = players[k]; if (!p.look || p.inn) return;
+        vtmp.set(p.x / TS, p.moto ? 1.2 : 1.05, p.y / TS); var dx = vtmp.x - px, dz = vtmp.z - pz, dist = Math.hypot(dx, dz); vtmp.project(camera);
         if (vtmp.z > 1 || vtmp.z < -1 || Math.abs(vtmp.x) > 1.2) return;
         drawRemote({ o: p, scr: [(vtmp.x * 0.5 + 0.5) * cv.width, (-vtmp.y * 0.5 + 0.5) * cv.height + 4], ty: dist }, 1);
       });
-      drawHand();
+      if (!ride) drawHand();
       if ((++mmN % 4) === 0) { drawMinimap(); }
     };
     applyPhase();
@@ -1802,26 +1929,17 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       built = true;
     }
 
-    // ----- personajes (carteles con la hoja de sprites de cada avatar)
-    var rc = new THREE.Raycaster(), VTMP = new THREE.Vector3();
-    function mkSprite(sh) {
-      var t = new THREE.CanvasTexture(sh.img); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.repeat.set(1 / 3, 1 / 4);
-      var k2 = 0.039, hgt = sh.FH * k2, wid = sh.FW * k2, base = -(sh.FH - sh.oy - sh.U) * k2;
-      var g = new THREE.PlaneGeometry(wid, hgt); g.translate(0, hgt / 2, 0);
-      var m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: t, alphaTest: 0.5, color: 0xFFF1E0, side: THREE.DoubleSide })); m.rotation.y = Math.PI / 4; m.userData = { base: base, tex: t, hgt: hgt };
-      scene.add(m); return m;
-    }
-    var ROW_R = 3, ROW_L = 2;
-    function rowOf(dx, dz) { var sr = (dx - dz) * 0.7071, sd = (dx + dz) * 0.7071; return Math.abs(sd) >= Math.abs(sr) ? (sd > 0 ? 0 : 1) : (sr > 0 ? ROW_R : ROW_L); }
-    function place(id, sheet, x, z, dir, moving, t, sit) {
-      var e = sprites[id]; if (e && e.sheet !== sheet) { scene.remove(e.m); e.m.geometry.dispose(); e.m.material.dispose(); e.m.userData.tex.dispose(); delete sprites[id]; e = null; }
-      if (!e) { e = sprites[id] = { m: mkSprite(sheet), sheet: sheet, seen: 0 }; }
+    // ----- personajes voxel (mismo modelo que en la calle, a la escala del café)
+    var rc = new THREE.Raycaster(), VTMP = new THREE.Vector3(), INMAT = VOX.mat(0xFFF1E0), IS = 0.117, SEAT_IN = 0.65;
+    function place(id, look, x, z, dir, moving, t, sit) {
+      var e = sprites[id]; if (e && e.look !== look) { scene.remove(e.m); delete sprites[id]; e = null; }
+      if (!e) { var r = VOX.rig(look, INMAT); r.root.scale.setScalar(IS); scene.add(r.root); e = sprites[id] = { m: r.root, r: r, look: look, seen: 0 }; }
       var m = e.m; e.seen = frameN; m.visible = true;
-      m.position.set(x, m.userData.base - (sit ? 0.3 : 0), z);
-      var fr = moving ? 1 + (Math.floor(t * 7) % 2) : 0; m.userData.tex.offset.set(fr / 3, 1 - (rowOf(dir[0], dir[1]) + 1) / 4);
+      m.position.set(x, sit ? SEAT_IN - 6.6 * IS * e.r.s : 0, z); m.rotation.set(0, Math.atan2(dir[0], dir[1]), 0);
+      e.r.pose(sit ? 'sit' : (moving ? 'walk' : 'stand'), t);
       e.id = id; e.x = x; e.z = z; return m;
     }
-    var frameN = 0, baristaSheet = null;
+    var frameN = 0, baristaLook = null;
 
     // ----- estado propio
     var me = null, path = [], pending = null, lastSend = 0, tapD = null;
@@ -1860,14 +1978,14 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     }
     function avatarSheet() {
       var av = (OL.profile && OL.profile.avatar) ? cleanAvatar(OL.profile.avatar) : defAvatar();
-      var sig = JSON.stringify(av); if (!me.sheet || me.sig !== sig) { me.sig = sig; me.sheet = makeChar(lookFrom(av)); } return me.sheet;
+      var sig = JSON.stringify(av); if (!me.look || me.sig !== sig) { me.sig = sig; me.look = lookFrom(av); } return me.look;
     }
 
     // ----- entrar / salir
     IN.enter = function () {
       if (IN.active || gateOpen) return; if (!built) build();
-      if (!baristaSheet) baristaSheet = makeChar(lookFrom(cleanAvatar({ skin: '#C68B60', hair: '#1E1712', hs: 'largo', top: '#F2F2F2', bottom: '#2B2B2E', shoe: '#2B2B2B', dress: false })));
-      me = { x: cx(1), z: cx(7), dir: [-1, 0], moving: false, sit: false, t: 0, sheet: null, sig: '' }; path = []; pending = null; avatarSheet();
+      if (!baristaLook) baristaLook = lookFrom(cleanAvatar({ skin: '#C68B60', hair: '#1E1712', hs: 'largo', top: '#F2F2F2', bottom: '#2B2B2E', shoe: '#2B2B2B', dress: false }));
+      me = { x: cx(1), z: cx(7), dir: [-1, 0], moving: false, sit: false, t: 0, look: null, sig: '' }; path = []; pending = null; avatarSheet();
       keys = {}; joy.x = joy.y = 0; closeDialog();
       IN.active = true; IN.me = me; IN.bubble = ''; IN.typUntil = 0; stage.classList.add('interior'); $('hudStreet').textContent = 'Café Calabozo'; $('hint').hidden = true;
       Object.keys(players).forEach(function (k) { var p = players[k]; if (p.inn && p.ix === undefined) { p.ix = p.itx = cx(2); p.iz = p.itz = cx(7); } });
@@ -1903,25 +2021,25 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       }
       if (IN.active && me.moving === false && path.length === 0 && !pending) { /* quieto */ }
       // dibujar personajes
-      place('me', me.sheet, me.x, me.z, me.dir, me.moving, me.t, me.sit);
-      place('barista', baristaSheet, baristaE.x, baristaE.z, baristaE.dir, false, 0, false); sprites.barista.m.userData.kind = 'barista'; sprites.barista.m.userData.who = 'barista';
+      place('me', me.look, me.x, me.z, me.dir, me.moving, me.t, me.sit);
+      place('barista', baristaLook, baristaE.x, baristaE.z, baristaE.dir, false, 0, false); sprites.barista.m.userData.kind = 'barista'; sprites.barista.m.userData.who = 'barista';
       var rem = [];
       Object.keys(players).forEach(function (k) {
-        var p = players[k]; if (!p.inn || !p.sheet) return; if (p.ix === undefined) { p.ix = p.itx = cx(2); p.iz = p.itz = cx(7); }
+        var p = players[k]; if (!p.inn || !p.look) return; if (p.ix === undefined) { p.ix = p.itx = cx(2); p.iz = p.itz = cx(7); }
         var ddx = p.itx - p.ix, ddz = p.itz - p.iz, dd = Math.hypot(ddx, ddz), mv = dd > 0.04;
         if (mv) { var s2 = Math.min(1, dt * 9); p.ix += ddx * s2; p.iz += ddz * s2; p.idir = [ddx / dd, ddz / dd]; p.t = (p.t || 0) + dt; }
-        var m = place('r' + k, p.sheet, p.ix, p.iz, p.idir || [0, 1], mv, p.t || 0, p.isit); m.userData.who = k; m.userData.kind = 'player'; rem.push(k);
+        var m = place('r' + k, p.look, p.ix, p.iz, p.idir || [0, 1], mv, p.t || 0, p.isit); m.userData.who = k; m.userData.kind = 'player'; rem.push(k);
       });
-      Object.keys(sprites).forEach(function (k) { var e = sprites[k]; if (e.seen !== frameN) { e.m.visible = false; if (k !== 'me' && k !== 'barista') { scene.remove(e.m); e.m.geometry.dispose(); e.m.material.dispose(); e.m.userData.tex.dispose(); delete sprites[k]; } } });
+      Object.keys(sprites).forEach(function (k) { var e = sprites[k]; if (e.seen !== frameN) { e.m.visible = false; if (k !== 'me' && k !== 'barista') { scene.remove(e.m); delete sprites[k]; } } });
       renderer.render(scene, cam);
       // capa 2D: nombres, globos y puntos
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); ctx.textAlign = 'center';
       function head(x, z, h) { VTMP.set(x, h, z).project(cam); return [(VTMP.x * 0.5 + 0.5) * cv.width, (-VTMP.y * 0.5 + 0.5) * cv.height]; }
       var sc = Math.max(0.8, Math.min(1.6, cv.height / 520));
-      rem.forEach(function (k) { var p = players[k], hs = head(p.ix, p.iz, 2.25); drawRemote({ o: p, scr: [hs[0] / sc, hs[1] / sc], ty: 0 }, sc); });
-      var hm = head(me.x, me.z, me.sit ? 1.95 : 2.25);
+      rem.forEach(function (k) { var p = players[k], hs = head(p.ix, p.iz, p.isit ? 2.4 : 2.85); drawRemote({ o: p, scr: [hs[0] / sc, hs[1] / sc], ty: 0 }, sc); });
+      var hm = head(me.x, me.z, me.sit ? 2.4 : 2.85);
       drawRemote({ o: { name: (OL.profile && OL.profile.name) || 'Tú', bubble: IN.bubble, bubbleUntil: IN.bubbleUntil, typUntil: IN.typUntil, id: 'me' }, scr: [hm[0] / sc, hm[1] / sc], ty: 0 }, sc);
-      var hb = head(baristaE.x, baristaE.z, 2.25); drawRemote({ o: { name: 'Doña Rosa', bubble: '', bubbleUntil: 0, typUntil: 0, id: 'b' }, scr: [hb[0] / sc, hb[1] / sc], ty: 0 }, sc);
+      var hb = head(baristaE.x, baristaE.z, 2.85); drawRemote({ o: { name: 'Doña Rosa', bubble: '', bubbleUntil: 0, typUntil: 0, id: 'b' }, scr: [hb[0] / sc, hb[1] / sc], ty: 0 }, sc);
     };
 
     IN.proj = function (x, y, z) { VTMP.set(x, y, z).project(cam); var r = cv.getBoundingClientRect(); return [r.left + (VTMP.x * 0.5 + 0.5) * r.width, r.top + (-VTMP.y * 0.5 + 0.5) * r.height]; };
@@ -1932,12 +2050,12 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (!IN.active || dlg || chatOpen || gateOpen) return;
       rc.setFromCamera(ndcOf(e), cam);
       var list = []; Object.keys(sprites).forEach(function (k) { if (sprites[k].m.visible && k !== 'me') list.push(sprites[k].m); }); list.push(doorM);
-      var hit = rc.intersectObjects(list, false)[0];
-      if (hit) {
-        var kd = hit.object.userData.kind;
+      var hit = rc.intersectObjects(list, true)[0], ho = hit && hit.object; while (ho && !ho.userData.kind && ho.parent) ho = ho.parent;
+      if (hit && ho) {
+        var kd = ho.userData.kind;
         if (kd === 'door') { goTo(DOOR.i, DOOR.j, 'exit'); return; }
         if (kd === 'barista') { goTo(cellOf(baristaE.x) , 2, 'barista'); return; }
-        if (kd === 'player') { var p = players[hit.object.userData.who]; if (p) { openChat(); tab = 'near'; setTab('near'); toast(p.name || 'Vecino'); } return; }
+        if (kd === 'player') { var p = players[ho.userData.who]; if (p) { openChat(); tab = 'near'; setTab('near'); toast(p.name || 'Vecino'); } return; }
       }
       var h1 = planeHit(1.15); if (h1) { var a1 = cellOf(h1.x), b1 = cellOf(h1.z); if (isCounter(a1, b1)) { goTo(Math.max(2, Math.min(7, a1)), 2, 'barista'); return; } }
       var h0 = planeHit(0); if (!h0) return; var ti = cellOf(h0.x), tj = cellOf(h0.z); if (ti < 0 || tj < 0 || ti >= NC || tj >= NC) return;
@@ -2237,6 +2355,12 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       setMode: function () { var t = ac.currentTime; cic.gain.setTargetAtTime(hour === 3 ? 0 : (hour === 1 ? 0.09 : 0.05), t, 0.4); cri.gain.setTargetAtTime(hour === 3 ? 0.035 : (hour === 2 ? 0.01 : 0), t, 0.4); gen.gain.setTargetAtTime(dark ? 0.05 : 0, t, 0.4); },
       honk: function (moto) { var o = ac.createOscillator(), g = ac.createGain(); o.type = 'square'; o.frequency.value = moto ? 880 : 420; g.gain.value = 0; o.connect(g); g.connect(master); var t = ac.currentTime; g.gain.setValueAtTime(0.06, t); g.gain.setValueAtTime(0, t + 0.18); if (!moto) { g.gain.setValueAtTime(0.06, t + 0.26); g.gain.setValueAtTime(0, t + 0.44); } o.start(t); o.stop(t + 0.5); }
     };
+    api.motor = function (on, v) {
+      if (!api._m) { var mo = ac.createOscillator(), mo2 = ac.createOscillator(), mf = ac.createBiquadFilter(), mg = ac.createGain(); mo.type = 'sawtooth'; mo2.type = 'square'; mf.type = 'lowpass'; mf.frequency.value = 500; mg.gain.value = 0; mo.connect(mf); mo2.connect(mf); mf.connect(mg); mg.connect(master); mo.start(); mo2.start(); api._m = { o: mo, o2: mo2, g: mg, f: mf }; }
+      var m = api._m, t = ac.currentTime, f = 34 + Math.abs(v) * 0.42;
+      m.o.frequency.setTargetAtTime(f, t, 0.08); m.o2.frequency.setTargetAtTime(f * 0.5, t, 0.08); m.f.frequency.setTargetAtTime(380 + Math.abs(v) * 4, t, 0.1);
+      m.g.gain.setTargetAtTime(on ? 0.05 + Math.min(0.06, Math.abs(v) / 2500) : 0, t, 0.15);
+    };
     api.setMode(); return api;
   }
 
@@ -2285,10 +2409,18 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   var BAD = /hijueputa|hijo de puta|malparid\w*|gonorrea|marico\w*|maricon\w*|\bputa\b|\bputo\b|\bverga\b|pendej\w*|\bmierda\b/gi;
   function cleanText(s) { return String(s == null ? '' : s).replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200).replace(BAD, function (m) { return new Array(m.length + 1).join('*'); }); }
 
+  // vista previa del editor: el mismo personaje voxel del juego, en tres cuartos
+  var PV = null;
   function drawPreview() {
-    var c = $('avPrev'), g = c.getContext('2d'), ch = makeChar(lookFrom(avState));
+    var c = $('avPrev'), g = c.getContext('2d'), look = lookFrom(avState);
     g.imageSmoothingEnabled = false; g.clearRect(0, 0, c.width, c.height);
-    g.drawImage(ch.img, 0, 0, ch.FW, ch.FH, 2, 6, 120, 180);
+    try {
+      if (!VOX) throw 0;
+      if (!PV) { var r = new THREE.WebGLRenderer({ alpha: true, antialias: true }); r.setSize(c.width * 2, c.height * 2, false); PV = { r: r, scene: new THREE.Scene(), cam: new THREE.PerspectiveCamera(30, c.width / c.height, 1, 200), mat: VOX.mat(), rig: null }; PV.cam.position.set(0, 13, 62); PV.cam.lookAt(0, 11.2, 0); }
+      if (PV.rig) PV.scene.remove(PV.rig.root);
+      PV.rig = VOX.rig(look, PV.mat); PV.rig.root.rotation.y = 0.55; PV.scene.add(PV.rig.root);
+      PV.r.render(PV.scene, PV.cam); g.drawImage(PV.r.domElement, 0, 0, c.width, c.height);
+    } catch (e) { var ch = makeChar(look); g.drawImage(ch.img, 0, 0, ch.FW, ch.FH, 2, 6, 120, 180); }
   }
   function buildAvatarUI() {
     var box = $('avOpts'); box.innerHTML = '';
@@ -2450,7 +2582,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (!p) { var x = isFinite(+m.x) ? +m.x : spawn.x, y = isFinite(+m.y) ? +m.y : spawn.y; p = players[k] = { id: k, remote: true, type: 'jugador', x: x, y: y, tx: x, ty: y, dir: 0, moving: false, t: 0, sit: false, sig: '', bubble: '', bubbleUntil: 0, typUntil: 0, talk: 0 }; }
       p.name = cleanName(m.name); p.talk = m.talk ? 1 : 0;
       var wasIn = p.inn; p.inn = m.inn ? 1 : 0; if (p.inn && !wasIn) { p.ix = p.itx = isFinite(+m.ix) ? +m.ix : -3.5; p.iz = p.itz = isFinite(+m.iz) ? +m.iz : 2.5; }
-      if (p.sig !== sig) { p.sig = sig; p.sheet = makeChar(lookFrom(av)); }
+      if (p.sig !== sig) { p.sig = sig; p.sheet = makeChar(lookFrom(av)); p.look = lookFrom(av); }
     });
     Object.keys(players).forEach(function (k) { if (!seen[k]) delete players[k]; });
     setNet();
@@ -2463,11 +2595,13 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var d = m && m.payload, p = d && players[d.id]; if (!p) return;
     var x = +d.x, y = +d.y; if (!isFinite(x) || !isFinite(y)) return;
     p.tx = clamp(x, 0, W * TS); p.ty = clamp(y, 0, H * TS);
+    p.moto = d.m ? 1 : 0; if (isFinite(+d.a)) p.mangT = +d.a;
   }
   function onlineTick(dt) {
     var ks = Object.keys(players);
     for (var i = 0; i < ks.length; i++) {
       var p = players[ks[i]], dx = p.tx - p.x, dy = p.ty - p.y, d = Math.hypot(dx, dy);
+      if (p.moto) { if (p.mang === undefined) p.mang = p.mangT || 0; p.mang += wrapAng((p.mangT || 0) - p.mang) * Math.min(1, dt * 8); }
       if (d > 200) { p.x = p.tx; p.y = p.ty; p.moving = false; continue; }
       if (d > 0.6) {
         var st = Math.min(1, dt * 7), nx = dx * st, ny = dy * st; p.x += nx; p.y += ny;
@@ -2479,9 +2613,9 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (!OL.on || !OL.conn || !OL.chan) return;
     sendT += dt;
     var moved = Math.abs(player.x - lastX) + Math.abs(player.y - lastY) > 1;
-    if ((moved && sendT > 0.2) || sendT > 3) {
+    if ((moved && sendT > (ride ? 0.1 : 0.2)) || sendT > 3) {
       sendT = 0; lastX = player.x; lastY = player.y;
-      try { OL.chan.send({ type: 'broadcast', event: 'pos', payload: { id: OL.user.id, x: Math.round(player.x), y: Math.round(player.y) } }); } catch (e) {}
+      try { OL.chan.send({ type: 'broadcast', event: 'pos', payload: { id: OL.user.id, x: Math.round(player.x), y: Math.round(player.y), m: ride ? 1 : 0, a: ride ? +ride.a.toFixed(2) : 0 } }); } catch (e) {}
     }
   }
 
@@ -2939,7 +3073,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { IN: IN, r3: R3, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 
