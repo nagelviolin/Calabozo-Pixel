@@ -1335,6 +1335,15 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     shareMotos();
     return true;
   }
+  // los jugadores son sólidos: no se atraviesan. rPed = radio de quien va a pie, rMoto = radio de quien va en moto.
+  function pBlock(x, y, ox, oy, rPed, rMoto) {
+    var ks = Object.keys(players);
+    for (var i = 0; i < ks.length; i++) {
+      var q = players[ks[i]]; if (q.inn) continue; var r = q.moto ? rMoto : rPed; if (!r) continue;
+      var d1 = Math.hypot(x - q.x, y - q.y); if (d1 < r && d1 < Math.hypot(ox - q.x, oy - q.y)) return true;
+    }
+    return false;
+  }
   function driveMoto(dt) {
     var R = ride, thr = (keys.up ? 1 : 0) - (keys.down ? 1 : 0), st = (keys.right ? 1 : 0) - (keys.left ? 1 : 0) + (keys.sr ? 1 : 0) - (keys.sl ? 1 : 0);
     if (Math.hypot(joy.x, joy.y) > 0.14) { thr += -joy.y; st += joy.x; }
@@ -1348,11 +1357,24 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var grip = clamp(Math.abs(R.v) / 40, 0, 1) * (1 - Math.min(0.45, Math.abs(R.v) / 400));
     R.a += R.steer * grip * 2.3 * dt * (R.v >= 0 ? 1 : -1);
     var ca = Math.cos(R.a), sa = Math.sin(R.a), nx = R.x + ca * R.v * dt, ny = R.y + sa * R.v * dt, sg = R.v >= 0 ? 1 : -1;
-    function ok(x, y) { var fx = x + ca * 9 * sg, fy = y + sa * 9 * sg; return freeAt(x, y) && freeAt(fx, fy) && !hitVehicle(fx, fy) && !hitParked(fx, fy); }
+    function ok(x, y) { var fx = x + ca * 9 * sg, fy = y + sa * 9 * sg; return freeAt(x, y) && freeAt(fx, fy) && !hitVehicle(fx, fy) && !hitParked(fx, fy) && !pBlock(fx, fy, R.x + ca * 9 * sg, R.y + sa * 9 * sg, Math.abs(R.v) > 60 ? 0 : 11, 14); }
     if (ok(nx, ny)) { R.x = nx; R.y = ny; }
     else if (ok(nx, R.y)) { R.x = nx; R.v *= 0.92; }                       // roza la pared y sigue
     else if (ok(R.x, ny)) { R.y = ny; R.v *= 0.92; }
     else { var vc = Math.abs(R.v); if (vc > 70 && audio && soundOn) audio.honk(true); R.v = -R.v * 0.2; if (vc > 105) perderVida('te estrellaste con la moto'); }
+    // atropello: si pasas rápido por encima de alguien a pie, lo lanzas y tu moto pierde casi toda la velocidad
+    if (Math.abs(R.v) > 60 && !(R.hitT > time)) {
+      var ks = Object.keys(players), fxh = R.x + ca * 8 * sg, fyh = R.y + sa * 8 * sg;
+      for (var ih = 0; ih < ks.length; ih++) {
+        var qh = players[ks[ih]]; if (qh.moto || qh.inn) continue;
+        if (Math.hypot(qh.x - fxh, qh.y - fyh) < 13) {
+          var vh = Math.abs(R.v); R.hitT = time + 1.2; R.v *= 0.35; if (audio && soundOn && audio.thud) audio.thud();
+          toast('💥 ¡Atropellaste a ' + (qh.name || 'alguien') + '!');
+          if (enLinea()) ecoSend({ t: 'golpe', to: ks[ih], h: +R.a.toFixed(3), v: Math.round(vh) });
+          break;
+        }
+      }
+    }
     R.lean += (-R.steer * clamp(R.v / 120, 0, 1) * 0.32 - R.lean) * Math.min(1, dt * 6);   // se inclina hacia donde gira
     player.x = R.x; player.y = R.y; player.a = R.a;
   }
@@ -1563,8 +1585,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (fwd || str) {
         var sp = ((keys.shift || jm > 0.95) ? 80 : 44) * dt * (jOn ? Math.min(1, jm / 0.85) : 1), ca = Math.cos(player.a), sa = Math.sin(player.a);
         var mx = (ca * fwd - sa * str), my = (sa * fwd + ca * str), n = Math.hypot(mx, my); mx = mx / n * sp; my = my / n * sp;
-        if (freeAt(player.x + mx, player.y) && !hitVehicle(player.x + mx, player.y) && !hitParked(player.x + mx, player.y)) { player.x += mx; moving = true; }
-        if (freeAt(player.x, player.y + my) && !hitVehicle(player.x, player.y + my) && !hitParked(player.x, player.y + my)) { player.y += my; moving = true; }
+        if (freeAt(player.x + mx, player.y) && !hitVehicle(player.x + mx, player.y) && !hitParked(player.x + mx, player.y) && !pBlock(player.x + mx, player.y, player.x, player.y, 9, 11)) { player.x += mx; moving = true; }
+        if (freeAt(player.x, player.y + my) && !hitVehicle(player.x, player.y + my) && !hitParked(player.x, player.y + my) && !pBlock(player.x, player.y + my, player.x, player.y, 9, 11)) { player.y += my; moving = true; }
       }
     }
     if (moving && !ride) walkPh += dt * (keys.shift ? 13 : 9);
@@ -1906,6 +1928,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         if (!e) { e = { r: VOX.rig(p.look, VXMAT), sig: p.sig, face: 0 }; e.r.root.scale.setScalar(VK); scene.add(e.r.root); avs.set(k, e); }
         var R = e.r; R.root.visible = !p.inn; if (p.inn) return;
         var sx = p.x / TS, sz = p.y / TS;
+        if (p.tum) { var tt0 = time - p.tum.t0; if (tt0 >= 0 && tt0 < 2.2) { var dd0 = vueloDist(p.tum.v0, tt0); p.x = p.tum.x0 + p.tum.dx * dd0; p.y = p.tum.y0 + p.tum.dy * dd0; sx = p.x / TS; sz = p.y / TS; } else p.tum = null; }
         if (p.moto) {
           var ca = Math.cos(p.mang || 0), sa = Math.sin(p.mang || 0);
           R.root.scale.setScalar(VK * RIDE_S); R.root.position.set(sx - ca * RBACK, SEAT - HIP, sz - sa * RBACK); R.root.rotation.set(0, Math.atan2(ca, sa), 0); R.pose('ride');
@@ -2939,7 +2962,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var pd = pend[d.id]; if (!pd || pd.n !== +d.n || pd.exp < Date.now()) return; delete pend[d.id];
       ganar(pd.n, cleanName(d.fn) + ' pagó'); if (pd.a === 'papeles') { ECO.matraca += pd.n; if (ECO.matraca >= 50) toast('Llevas $' + ECO.matraca + ' de matraca… ojo con el Comisario'); }
     } else if (d.t === 'no' && d.to === me) { delete pend[d.id]; toast(cleanName(d.fn) + (d.why === 'poor' ? ' no tiene con qué pagar' : ' no quiso pagar')); }
-    else if (d.t === 'atrop') { var qa = players[d.id]; if (qa) { qa.tumbleAt = time; qa.tumbleSp = d.sp === -1 ? -1 : 1; } }
+    else if (d.t === 'atrop') { var qa = players[d.id]; if (qa) { qa.tumbleAt = time; qa.tumbleSp = d.sp === -1 ? -1 : 1; var ax = +d.x, ay = +d.y, adx = +d.dx, ady = +d.dy, av = +d.v0; if ([ax, ay, adx, ady, av].every(isFinite)) qa.tum = { t0: time, x0: clamp(ax, 0, W * TS), y0: clamp(ay, 0, H * TS), dx: adx, dy: ady, v0: clamp(av, 60, 260) }; } }
+    else if (d.t === 'golpe' && d.to === me) { var gh = +d.h, gv = +d.v; if (isFinite(gh) && isFinite(gv)) atropellado(Math.cos(gh), Math.sin(gh), clamp(gv, 40, 230)); }
     else if (d.t === 'chisme' && d.to === me) chismeRecibido(d);
     else if (d.t === 'viral') chismeViral(d);
     else if (d.t === 'desm' && d.to === me) {
@@ -2975,18 +2999,20 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   // ---- atropellos: si una moto te pasa por encima pierdes media vida y sales revolcado
   var TUMBLE = null, TUM_DUR = 2.2;
-  function atropellado(dx, dy) {
-    if (TUMBLE || ECO.hurtT > time || gateOpen) return;
-    var l = Math.hypot(dx, dy) || 1, sp = Math.random() < 0.5 ? -1 : 1;
+  function atropellado(dx, dy, vel) {
+    if (TUMBLE || ECO.hurtT > time || gateOpen || ride) return;
+    var l = Math.hypot(dx, dy) || 1, sp = Math.random() < 0.5 ? -1 : 1, v0 = clamp(70 + 0.9 * (vel || 100), 110, 215), ux = dx / l, uy = dy / l;
     if (modOpen) modClose(true); if (mapOpen) closeMap(); if (chatOpen) closeChat(); closeDialog(); keys = {}; joy.x = joy.y = 0;
-    TUMBLE = { t: 0, dx: dx / l, dy: dy / l, spin: sp };
+    TUMBLE = { t: 0, dx: ux, dy: uy, spin: sp, v0: v0 };
     perderVida('te atropellaron', 0.5); if (!TUMBLE) return; ECO.hurtT = time + 4.5;
     if (audio && soundOn && audio.thud) audio.thud();
-    if (enLinea()) ecoSend({ t: 'atrop', id: OL.user.id, sp: sp });
+    if (enLinea()) ecoSend({ t: 'atrop', id: OL.user.id, sp: sp, x: Math.round(player.x), y: Math.round(player.y), dx: +ux.toFixed(3), dy: +uy.toFixed(3), v0: Math.round(v0) });
   }
+  // distancia recorrida en el vuelo: la velocidad baja hasta cero en 0,8 s
+  function vueloDist(v0, t) { var u = Math.min(t, 0.8); return v0 * (u - u * u / 1.6); }
   function tumbleTick(dt) {
     if (!TUMBLE) return; TUMBLE.t += dt; var t = TUMBLE.t;
-    if (t < 0.8) { var v = 150 * (1 - t / 0.8), mx = TUMBLE.dx * v * dt, my = TUMBLE.dy * v * dt; if (freeAt(player.x + mx, player.y)) player.x += mx; if (freeAt(player.x, player.y + my)) player.y += my; }
+    if (t < 0.8) { var v = TUMBLE.v0 * (1 - t / 0.8), mx = TUMBLE.dx * v * dt, my = TUMBLE.dy * v * dt; if (freeAt(player.x + mx, player.y)) player.x += mx; if (freeAt(player.x, player.y + my)) player.y += my; }
     if (t >= TUM_DUR) TUMBLE = null;
   }
   function atropelloTick(dt) {
@@ -2994,15 +3020,18 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     for (var i = 0; i < ks.length; i++) {
       var q = players[ks[i]]; if (q.lx === undefined) { q.lx = q.x; q.ly = q.y; q.spd = 0; }
       if (dt > 0) q.spd = q.spd * 0.6 + 0.4 * Math.hypot(q.x - q.lx, q.y - q.ly) / dt; q.lx = q.x; q.ly = q.y;
-      if (!hit && q.moto && !q.inn && !ride && !TUMBLE && q.spd > 55 && Math.hypot(q.x - player.x, q.y - player.y) < 13) hit = q;
+      if (!hit && q.moto && !q.inn && !ride && !TUMBLE && q.spd > 45 && Math.hypot(q.x - player.x, q.y - player.y) < 13) hit = q;
     }
-    if (hit) { var h = hit.mang || 0; atropellado(Math.cos(h) * 0.8 + (player.x - hit.x) * 0.02, Math.sin(h) * 0.8 + (player.y - hit.y) * 0.02); }
+    if (hit) { var h = hit.mang || 0; atropellado(Math.cos(h) * 0.8 + (player.x - hit.x) * 0.02, Math.sin(h) * 0.8 + (player.y - hit.y) * 0.02, hit.spd); }
   }
   function sm(k) { k = Math.max(0, Math.min(1, k)); return k * k * (3 - 2 * k); }
   // cámara del que sale volando: salta, cae de espaldas, se queda mareado en el piso y se levanta
   function tumblePose(t, sp) {
     var up = sm((t - 1.7) / 0.5), fall = sm((t - 0.3) / 0.6), toss = sm(t / 0.35), roll1 = sm(t / 0.9);
-    var y = t < 0.3 ? 0.82 + 0.5 * Math.sin(Math.PI * t / 0.3) : 0.82 + (0.14 - 0.82) * fall + (0.82 - 0.14) * up;
+    var y;
+    if (t < 0.85) y = 0.82 + (0.14 - 0.82) * sm(t / 0.85) + (t < 0.8 ? 0.95 * Math.sin(Math.PI * t / 0.8) : 0);
+    else if (t < 1.7) y = 0.14;
+    else y = 0.14 + (0.82 - 0.14) * up;
     var lying = t > 0.9 && t < 1.7;
     var pitch = (0.45 * toss * (1 - fall) + 0.14 * fall - 0.35 * Math.sin(Math.PI * Math.min(1, t / 0.9))) * (1 - up) + (lying ? 0.05 * Math.sin((t - 0.9) * 9) : 0);
     // una vuelta de campana completa mientras vuela y queda tumbado de lado
@@ -3012,8 +3041,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   // los demás ven a tu personaje volar y caer
   function tumbleRig(R, t, sp, face) {
-    var k = t < 0.9 ? sm(t / 0.7) : (t < 1.7 ? 1 : 1 - sm((t - 1.7) / 0.5)), hop = t < 0.35 ? Math.sin(Math.PI * t / 0.35) * 0.55 : 0, fl = t < 0.9 ? 1 : 0.15;
-    R.root.position.y = hop + 0.05 * k; R.root.rotation.set(-Math.PI / 2 * k, face + sp * 2.2 * sm(t / 0.9) * (t < 1.7 ? 1 : 1 - sm((t - 1.7) / 0.5)), 0);
+    var k = t < 0.9 ? sm(t / 0.7) : (t < 1.7 ? 1 : 1 - sm((t - 1.7) / 0.5)), hop = t < 0.8 ? 0.95 * Math.sin(Math.PI * t / 0.8) : 0, fl = t < 0.9 ? 1 : 0.15, flip = t < 0.8 ? -6.283 * sm(t / 0.8) : 0;
+    R.root.position.y = hop + 0.05 * k; R.root.rotation.set(-Math.PI / 2 * k + flip, face + sp * 2.2 * sm(t / 0.9) * (t < 1.7 ? 1 : 1 - sm((t - 1.7) / 0.5)), 0);
     R.armL.rotation.set(Math.sin(t * 16) * 1.5 * fl, 0, 0.9 * k); R.armR.rotation.set(-Math.sin(t * 16) * 1.5 * fl, 0, -0.9 * k); R.legL.rotation.set(Math.sin(t * 14) * 1.1 * fl, 0, 0.2 * k); R.legR.rotation.set(-Math.sin(t * 14) * 1.1 * fl, 0, -0.2 * k);
   }
   // ---- botones y teclas

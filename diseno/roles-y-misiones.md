@@ -8,7 +8,7 @@ Moneda: **$** (en Calabozo todo se cobra en dólares). Cada persona empieza con 
 - **Vidas**: cada persona tiene 5. Una vida se pierde por un choque fuerte con la moto, o por el **riesgo** de algunas misiones (abajo).
 - **Quedarse sin vidas**: te llevan **bien lejos** (a más de un kilómetro de la plaza), **pierdes todo el dinero** y vuelves con 5 vidas nuevas.
 - **Inmunidad**: después de perder una vida hay 2 segundos en los que no se puede perder otra.
-- **Atropellos**: si una moto en marcha te pasa por encima pierdes **media vida** (el corazón sale partido), sales volando y rodando por el suelo unos 2 segundos sin poder moverte, y los demás te ven tendido. Después tienes unos segundos de protección. Por ahora solo atropellan las motos de otros jugadores.
+- **Atropellos**: si una moto en marcha te pasa por encima pierdes **media vida** (el corazón sale partido), sales volando y rodando por el suelo unos 2 segundos sin poder moverte, y los demás te ven tendido. Después tienes unos segundos de protección. El atropellado sale **volando unos 10 metros** dando una vuelta en el aire, y el conductor pierde casi toda su velocidad. Los jugadores son **sólidos**: no se atraviesan a pie ni en moto (a poca velocidad la moto se detiene ante alguien; solo se atropella de verdad a más de unos 27 km/h). Por ahora solo atropellan las motos de otros jugadores.
 - **Vehículos**: las motos y los carros **se compran**; ya no hay motos gratis.
   - Moto: **$150** (con $100 de salida hay que ganar primero unos $50).
   - Carro: **$600** (cuando se pueda conducir).
