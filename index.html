@@ -872,6 +872,42 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   // ---------------------------------------------------------------- personajes
   var SKINS = ['#F1C9A5', '#E0AC84', '#C68B60', '#A86F48', '#8A5534', '#6B3F25'];
   var HAIRS = ['#1E1712', '#2B1B14', '#3B2A20', '#5A3A22', '#8A6A3A', '#D8D0C0'];
+  // conductor de moto: mismo estilo que makeChar pero sentado, con las manos en el manillar.
+  // Una columna por conductor y 4 filas (frente, espalda, perfil izq., perfil der.), como los personajes.
+  var RIDERCOL = ['#E86A2E', '#2E6FB7', '#F2F2F2', '#6E1423', '#2F8F4E'];
+  function makeRiders() {
+    var FW = 20, FH = 30, V = RIDERCOL.length * 2, sheet = mk(FW * V, FH * 4), sx = sheet.getContext('2d');
+    for (var v = 0; v < V; v++) {
+      var rnd = mulberry(9100 + v), o = { top: RIDERCOL[v >> 1], casco: v % 2 === 1, skin: SKINS[Math.floor(rnd() * SKINS.length)], hair: HAIRS[Math.floor(rnd() * 5)], bottom: ['#2B3550', '#3A3A3A', '#5A4632', '#24324A'][Math.floor(rnd() * 4)], shoe: '#1E1A16', hatc: ['#1E1E1E', '#C8302E', '#F2F2F2', '#2E6FB7'][Math.floor(rnd() * 4)] };
+      for (var d = 0; d < 3; d++) {
+        var c = mk(FW, FH), g = c.getContext('2d');
+        var p = function (x, y, w, h, col) { if (w > 0 && h > 0) { g.fillStyle = col; g.fillRect(x + 1, y + 5, w, h); } };
+        if (d < 2) {
+          p(4, 15, 4, 3, o.bottom); p(11, 15, 4, 3, o.bottom); p(3, 17, 3, 4, o.bottom); p(13, 17, 3, 4, o.bottom); p(3, 21, 3, 1, o.shoe); p(13, 21, 3, 1, o.shoe);
+          p(4, 9, 11, 7, o.top); p(2, 10, 2, 4, o.top); p(15, 10, 2, 4, o.top); p(1, 13, 2, 2, o.skin); p(16, 13, 2, 2, o.skin);
+        } else {
+          p(2, 15, 8, 3, o.bottom); p(2, 17, 3, 4, o.bottom); p(1, 21, 4, 1, o.shoe);
+          p(6, 9, 8, 7, o.top); p(3, 11, 6, 2, o.top); p(1, 11, 2, 2, o.skin);
+        }
+        p(5, 2, 9, 7, o.skin);
+        if (o.casco) { p(4, 0, 11, 6, o.hatc); if (d === 0) p(6, 3, 7, 2, '#8CC4E6'); if (d === 2) p(4, 3, 3, 2, '#8CC4E6'); }
+        else {
+          p(5, 1, 9, 3, o.hair); if (d === 0) { p(5, 3, 1, 2, o.hair); p(13, 3, 1, 2, o.hair); } if (d === 1) p(5, 1, 9, 7, o.hair); if (d === 2) p(9, 3, 5, 4, o.hair);
+        }
+        if (d === 0) { p(7, 5, 1, 1, '#1A1A1A'); p(11, 5, 1, 1, '#1A1A1A'); }
+        if (d === 2 && !o.casco) p(6, 5, 1, 1, '#1A1A1A');
+        var data = g.getImageData(0, 0, FW, FH).data, out = [];
+        for (var y = 0; y < FH; y++) for (var x = 0; x < FW; x++) {
+          if (data[(y * FW + x) * 4 + 3] > 0) continue;
+          if ((x > 0 && data[(y * FW + x - 1) * 4 + 3] > 0) || (x < FW - 1 && data[(y * FW + x + 1) * 4 + 3] > 0) || (y > 0 && data[((y - 1) * FW + x) * 4 + 3] > 0) || (y < FH - 1 && data[((y + 1) * FW + x) * 4 + 3] > 0)) out.push(x, y);
+        }
+        g.fillStyle = '#16120F'; for (var i = 0; i < out.length; i += 2) g.fillRect(out[i], out[i + 1], 1, 1);
+        sx.drawImage(c, v * FW, d * FH);
+        if (d === 2) { sx.save(); sx.translate(v * FW + FW, 3 * FH); sx.scale(-1, 1); sx.drawImage(c, 0, 0); sx.restore(); } // perfil derecho = espejo
+      }
+    }
+    return { img: upscale(sheet, 3), V: V, FW: FW * 3, FH: FH * 3, HIP: 20 * 3 };
+  }
   function makeChar(o) {
     var FW = 20, FH = 30, sheet = mk(FW * 3, FH * 4), sx = sheet.getContext('2d');
     for (var d = 0; d < 4; d++) for (var f = 0; f < 3; f++) {
@@ -1582,7 +1618,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     }
     function propMatsTint(hex) { Object.keys(propMats).forEach(function (k) { var pm = propMats[k]; if (pm && !pm.lamp) pm.mat.color.setHex(hex); }); props.forEach(function (sp) { if (sp && sp.userData.pm.lamp) sp.material = PH[hour].win ? sp.userData.pm.mn : sp.userData.pm.mat; }); }
 
-    R3.on = true; R3.renderer = renderer; R3.glc = glc; R3.scene = scene; R3.camera = camera;
+    R3.on = true; R3.renderer = renderer; R3.glc = glc; R3.scene = scene; R3.camera = camera; R3.syncMotos = function () { syncMotos(); };
     R3.stats = function () { return { blds: blds.size, chunks: chunks.size, props: props.size, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures }; };
     R3.resize = function () {
       var w = cv.width, h = cv.height, dpr = window.devicePixelRatio || 1;
@@ -1618,6 +1654,17 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         motoIM.count = 0; motoIM.frustumCulled = false; scene.add(motoIM);
       }).catch(function () {});
     })();
+    var riderIM = null, RS = null, riderUV = null, riderM4 = new THREE.Matrix4(), riderQ = new THREE.Quaternion(), riderP = new THREE.Vector3();
+    (function () {
+      RS = makeRiders();
+      var t = new THREE.CanvasTexture(RS.img); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; t.repeat.set(1 / RS.V, 1 / 4);
+      var k2 = 0.95 / (26 * 3) * 0.78, wid = RS.FW * k2, hgt = RS.FH * k2, SEAT = 0.38; // un poco más pequeño que un peatón para que quepa en la moto
+      var geo = new THREE.PlaneGeometry(wid, hgt); geo.translate(0, hgt / 2 + SEAT - (RS.FH - RS.HIP) * k2, 0);
+      riderUV = new THREE.InstancedBufferAttribute(new Float32Array(64), 2); geo.setAttribute('uvo', riderUV);
+      var mat = new THREE.MeshBasicMaterial({ map: t, alphaTest: 0.5, side: THREE.DoubleSide });
+      mat.onBeforeCompile = function (sh) { sh.vertexShader = 'attribute vec2 uvo;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n\tvUv += uvo;'); };
+      riderIM = new THREE.InstancedMesh(geo, mat, 32); riderIM.count = 0; riderIM.frustumCulled = false; scene.add(riderIM);
+    })();
     function syncMotos() {
       if (!motoIM) return;
       var px = player.x / TS, pz = player.y / TS, vis = scene.fog.far + 4, n = 0;
@@ -1625,9 +1672,17 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         var c = cars[i]; if (c.type !== 'moto') continue;
         var x = c.x / TS, z = c.y / TS; if (Math.hypot(x - px, z - pz) > vis) continue;
         motoQ.setFromAxisAngle(motoUp, Math.atan2(c.hy, -c.hx)); // el faro del modelo mira hacia -X
-        motoP.set(x, 0, z); motoM4.compose(motoP, motoQ, motoS); motoIM.setMatrixAt(n++, motoM4);
+        motoP.set(x, 0, z); motoM4.compose(motoP, motoQ, motoS); motoIM.setMatrixAt(n, motoM4);
+        // conductor: mira a la cámara y elige frente/espalda/perfil según hacia dónde va la moto
+        var hx = c.hx, hz = c.hy, vx = camera.position.x - x, vz = camera.position.z - z, vl = Math.hypot(vx, vz) || 1; vx /= vl; vz /= vl;
+        var dot = hx * vx + hz * vz, cross = hx * vz - hz * vx, row = dot > 0.7 ? 0 : (dot < -0.7 ? 1 : (cross > 0 ? 3 : 2));
+        var vi = Math.max(0, RIDERCOL.indexOf(c.rider)) * 2 + (Math.floor(c.speed * 10) % 2);
+        riderP.set(x - hx * 0.16, 0, z - hz * 0.16); riderQ.setFromAxisAngle(motoUp, Math.atan2(vx, vz)); // sobre el asiento, detrás del depósito
+        riderM4.compose(riderP, riderQ, motoS); riderIM.setMatrixAt(n, riderM4); riderUV.setXY(n, vi / RS.V, 1 - (row + 1) / 4);
+        n++;
       }
       motoIM.count = n; motoIM.instanceMatrix.needsUpdate = true;
+      riderIM.count = n; riderIM.instanceMatrix.needsUpdate = true; riderUV.needsUpdate = true; riderIM.material.color.setHex(PH[hour].prop);
     }
 
     render3d = function () {
