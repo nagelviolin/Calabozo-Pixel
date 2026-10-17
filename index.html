@@ -2568,9 +2568,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   // Cada persona tiene dinero y 5 vidas. Sin vidas: te llevan bien lejos, vuelves con 5 vidas y sin un centavo.
   var ECO = { money: 100, lives: 5, key: 'calabozo-eco-invitado', hurtT: 0, MAXV: 5, loaded: false };
   var ECO_FUN = [
-    ['¡Te llevaron al fin del mundo!', 'Sin vidas y sin plata. Te dejaron más lejos que la bomba de gasolina del cuento. Empieza de nuevo y esta vez cuida la moto.'],
-    ['¡Cayó el rey del pueblo!', 'Te quedaste sin vidas, y el dinero se lo llevó el viento (y el cobrador). Toca caminar un rato, compadre.'],
-    ['¡Fuiste sancionado!', 'Cinco golpes y fuera: te mandaron lejísimos y sin un bolívar. Dicen que desde allá se ve la Plaza Bolívar, pero chiquitica.']
+    ['¡Chávez te jaló las patas!', 'Te mandaron pal 2017. Comienza otra vez y no la cagues, ¡la patria sigue!']
   ];
   function ecoLoad(uid) {
     ECO.key = 'calabozo-eco-' + (uid || 'invitado'); ECO.loaded = true;
@@ -2619,7 +2617,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (ride) dismountMoto(true); keys = {}; joy.x = joy.y = 0; closeDialog(); if (chatOpen) closeChat(); if (mapOpen) closeMap();
     var pos = sitioLejano(); player.x = pos[0]; player.y = pos[1]; player.a = Math.random() * Math.PI * 2; player.va = 0;
     var m = ECO_FUN[Math.floor(Math.random() * ECO_FUN.length)];
-    $('ecoMsgT').textContent = m[0]; $('ecoMsgP').textContent = m[1] + (perdido ? ' Perdiste $' + perdido + '.' : '') + (why ? ' (' + why + ')' : ''); $('ecoMsg').hidden = false;
+    $('ecoMsgT').textContent = m[0]; $('ecoMsgP').textContent = m[1] + (perdido ? ' Perdiste $' + perdido + '.' : ''); $('ecoMsg').hidden = false;
     shareMotos();
   }
   $('ecoMsgB').addEventListener('click', function () { $('ecoMsg').hidden = true; try { stage.focus({ preventScroll: true }); } catch (e) {} });
