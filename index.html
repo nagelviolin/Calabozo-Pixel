@@ -217,6 +217,18 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .invite p { font-size: 13.5px; }
 .invite .btn { min-height: 32px; font-size: 13px; }
 @media (max-height: 520px) { .chatpanel { max-width: min(400px, 56%); } }
+/* mapa a pantalla completa */
+.mini canvas { cursor: pointer; }
+.bigmap { position: absolute; inset: 0; z-index: 30; background: #0E1713; touch-action: none; }
+.bigmap[hidden] { display: none; }
+.bigmap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+.bmtop { position: absolute; top: max(10px, env(safe-area-inset-top, 0px)); left: max(10px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 1px; background: rgba(10, 17, 14, 0.88); border: 2px solid var(--line); border-radius: 6px; padding: 6px 10px; pointer-events: none; max-width: 60%; }
+.bmtop b { font: 700 15px/1.2 var(--display); }
+.bmtop span { color: var(--muted); font-size: 12.5px; }
+.bmzoom { position: absolute; right: max(10px, env(safe-area-inset-right, 0px)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; }
+.bmb { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--line); background: rgba(10, 17, 14, 0.88); color: var(--fg); font: 700 22px/1 var(--body); cursor: pointer; padding: 0; }
+.bmback { position: absolute; right: max(10px, env(safe-area-inset-right, 0px)); bottom: max(10px, env(safe-area-inset-bottom, 0px)); min-height: 48px; padding: 0 18px; font-size: 15px; }
+.stage.map-open .joy, .stage.map-open .act, .stage.map-open .fab, .stage.map-open .mic, .stage.map-open .gear, .stage.map-open .hud, .stage.map-open .mini, .stage.map-open .chatlive, .stage.map-open .hint { display: none !important; }
 /* chat de voz: micrófono debajo del botón de Chat */
 .fab { bottom: 136px; }
 .mic { position: absolute; right: 10px; bottom: 74px; width: 54px; height: 54px; border-radius: 50%; border: 2px solid var(--line); background: rgba(10, 17, 14, 0.85); color: var(--fg); display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; z-index: 5; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
@@ -254,7 +266,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       <canvas id="cv" role="img" aria-label="Vista en primera persona de las calles del centro de Calabozo"></canvas>
       <div class="chip hud"><b id="hudStreet">Plaza Bolívar</b><span id="hudClock">1:00 pm · 37 °C</span><span id="hudSpeed" hidden></span><span class="warn" id="hudDark" hidden>Sin luz</span><span id="hudNet" style="display:none"></span></div>
       <button type="button" class="gear" id="cfgBtn" aria-label="Ajustes"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
-      <div class="chip mini"><canvas id="mm" aria-label="Minimapa con tu posición y hacia dónde miras"></canvas></div>
+      <div class="chip mini"><canvas id="mm" role="button" tabindex="0" aria-label="Minimapa: tócalo para verlo en grande"></canvas></div>
+      <div class="bigmap" id="bigmap" hidden role="dialog" aria-label="Mapa de Calabozo"><canvas id="bmc"></canvas><div class="bmtop"><b>Mapa de Calabozo</b><span id="bmWhere"></span></div><div class="bmzoom"><button type="button" class="bmb" id="bmIn" aria-label="Acercar">+</button><button type="button" class="bmb" id="bmOut" aria-label="Alejar">−</button><button type="button" class="bmb" id="bmMe" aria-label="Centrar en mí">◎</button></div><button type="button" class="btn primary bmback" id="bmBack">Volver al juego</button></div>
       <div class="chip place" id="place" data-on="0"><small id="placeType"></small><span id="placeName"></span></div>
       <div class="chip hint" id="hint">Haz clic aquí. Camina con ↑ ↓ o W S, gira con ← → o arrastrando el mouse, y A D para pasos de lado. En el teléfono: la palanca camina y arrastrar el dedo por la imagen gira. Pulsa E frente a las tiendas o una puerta, y T para escribir en el chat.</div>
       <div class="dpad">
@@ -1332,9 +1345,9 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function update(dt) {
     time += dt; gameMin = calaboMin(); if (hourOf(gameMin) !== hour) { hour = hourOf(gameMin); updateSitters(); if (audio) audio.setMode(); } onlineTick(dt);
     var moving = false;
-    if (ride && (dlg || gateOpen || chatOpen)) ride.v = 0;
-    if (ride && !dlg && !gateOpen && !chatOpen && !IN.active) driveMoto(dt);
-    else if (!dlg && !gateOpen && !chatOpen && !IN.active) {
+    if (ride && (dlg || gateOpen || chatOpen || mapOpen)) ride.v = 0;
+    if (ride && !dlg && !gateOpen && !chatOpen && !mapOpen && !IN.active) driveMoto(dt);
+    else if (!dlg && !gateOpen && !chatOpen && !mapOpen && !IN.active) {
       var turn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
       player.va = (player.va || 0) + (turn * 2.0 - (player.va || 0)) * Math.min(1, dt * 7);
       player.a += player.va * dt;
@@ -2389,6 +2402,82 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     mctx.fillStyle = 'rgba(245,179,1,0.35)'; mctx.beginPath(); mctx.moveTo(mx, my); mctx.arc(mx, my, 22, player.a - FOV / 2, player.a + FOV / 2); mctx.closePath(); mctx.fill();
     mctx.fillStyle = '#FFFFFF'; mctx.strokeStyle = '#0E1713'; mctx.lineWidth = 1.5; mctx.beginPath(); mctx.arc(mx, my, 3.5, 0, Math.PI * 2); mctx.fill(); mctx.stroke();
   }
+  // ---- mapa a pantalla completa: arrastrar para moverlo, pellizcar o +/− para acercar, nombres de lugares
+  var mapOpen = false, BM = { cx: 0, cy: 0, z: 3, ptrs: {}, pinch: 0, t: 0 }, bmc = $('bmc'), bctx2 = bmc.getContext('2d');
+  var MAPKIND = { plaza: 1, parque: 1, catedral: 1, iglesia: 1, mercado: 1, alcaldia: 1, clinica: 1, escuela: 1, policia: 1, cultura: 1, hotel: 1 };
+  var POICOL = { plaza: '#2F9E5B', parque: '#2F9E5B', catedral: '#C8302E', iglesia: '#C8302E', clinica: '#E8463C', escuela: '#2E6FB7', mercado: '#E8B04B', alcaldia: '#6E4AB0', policia: '#2B3550', banco: '#2F8F4E', cultura: '#9C4DCC', hotel: '#5DB8C9', comida: '#E86A2E', panaderia: '#C9853A', farmacia: '#2FB39C', tienda: '#E8B04B' };
+  function bmFit() { var r = bmc.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1); bmc.width = Math.max(1, Math.round(r.width * dpr)); bmc.height = Math.max(1, Math.round(r.height * dpr)); BM.dpr = dpr; }
+  function bmClampZ() { var minZ = Math.min(bmc.width / W, bmc.height / H) * 0.9; BM.z = clamp(BM.z, minZ, 14 * BM.dpr); }
+  function openMap() {
+    if (mapOpen || gateOpen) return; mapOpen = true; keys = {}; joy.x = joy.y = 0; $('bigmap').hidden = false; stage.classList.add('map-open'); bmFit();
+    BM.cx = player.x / TS; BM.cy = player.y / TS; BM.z = 3 * BM.dpr; bmClampZ(); drawBigMap();
+    $('bmWhere').textContent = $('hudStreet').textContent || '';
+  }
+  function closeMap() { if (!mapOpen) return; mapOpen = false; $('bigmap').hidden = true; stage.classList.remove('map-open'); BM.ptrs = {}; try { stage.focus({ preventScroll: true }); } catch (e) {} }
+  function bmToScr(x, y) { return [(x - BM.cx) * BM.z + bmc.width / 2, (y - BM.cy) * BM.z + bmc.height / 2]; }
+  function drawBigMap() {
+    var g = bctx2, cw = bmc.width, ch = bmc.height, z = BM.z, d = BM.dpr, used = [];
+    BM.cx = clamp(BM.cx, 0, W); BM.cy = clamp(BM.cy, 0, H);
+    g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#0E1713'; g.fillRect(0, 0, cw, ch);
+    g.imageSmoothingEnabled = z < 2; var o = bmToScr(0, 0); g.drawImage(mmBase, o[0], o[1], W * z, H * z);
+    if (hour === 3) { g.fillStyle = dark ? 'rgba(4,6,16,0.45)' : 'rgba(10,14,40,0.3)'; g.fillRect(0, 0, cw, ch); }
+    function free(x, y, w, h) { for (var i = 0; i < used.length; i++) { var u = used[i]; if (x < u[0] + u[2] && x + w > u[0] && y < u[1] + u[3] && y + h > u[1]) return false; } used.push([x, y, w, h]); return true; }
+    function label(x, y, txt, col, big) {
+      g.font = (big ? '700 ' : '600 ') + Math.round((big ? 13 : 11.5) * d) + 'px "DM Sans", system-ui, sans-serif';
+      var w = g.measureText(txt).width + 10 * d, h = (big ? 19 : 17) * d, lx = x - w / 2, ly = y - h - 7 * d;
+      if (lx < 0 || ly < 0 || lx + w > cw || ly + h > ch || !free(lx, ly, w, h)) return false;
+      g.fillStyle = 'rgba(10,17,14,0.86)'; g.fillRect(lx, ly, w, h); g.fillStyle = col || '#EAF2EC'; g.fillRect(lx, ly + h - 2 * d, w, 2 * d);
+      g.fillStyle = '#EAF2EC'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, x, ly + h / 2 - 1 * d); return true;
+    }
+    function dot(x, y, col, r) { g.fillStyle = col; g.strokeStyle = '#0E1713'; g.lineWidth = 1.5 * d; g.beginPath(); g.arc(x, y, r * d, 0, 6.2832); g.fill(); g.stroke(); }
+    // tú, la gente y las motos (primero, para que los nombres no los tapen)
+    var me = bmToScr(player.x / TS, player.y / TS);
+    used.push([me[0] - 12 * d, me[1] - 9 * d, 24 * d, 21 * d]); label(me[0], me[1] - 6 * d, ride ? 'Tú, en moto' : 'Tú', '#F5B301', true);
+    Object.keys(players).forEach(function (k) { var p = players[k]; if (p.inn) return; var q = bmToScr(p.x / TS, p.y / TS); dot(q[0], q[1], '#8FD9A8', 5); label(q[0], q[1], (p.moto ? '🏍 ' : '') + (p.name || 'Vecino'), '#8FD9A8'); });
+    PARKED.forEach(function (m) { if (m.by) return; var q = bmToScr(m.x / TS, m.y / TS); dot(q[0], q[1], '#2E7FE8', 4.5); });
+    // lugares: los importantes siempre; el resto al acercarte
+    var showAll = z >= 4 * d;
+    POIS.forEach(function (pi) { if (!MAPKIND[pi[3]]) return; var q = bmToScr(pi[0], pi[1]); dot(q[0], q[1], POICOL[pi[3]] || '#F5B301', 4); label(q[0], q[1], pi[2], POICOL[pi[3]], true); });
+    if (showAll) POIS.forEach(function (pi) { if (MAPKIND[pi[3]]) return; var q = bmToScr(pi[0], pi[1]); if (q[0] < 0 || q[1] < 0 || q[0] > cw || q[1] > ch) return; dot(q[0], q[1], POICOL[pi[3]] || '#F5B301', 3); label(q[0], q[1], pi[2], POICOL[pi[3]], false); });
+    // nombres de calles al acercarte
+    if (z >= 5 * d) {
+      var seenN = {};
+      SEGS.forEach(function (sg) {
+        if (!sg.n || sg.o === 'D' || seenN[sg.n] > 2) return; var len = Math.hypot(sg.x2 - sg.x1, sg.y2 - sg.y1) * z; if (len < 140 * d) return;
+        var q = bmToScr((sg.x1 + sg.x2) / 2, (sg.y1 + sg.y2) / 2); if (q[0] < 0 || q[1] < 0 || q[0] > cw || q[1] > ch) return;
+        g.font = '600 ' + Math.round(10.5 * d) + 'px "DM Sans", system-ui, sans-serif'; var w = g.measureText(sg.n).width;
+        var bx = sg.o === 'H' ? [q[0] - w / 2, q[1] - 6 * d, w, 12 * d] : [q[0] - 6 * d, q[1] - w / 2, 12 * d, w];
+        if (!free(bx[0], bx[1], bx[2], bx[3])) return; seenN[sg.n] = (seenN[sg.n] || 0) + 1;
+        g.save(); g.translate(q[0], q[1]); if (sg.o === 'V') g.rotate(-Math.PI / 2); g.fillStyle = 'rgba(255,255,255,0.92)'; g.strokeStyle = 'rgba(14,23,19,0.85)'; g.lineWidth = 3 * d; g.textAlign = 'center'; g.textBaseline = 'middle'; g.strokeText(sg.n, 0, 0); g.fillText(sg.n, 0, 0); g.restore();
+      });
+    }
+    // tú: flecha hacia donde miras
+    g.save(); g.translate(me[0], me[1]); g.rotate(player.a); g.fillStyle = '#F5B301'; g.strokeStyle = '#0E1713'; g.lineWidth = 2 * d; g.beginPath(); g.moveTo(11 * d, 0); g.lineTo(-7 * d, 7 * d); g.lineTo(-3 * d, 0); g.lineTo(-7 * d, -7 * d); g.closePath(); g.fill(); g.stroke(); g.restore();
+    used.length = 0;
+  }
+  (function () {
+    $('mm').addEventListener('click', function (e) { e.stopPropagation(); openMap(); });
+    $('mm').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openMap(); } });
+    $('bmBack').addEventListener('click', closeMap);
+    function zoomAt(f, sx, sy) { var x = BM.cx + (sx - bmc.width / 2) / BM.z, y = BM.cy + (sy - bmc.height / 2) / BM.z; BM.z *= f; bmClampZ(); BM.cx = x - (sx - bmc.width / 2) / BM.z; BM.cy = y - (sy - bmc.height / 2) / BM.z; drawBigMap(); }
+    $('bmIn').addEventListener('click', function () { zoomAt(1.5, bmc.width / 2, bmc.height / 2); });
+    $('bmOut').addEventListener('click', function () { zoomAt(1 / 1.5, bmc.width / 2, bmc.height / 2); });
+    $('bmMe').addEventListener('click', function () { BM.cx = player.x / TS; BM.cy = player.y / TS; drawBigMap(); });
+    function pos(e) { var r = bmc.getBoundingClientRect(); return [(e.clientX - r.left) * BM.dpr, (e.clientY - r.top) * BM.dpr]; }
+    bmc.addEventListener('pointerdown', function (e) { BM.ptrs[e.pointerId] = pos(e); try { bmc.setPointerCapture(e.pointerId); } catch (er) {} var k = Object.keys(BM.ptrs); if (k.length === 2) { var a = BM.ptrs[k[0]], b = BM.ptrs[k[1]]; BM.pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); } });
+    bmc.addEventListener('pointermove', function (e) {
+      var old = BM.ptrs[e.pointerId]; if (!old) return; var now = pos(e), k = Object.keys(BM.ptrs);
+      if (k.length === 1) { BM.cx -= (now[0] - old[0]) / BM.z; BM.cy -= (now[1] - old[1]) / BM.z; BM.ptrs[e.pointerId] = now; drawBigMap(); return; }
+      BM.ptrs[e.pointerId] = now; var a = BM.ptrs[k[0]], b = BM.ptrs[k[1]], dd = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (BM.pinch > 0) zoomAt(dd / BM.pinch, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); BM.pinch = dd;
+    });
+    function up(e) { delete BM.ptrs[e.pointerId]; BM.pinch = 0; }
+    bmc.addEventListener('pointerup', up); bmc.addEventListener('pointercancel', up);
+    bmc.addEventListener('wheel', function (e) { e.preventDefault(); var q = pos(e); zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, q[0], q[1]); }, { passive: false });
+    window.addEventListener('keydown', function (e) { if (mapOpen && (e.key === 'Escape' || e.key === 'm' || e.key === 'M')) { e.preventDefault(); closeMap(); } else if (!mapOpen && (e.key === 'm' || e.key === 'M') && inStage()) { e.preventDefault(); openMap(); } });
+    window.addEventListener('resize', function () { if (mapOpen) { bmFit(); bmClampZ(); drawBigMap(); } });
+    setInterval(function () { if (mapOpen) drawBigMap(); }, 500); // la gente se mueve
+  })();
   // sonido
   var audio = null;
   function makeAudio() {
