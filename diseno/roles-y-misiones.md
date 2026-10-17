@@ -14,7 +14,7 @@ Moneda: **$** (en Calabozo todo se cobra en dólares). Cada persona empieza con 
   - Los vehículos se compran en un concesionario junto a la plaza y quedan guardados en la cuenta.
 - **Mototaxi para viajar rápido**: puedes pagarle a un mototaxista para que te lleve. Te montas atrás y pagas al llegar.
 
-## Los 10 roles
+## Los 7 roles
 
 Cada rol tiene **3 misiones**: una de ganar dinero tranquilo, una con otra persona y una de **riesgo** (si falla, −1 vida).
 
@@ -44,30 +44,15 @@ Necesita su propia moto ($150).
 - **La cola del Banesco**: haz cola 30 s y véndele tu puesto a un jugador por **$10**.
 - **⚠ Revisión sorpresa**: si un policía te para con mercancía encima, la pierdes y pierdes **1 vida**.
 
-### 6. 🗣️ Chismosa — «Yo no soy chismosa, yo me entero»
+### 6. 🗣️ Chismosa — «Yo no soy chismosa, yo me entero» *(por mejorar)*
 - **La ronda del chisme**: pasa por la Panadería, la Plaza y el Supermercado y vende la información: **$20**.
 - **Chisme premium**: un jugador te paga **$5** por el chisme del día.
 - **⚠ Lengua suelta**: si cuentas el mismo chisme a 3 personas, la afectada te saca **1 vida**.
 
-### 7. 🐎 Llanero Coleador — «Con el joropo en la sangre»
-- **Gallinas sueltas**: atrapa 5 gallinas del pueblo. **$20**.
-- **Queso llanero**: lleva queso del mercado a la Alcaldía. **$15**.
-- **⚠ Toro bravo**: aguanta 30 s sin quedarte parado (el toro te embiste): **$40**. Si te quedas parado 5 s, **−1 vida**.
-
-### 8. 🫓 Arepera de la Esquina — «Arepa con todo»
-- **Pedido de 10 arepas**: compra harina, cocina 15 s en tu puesto y entrégalas. **$12** cada pedido.
-- **El fiado**: un jugador pide fiado. Si te paga en 3 min ganas el doble (**$24**); si no, pierdes.
-- **⚠ Arepa quemada**: si te alejas del puesto más de 10 s mientras cocinas, se quema: pierdes los ingredientes y **1 vida** del susto.
-
-### 9. 🎙️ Candidato — «¡Prometo un hueco menos en cada calle!»
-- **Discurso en la plaza**: habla 30 s con el micrófono en la Plaza Bolívar con 2 o más jugadores cerca. **$30**.
-- **Repartir bolsas**: lleva 5 bolsas del Supermercado a la Alcaldía. **$25** (los votos).
-- **⚠ Escándalo**: si 2 jugadores te abuchean mientras hablas, pierdes **1 vida**.
-
-### 10. 🎻 Músico de Plaza — «Arpa, cuatro, maracas… y violín»
-- **Serenata**: toca (mantén el micrófono) 10 s cerca de gente. **$5** de propina por oyente.
-- **Boda por sorpresa**: ve a la Catedral y toca 20 s. **$30**.
-- **⚠ Desafinaste**: si tocas más de 3 veces seguidas en el mismo sitio te tiran un tomate: **−1 vida**.
+### 7. 🎒 Estudiante — «Mañana lo estudio, hoy lo vivo»
+- **Fotocopias al rescate**: compra los apuntes en el C.C. Torres ($5) y llévalos a la escuela antes de 3 min. **$14**
+- **Exposición en clase**: quédate 45 s «exponiendo» en la escuela con 2 o más jugadores cerca. **$20**
+- ⚠ **Copiarse en el examen**: pégate a otro jugador 5 s para copiar. **+$15**. Si pasa «la profesora» (1 de cada 4 veces) te saca **1 vida**: «¡Cero en el examen!».
 
 ## Misiones para cualquiera
 
