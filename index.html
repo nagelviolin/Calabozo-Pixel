@@ -463,10 +463,11 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function dims(b) {
     var l = LAND[b.k];
     var hw = l ? l.hw : (b.fl === 2 ? 3.0 : (SHOPK[b.k] ? 1.9 : 1.75));
-    var extra = l && l.extra ? l.extra : (b.roof === 'teja' ? 0.5 : (b.roof === 'plata' ? 0.8 : 0.22));
+    var extra = CUSTOMEXTRA[b.sign] || (l && l.extra ? l.extra : (b.roof === 'teja' ? 0.5 : (b.roof === 'plata' ? 0.8 : 0.22)));
     return { hw: hw, th: hw + extra, solid: hw + (l && l.extra ? 0 : (b.roof === 'teja' ? 0.4 : 0.15)) };
   }
   // edificios de referencia del pueblo, pintados como en la realidad
+  var CUSTOMEXTRA = { 'SUPERMERCADO LA CRIOLLA 22, C.A': 1.1 }; // el banner sobresale por encima del tejado
   var CUSTOMWALL = { 'SUPERMERCADO LA CRIOLLA 22, C.A': '#F2C231', 'Panadería La Criolla': '#2F8F4E', 'C.C. TORRES': '#2F8F4E' };
   function wallColor(b, r) {
     var cw = CUSTOMWALL[b.sign]; if (cw) return cw;
@@ -621,12 +622,16 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   // Supermercado La Criolla 22: fachada amarilla con arcos, zócalo de piedra y banner rojo
   function paintCriollaSuper(g, b, Wp, Hp, wallTop, gy, lights) {
     var Wt = '#F7F2E6', K = '#1B1714', base = gy - 10, top = wallTop, i, x, y;
-    tileStrip(g, Wp, top - 1, 8);
-    // banner rojo inclinado encima del tejado
-    g.fillStyle = '#D8283A'; g.beginPath(); g.moveTo(0, 1); g.lineTo(Wp, 8); g.lineTo(Wp, top + 1); g.lineTo(0, top - 6); g.closePath(); g.fill();
-    g.fillStyle = 'rgba(255,255,255,0.14)'; g.beginPath(); g.moveTo(Wp * 0.62, top + 1); g.quadraticCurveTo(Wp * 0.86, top - 3, Wp, 7); g.lineTo(Wp, top + 1); g.closePath(); g.fill();
-    g.save(); g.translate(Wp * 0.46, (top - 6) / 2 + 4.2); g.rotate(Math.atan2(7, Wp)); g.fillStyle = '#FFFFFF'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 7px "DM Sans", system-ui, sans-serif'; g.fillText(fitText(g, 'SUPERMERCADO LA CRIOLLA 22, C.A', Wp - 34, 8, 4), 0, 0); g.restore();
-    g.fillStyle = '#F7E1E4'; g.beginPath(); g.arc(Wp - 10, top - 3, 6, 0, 6.2832); g.fill(); g.fillStyle = '#D8283A'; g.font = '700 3px "DM Sans", sans-serif'; g.textBaseline = 'middle'; g.fillText('baby', Wp - 10, top - 4); g.fillText('finger', Wp - 10, top - 1);
+    tileStrip(g, Wp, top - 6, 8);
+    // banner rojo encima del tejado, con el nombre en dos líneas
+    var bt = 3, bb = top - 8;
+    g.fillStyle = '#D8283A'; g.beginPath(); g.moveTo(0, bt); g.lineTo(Wp, bt + 3); g.lineTo(Wp, bb + 3); g.lineTo(0, bb); g.closePath(); g.fill();
+    fr(g, 0, bt, Wp, 1, '#F06A78'); fr(g, 0, bb - 1, Wp, 1, '#A81C2C');
+    g.fillStyle = 'rgba(255,255,255,0.16)'; g.beginPath(); g.moveTo(Wp * 0.70, bb + 2); g.quadraticCurveTo(Wp * 0.90, bb - 2, Wp, bt + 5); g.lineTo(Wp, bb + 3); g.closePath(); g.fill();
+    g.fillStyle = '#FFFFFF'; g.textAlign = 'center'; g.textBaseline = 'middle'; var cxT = (Wp - 26) / 2 + 2, mh = (bt + bb) / 2 + 1.5;
+    g.font = '800 12px "DM Sans", system-ui, sans-serif'; g.fillText(fitText(g, 'SUPERMERCADO', Wp - 34, 12, 7), cxT, mh - 5.5);
+    g.font = '800 9px "DM Sans", system-ui, sans-serif'; g.fillText(fitText(g, 'LA CRIOLLA 22, C.A', Wp - 34, 9, 6), cxT, mh + 6);
+    g.fillStyle = '#F7E1E4'; g.beginPath(); g.arc(Wp - 13, mh, 8, 0, 6.2832); g.fill(); g.fillStyle = '#D8283A'; g.font = '800 4px "DM Sans", sans-serif'; g.fillText('baby', Wp - 13, mh - 2); g.fillText('finger', Wp - 13, mh + 2);
     // ménsulas bajo el alero
     for (x = 5; x < Wp - 5; x += 12) { fr(g, x, top + 9, 6, 5, '#6E5240'); fr(g, x, top + 9, 6, 1, '#9A7C66'); }
     // zócalo de piedra
@@ -659,7 +664,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       g.fillStyle = '#12301F'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 6px "DM Sans", system-ui, sans-serif'; g.fillText('C.C. TORRES', Wp / 2, top + 11);
       var sx = 14, sw = Wp - 36; fr(g, sx - 1, top + 16, sw + 2, 22, '#7A4A1E'); fr(g, sx, top + 17, sw, 20, '#F3DFAE');
       g.fillStyle = '#E8C77A'; g.beginPath(); g.arc(sx + 9, top + 27, 6, 0, 6.2832); g.fill(); fr(g, sx + 6, top + 22, 6, 3, '#FFFFFF'); fr(g, sx + 7, top + 26, 1, 1, '#222'); fr(g, sx + 10, top + 26, 1, 1, '#222');
-      g.fillStyle = '#4A2C16'; g.font = '800 6px "DM Sans", system-ui, sans-serif'; g.fillText('PANADERIA', sx + 9 + sw / 2, top + 24); g.font = '800 8px "DM Sans", system-ui, sans-serif'; g.fillText('LA CRIOLLA', sx + 9 + sw / 2, top + 32);
+      g.fillStyle = '#4A2C16'; g.textAlign = 'center'; var tcx = sx + 18 + (sw - 18) / 2; g.font = '800 6px "DM Sans", system-ui, sans-serif'; g.fillText(fitText(g, 'PANADERIA', sw - 24, 6, 4), tcx, top + 24); g.font = '800 8px "DM Sans", system-ui, sans-serif'; g.fillText(fitText(g, 'LA CRIOLLA', sw - 24, 8, 5), tcx, top + 32);
       g.fillStyle = Wt; g.beginPath(); g.moveTo(sx - 4, top + 41); g.lineTo(sx + sw + 4, top + 41); g.lineTo(sx + sw + 1, top + 50); g.lineTo(sx - 1, top + 50); g.closePath(); g.fill(); fr(g, sx - 4, top + 50, sw + 8, 2, '#CFC8B6');
       fr(g, sx, top + 53, sw, base - top - 53, '#241C18'); for (x = sx + 4; x < sx + sw - 2; x += 6) fr(g, x, top + 55, 1, base - top - 57, '#C9A04A'); for (y = top + 58; y < base - 4; y += 7) fr(g, sx + 2, y, sw - 4, 1, '#C9A04A');
       lights.push([sx, top + 53, sw, base - top - 53, 's']);
