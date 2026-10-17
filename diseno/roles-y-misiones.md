@@ -44,10 +44,14 @@ Necesita su propia moto ($150).
 - **La cola del Banesco**: haz cola 30 s y véndele tu puesto a un jugador por **$10**.
 - **⚠ Revisión sorpresa**: si un policía te para con mercancía encima, la pierdes y pierdes **1 vida**.
 
-### 6. 🗣️ Chismosa — «Yo no soy chismosa, yo me entero» *(por mejorar)*
-- **La ronda del chisme**: pasa por la Panadería, la Plaza y el Supermercado y vende la información: **$20**.
-- **Chisme premium**: un jugador te paga **$5** por el chisme del día.
-- **⚠ Lengua suelta**: si cuentas el mismo chisme a 3 personas, la afectada te saca **1 vida**.
+### 6. 🗣️ Chismosa — «Yo no soy chismosa, yo me entero»
+- **La ronda del chisme**: pasa por la Panadería, la Plaza y el Supermercado y vende la información. **$20**
+- **Chisme en cadena**: elige un chisme con el nombre de un jugador conectado, cuéntaselo a otro jugador y que él lo vaya pasando con «Pasar el chisme». Cuando llega a **3 jugadores distintos** se hace viral: tú cobras **$15** y cada persona que lo pasó gana **$3**.
+  - Ejemplos: «Dicen que **{jugador}** se compró una moto con la plata de la vuelta», «Dicen que **{jugador}** le debe $50 al bachaquero», «Dicen que **{jugador}** le tiene miedo a la gallina».
+  - ⚠ **Se te voltea el chisme**: si dos jugadores lo desmienten seguidos, pierdes **1 vida** («¡Te quedó el chisme chimbo!»).
+- **Servicios de chismosa** (te pagan otros jugadores):
+  - **Radio Bemba**: por **$5** ves dónde está la gente en el mapa durante 30 s.
+  - **Lo que vi**: por **$2** te cuento el último sitio donde estuvo un jugador.
 
 ### 7. 🎒 Estudiante — «Mañana lo estudio, hoy lo vivo»
 - **Fotocopias al rescate**: compra los apuntes en el C.C. Torres ($5) y llévalos a la escuela antes de 3 min. **$14**
