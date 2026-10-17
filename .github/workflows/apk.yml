@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [".github/workflows/apk.yml", "index.html"]
+    paths: [".github/workflows/apk.yml", "index.html", "modelos/**"]
 
 permissions:
   contents: write
@@ -28,6 +28,7 @@ jobs:
         run: |
           mkdir -p www
           cp index.html sw.js manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png www/
+          mkdir -p www/modelos && cp modelos/*.glb www/modelos/
           npm init -y
           npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7 @capacitor/keyboard@7
           npx cap init "Calabozo en Línea" com.calabozo.enlinea --web-dir=www

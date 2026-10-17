@@ -1594,6 +1594,42 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     };
     R3.warm = function (ms) { scan(); pump(ms); };
     var vtmp = new THREE.Vector3();
+    // ---- motos que circulan: modelo 3D (modelos/moto-azul.glb, colores por vértice), todas en una sola llamada
+    var motoIM = null, motoM4 = new THREE.Matrix4(), motoQ = new THREE.Quaternion(), motoP = new THREE.Vector3(), motoS = new THREE.Vector3(1, 1, 1), motoUp = new THREE.Vector3(0, 1, 0);
+    (function loadMoto() {
+      fetch('modelos/moto-azul.glb').then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(function (buf) {
+        var dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl))), bo = 20 + jl + 8;
+        var NC = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 }, TY = { 5126: [Float32Array, 'getFloat32'], 5123: [Uint16Array, 'getUint16'], 5125: [Uint32Array, 'getUint32'] };
+        function attr(i) {
+          var a = json.accessors[i], bv = json.bufferViews[a.bufferView], n = NC[a.type], t = TY[a.componentType], sz = t[0].BYTES_PER_ELEMENT;
+          var st = bv.byteStride || n * sz, base = bo + (bv.byteOffset || 0) + (a.byteOffset || 0), o = new t[0](a.count * n);
+          for (var k = 0; k < a.count; k++) for (var c = 0; c < n; c++) o[k * n + c] = dv[t[1]](base + k * st + c * sz, true);
+          return o;
+        }
+        var pr = json.meshes[0].primitives[0], geo = new THREE.BufferGeometry(), col = attr(pr.attributes.COLOR_0);
+        for (var i = 0; i < col.length; i++) { var cc = col[i]; col[i] = cc <= 0.0031308 ? cc * 12.92 : 1.055 * Math.pow(cc, 1 / 2.4) - 0.055; } // el juego trabaja en sRGB
+        geo.setAttribute('position', new THREE.BufferAttribute(attr(pr.attributes.POSITION), 3));
+        geo.setAttribute('normal', new THREE.BufferAttribute(attr(pr.attributes.NORMAL), 3));
+        geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+        geo.setIndex(new THREE.BufferAttribute(attr(pr.indices), 1));
+        // 1,9 m de largo = 0,95 casillas; las ruedas tocan el suelo
+        var k2 = 0.5; geo.scale(k2, k2, k2); geo.computeBoundingBox(); geo.translate(0, -geo.boundingBox.min.y, 0);
+        motoIM = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }), 32);
+        motoIM.count = 0; motoIM.frustumCulled = false; scene.add(motoIM);
+      }).catch(function () {});
+    })();
+    function syncMotos() {
+      if (!motoIM) return;
+      var px = player.x / TS, pz = player.y / TS, vis = scene.fog.far + 4, n = 0;
+      for (var i = 0; i < cars.length && n < 32; i++) {
+        var c = cars[i]; if (c.type !== 'moto') continue;
+        var x = c.x / TS, z = c.y / TS; if (Math.hypot(x - px, z - pz) > vis) continue;
+        motoQ.setFromAxisAngle(motoUp, Math.atan2(c.hy, -c.hx)); // el faro del modelo mira hacia -X
+        motoP.set(x, 0, z); motoM4.compose(motoP, motoQ, motoS); motoIM.setMatrixAt(n++, motoM4);
+      }
+      motoIM.count = n; motoIM.instanceMatrix.needsUpdate = true;
+    }
+
     render3d = function () {
       if (hour !== lastHour) applyPhase();
       scanT -= 1; if (scanT <= 0) { scanT = 12; scan(); }
@@ -1605,7 +1641,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var sd = sunSpr.userData.dir; if (sunSpr.visible && sd) sunSpr.position.set(px + sd[0] * 380, sd[1] * 380, pz + sd[2] * 380);
       for (var i = 0; i < cloudObjs.length; i++) { var c = CLOUDS[i], ang = c.a + time * 0.004, rr = 320 - c.e * 60; cloudObjs[i].position.set(px + Math.cos(ang) * rr, 60 + c.e * 140, pz + Math.sin(ang) * rr); }
       sun.position.set(px + ph.dir[0] * 60, ph.dir[1] * 60, pz + ph.dir[2] * 60); sun.target.position.set(px, 0, pz);
-      syncPlayers(camera.position);
+      syncPlayers(camera.position); syncMotos();
       renderer.render(scene, camera);
       // capa 2D: mano, nombres, minimapa
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
