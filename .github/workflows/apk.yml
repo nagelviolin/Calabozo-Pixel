@@ -54,7 +54,7 @@ jobs:
       - name: Siempre en horizontal
         run: |
           M=android/app/src/main/AndroidManifest.xml
-          sed -i 's#<activity #<activity android:screenOrientation="sensorLandscape" #' $M
+          sed -i '0,/<activity/s//<activity android:screenOrientation="sensorLandscape"/' $M
           grep -q 'screenOrientation="sensorLandscape"' $M || { echo "no se pudo fijar la orientación horizontal"; cat $M; exit 1; }
 
       - name: Permiso de micrófono (chat de voz)
