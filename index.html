@@ -3386,8 +3386,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     function initVoices() {
       var vs = [];
       for (var i = 0; i < NV; i++) {
-        var o1 = ac.createOscillator(), o2 = ac.createOscillator(), lpf = ac.createBiquadFilter(), g = ac.createGain(), pan = ac.createStereoPanner ? ac.createStereoPanner() : null;
-        o1.type = 'sawtooth'; o2.type = 'square'; lpf.type = 'lowpass'; lpf.frequency.value = 500; g.gain.value = 0; o1.connect(lpf); o2.connect(lpf); lpf.connect(g); if (pan) { g.connect(pan); pan.connect(master); } else g.connect(master); o1.start(); o2.start();
+        var o1 = ac.createOscillator(), o2 = ac.createOscillator(), o2g = ac.createGain(), lpf = ac.createBiquadFilter(), hpf = ac.createBiquadFilter(), g = ac.createGain(), pan = ac.createStereoPanner ? ac.createStereoPanner() : null;
+        o1.type = 'sawtooth'; o2.type = 'square'; o2g.gain.value = 0.3; lpf.type = 'lowpass'; lpf.frequency.value = 900; hpf.type = 'highpass'; hpf.frequency.value = 130; g.gain.value = 0; o1.connect(lpf); o2.connect(o2g); o2g.connect(lpf); lpf.connect(hpf); hpf.connect(g); if (pan) { g.connect(pan); pan.connect(master); } else g.connect(master); o1.start(); o2.start();
         vs.push({ id: null, o1: o1, o2: o2, lpf: lpf, g: g, pan: pan });
       }
       api._v = vs;
@@ -3400,10 +3400,10 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       list.forEach(function (e) {
         var v = null; for (i = 0; i < vs.length; i++) if (vs[i].id === e.id) { v = vs[i]; break; }
         if (!v) { for (i = 0; i < vs.length; i++) if (vs[i].id === null) { v = vs[i]; break; } if (!v) return; v.id = e.id; }
-        var k = clamp(1 - e.d / 40, 0, 1), dop = clamp(171 / (171 + e.vr), 0.9, 1.1), f = (30 + e.spd * 0.42) * dop;
-        v.o1.frequency.setTargetAtTime(f, t, 0.08); v.o2.frequency.setTargetAtTime(f * 0.5, t, 0.08);
-        v.lpf.frequency.setTargetAtTime(250 + (130 + e.spd * 3) * (0.35 + 0.65 * k), t, 0.1);
-        v.g.gain.setTargetAtTime(Math.pow(k, 2) * (0.05 + Math.min(0.06, e.spd / 2500)), t, 0.08);
+        var k = clamp(1 - e.d / 40, 0, 1), dop = clamp(171 / (171 + e.vr), 0.9, 1.1), f = (68 + e.spd * 0.9) * dop;
+        v.o1.frequency.setTargetAtTime(f, t, 0.08); v.o2.frequency.setTargetAtTime(f * 2, t, 0.08);
+        v.lpf.frequency.setTargetAtTime(500 + (900 + e.spd * 6) * (0.3 + 0.7 * k), t, 0.1);
+        v.g.gain.setTargetAtTime(Math.pow(k, 2.2) * (0.02 + Math.min(0.025, e.spd / 6000)), t, 0.08);
         if (v.pan) v.pan.pan.setTargetAtTime(e.pan * 0.9, t, 0.08);
       });
     };
