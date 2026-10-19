@@ -79,6 +79,7 @@ Necesita su propia moto ($150).
 - ✅ Atropellos: media vida, revolcón con la pantalla dando vueltas y los demás lo ven.
 - ✅ Riesgos: policía que te ve robar, revisión sorpresa del bachaquero, profesora, Comisario con la matraca.
 - ✅ NPC con aspecto de personaje: peatones, vendedores con puesto (venden comida y te dan vida/ánimo), mototaxis NPC y motos de tráfico que atropellan.
+- ✅ **Rateros**: 2 NPC con antifaz que recorren todo el pueblo por las aceras (no solo la plaza). Si tienes dinero y te alcanzan te quitan el 30 % (mínimo $5) y salen corriendo; si los alcanzas mientras huyen recuperas la plata. Corriendo (Shift) los pierdes; no te roban si vas en moto rápido.
 - ⏳ Concesionario y compra de moto y carro (las 4 motos de la plaza siguen siendo gratis por ahora).
 - ⏳ Pasajero en la moto (mototaxi), Radio Bemba y Lo que vi.
 - ⏳ Que el servidor guarde el dinero (ahora se guarda en el teléfono).

@@ -1155,6 +1155,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       box(body, 1, 1.2, 0.4, -2, 16.6, 4.1, '#1A1A1A', false); box(body, 1, 1.2, 0.4, 2, 16.6, 4.1, '#1A1A1A', false);
       box(body, 2.6, 0.7, 0.4, 0, 14.9, 4.1, '#5A2E22', false);
       if (o.mous) box(body, 4, 0.9, 0.5, 0, 15.6, 4.15, hair, false);
+      if (o.mask) box(body, 9.4, 2.7, 0.7, 0, 13.65, 4.2, '#1B1B1F', false);
       var hs = o.hs || 'corto';
       if (hs === 'calvo') { box(body, 0.8, 3, 4, -4.6, 15.4, -1.5, hair, false); box(body, 0.8, 3, 4, 4.6, 15.4, -1.5, hair, false); box(body, 9.2, 3, 1, 0, 15.4, -4.2, hair, false); }
       else {
@@ -1266,6 +1267,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     joven: ['Kevin', 'Yorbelis', 'El gocho', 'Mariangel', 'Jhonaiker', 'Daniela'],
     niño: ['Luisito', 'Josué', 'La niña Valeria', 'Chuíto'],
     mariachi: ['Sr Jairo'],
+    ratero: ['Ratero'],
     mototaxi: ['El gocho de la moto', 'Moto 23', 'Wilmer, mototaxista'],
     chismosa: ['Doña Cruz, la de la esquina', 'La comadre Hilda'],
     abuelo: ['Don Nicanor', 'Doña Petra', 'Don Pío', 'Doña Chela', 'Don Anselmo']
@@ -1276,6 +1278,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     llanero: [['¡Epa, compadre! Usted no es de por aquí, ¿verdad?', 'Se le nota en el paso. Aquí caminamos despacito, por el sol.'], ['Calabozo es tierra de Lazo Martí, de garceros y de sabana abierta.'], ['En el llano uno se levanta con las gallinas y se acuesta con las chicharras.']],
     joven: [['Chamo, ¿tienes datos? Aquí no agarra la señal.'], ['Esta noche hay toque en la plaza. Si no se va la luz, claro.'], ['¿Viste el partido de la Vinotinto? ¡Qué golazo, vale!']],
     niño: [['¿Juegas chapita? Nos falta uno.'], ['¡Mi mamá me mandó a comprar pan y se me olvidó cuál!'], ['¿Tú sabes dónde venden raspados? Yo quiero de colita.']],
+    ratero: [['¿Qué mira, mijo? Siga caminando.', 'Aquí no ha pasado nada, ¿oyó?'], ['Yo solo estoy dando una vuelta… tranquilo.']],
     mariachi: [['¡Ay, mijo! Cuarenta años tocando serenatas en Calabozo y todavía me tiemblan los labios.', 'Si quiere una canción para la novia, dígame. La propina es sagrada.'], ['Esta trompeta me la regaló mi papá. Sonaba bonito hasta cuando desafinaba.', '¡Viva Venezuela, carajo! Y viva la serenata.']],
     mototaxi: [['¿Pa\' dónde va? Lo llevo al Terminal rapidito.'], ['La gasolina está fea. Hoy me tocó cola desde las cuatro de la mañana.']],
     chismosa: [['Mija, ven acá… ¿supiste lo de la vecina de la esquina?', 'No, no, yo no digo nada. Pero que se vio, se vio.'], ['Yo no soy chismosa, yo me entero, que es distinto.']],
@@ -1291,6 +1294,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     llanero: function (r) { return { skin: pick(r, SKINS.slice(1)), hair: '#2B1B14', hs: 'corto', top: pick(r, ['#F4F1E8', '#D9C79A', '#C9D6E0']), bottom: '#3A3226', shoe: '#6B4A2A', hat: 'llanero', hatc: pick(r, ['#D8C08A', '#C9AE72', '#E6D5A8']), mous: true }; },
     joven: function (r) { return { skin: pick(r, SKINS), hair: pick(r, HAIRS.slice(0, 4)), hs: r() < 0.4 ? 'largo' : 'corto', top: pick(r, ['#6E1423', '#6E1423', '#2E6FB7', '#F2F2F2', '#2B2B2E', '#F2C230']), bottom: pick(r, ['#2B3550', '#4A4A4A', '#7A6A4A']), shorts: r() < 0.5, shoe: pick(r, ['#F2F2F2', '#2B2B2B']), hat: r() < 0.25 ? 'gorra' : null, hatc: '#2B2B2E' }; },
     niño: function (r) { return { skin: pick(r, SKINS), hair: pick(r, HAIRS.slice(0, 4)), hs: r() < 0.4 ? 'largo' : 'corto', top: pick(r, ['#F2C230', '#E8463C', '#5DB8C9', '#F2F2F2']), bottom: '#2B3550', shorts: true, shoe: '#F2F2F2', kid: true }; },
+    ratero: function (r) { return { skin: pick(r, SKINS), hair: '#1E1712', hs: 'corto', top: pick(r, ['#2B2B2E', '#5A1E1E', '#1E3A5A']), bottom: '#2E2E32', shoe: '#1E1A16', hat: 'gorra', hatc: pick(r, ['#111111', '#8E1F1F']), mask: true, bag: '#7A6A4A' }; },
     mariachi: function () { return { skin: '#D9A87E', hair: '#E6E1D6', hs: 'corto', mous: true, top: '#17171A', bottom: '#17171A', shoe: '#1E1A16', hat: 'charro', hatc: '#17171A', charro: true, trumpet: true, tall: true, thin: true }; },
     mototaxi: function (r) { return { skin: pick(r, SKINS), hair: '#1E1712', hs: 'corto', top: '#2B2B2E', vest: pick(r, ['#E86A2E', '#3FBF5F']), bottom: '#2B3550', shoe: '#2B2B2B', hat: 'casco', hatc: pick(r, ['#222', '#C8302E', '#F2F2F2']) }; },
     chismosa: function (r) { return { skin: pick(r, SKINS), hair: '#2B1B14', hs: 'rolos', dress: true, top: '#F28CB1', bottom: '#9C4DCC', pattern: '#FFFFFF', shoe: '#F2F2F2' }; },
@@ -1645,7 +1649,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     }
     if (moving && !ride) walkPh += dt * (keys.shift ? 13 : 9);
     misTick(dt); atropelloTick(dt); tumbleTick(dt);
-    engineTick();
+    ratTick(dt); engineTick();
     if (audio && audio.motor) { motorT -= dt; if (motorT <= 0) { motorT = 0.1; audio.motor(!!ride && soundOn && !IN.active, ride ? ride.v : 0); } }
     var walkers = 0;
     for (var i = npcs.length - 1; i >= 0; i--) { var nn = npcs[i]; if (nn.tum || nn.back) { npcFly(nn, dt); continue; } if (nn.stat) continue; walkers++; if (Math.hypot(nn.x - player.x, nn.y - player.y) / TS > 55) { npcs.splice(i, 1); continue; } if (!(dlg && target && target.o === nn)) npcWalk(nn, dt); }
@@ -3228,8 +3232,69 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function addJairo() {
     var f = findFree(569, 364, [4, 6, 7]), rd = roadDir(Math.floor(f.x / TS), Math.floor(f.y / TS)), n = newNpc('mariachi', f.x, f.y, { stat: true, fixed: true, dir: rd[2], name: 'Sr Jairo', trumpet: true }); n.home = [f.x, f.y]; npcs.push(n);
   }
+  // ---- rateros: dos NPC que recorren TODO el pueblo por las aceras y te roban plata si te alcanzan
+  var RATS = [], ratWarn = 0;
+  function ratPoint(r) {   // punto de la acera, un poco más adelante, sobre la calle que sigue
+    var l = r.l, s2 = clamp(r.s + r.dir * 1.2, l.a, l.b), off = r.side * (l.wt / 2 + 1);
+    return l.o === 'H' ? [clamp(s2, 2, W - 2) * TS, clamp(l.c + off, 2, H - 2) * TS] : [clamp(l.c + off, 2, W - 2) * TS, clamp(s2, 2, H - 2) * TS];
+  }
+  function ratLine(r, far) {
+    for (var k = 0; k < 40; k++) {
+      var l = pick(rng, TL); if (l.a < 3 || l.c < 3 || l.b > W - 3 || l.c > Math.min(W, H) - 3) continue;
+      r.l = l; r.s = l.a + rng() * (l.b - l.a); r.dir = rng() < 0.5 ? 1 : -1; r.side = rng() < 0.5 ? 1 : -1; r.cool = 4;
+      if (!far) return; var q = ratPoint(r); if (freeAt(q[0], q[1])) { r.n.x = q[0]; r.n.y = q[1]; return; }
+    }
+  }
+  function ratStep(r, tx, ty, sp, dt) {
+    var n = r.n, dx = tx - n.x, dy = ty - n.y, d = Math.hypot(dx, dy) || 1, st = Math.min(d, sp * dt), nx = n.x + dx / d * st, ny = n.y + dy / d * st, ox = n.x, oy = n.y;
+    if (freeAt(nx, n.y)) n.x = nx; if (freeAt(n.x, ny)) n.y = ny;
+    var moved = Math.hypot(n.x - ox, n.y - oy); r.stuck = moved < st * 0.3 ? r.stuck + dt : 0;
+    if (moved > 0.01) { n.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 3 : 2) : (dy > 0 ? 0 : 1); n.moving = true; n.t += dt; }
+    return d;
+  }
+  function ratCross(r) {   // ¿hay una calle que cruce justo aquí? (para dar la vuelta por otra calle)
+    var l = r.l, out = TL.filter(function (m) { return m.o !== l.o && Math.abs(m.c - r.s) < 1.5 && l.c >= m.a - 1 && l.c <= m.b + 1; });
+    return out.length ? pick(rng, out) : null;
+  }
+  function setupRats() {
+    for (var i = 0; i < 2; i++) {
+      var n = newNpc('ratero', 0, 0, { stat: true, fixed: true, name: 'Ratero', ratero: true, dir: 0 }); npcs.push(n);
+      var r = { n: n, st: 'roam', t: 0, cd: 0, stuck: 0, bad: 0, loot: 0, hold: 0, l: null, s: 0, dir: 1, side: 1, cool: 0 };
+      ratLine(r, true); RATS.push(r);
+    }
+  }
+  function ratTick(dt) {
+    if (ratWarn > 0) ratWarn -= dt;
+    var px = player.x, py = player.y, safe = gateOpen || IN.active || TUMBLE || (ride && Math.abs(ride.v) > 20);
+    RATS.forEach(function (r) {
+      var n = r.n, dpx = Math.hypot(n.x - px, n.y - py) / TS; n.moving = false; if (r.cd > 0) r.cd -= dt;
+      if (r.st === 'roam') {
+        if (!safe && r.cd <= 0 && ECO.money > 0 && dpx < 13) { r.st = 'chase'; if (ratWarn <= 0) { ratWarn = 15; toast('🦹 ¡Cuidado, un ratero va por ti! Corre (Shift) o aléjate'); } return; }
+        var q = ratPoint(r), d = ratStep(r, q[0], q[1], 30, dt), l = r.l; r.cool -= dt;
+        if (d < 3 * TS) r.s += r.dir * 30 * dt / TS;
+        if (r.cool <= 0 && r.s > l.a + 3 && r.s < l.b - 3 && rng() < dt * 0.6) { var c0 = ratCross(r); if (c0) { var cc = l.c; r.l = c0; r.s = cc; r.dir = rng() < 0.5 ? 1 : -1; r.cool = 6; } }
+        if (r.s <= l.a || r.s >= l.b) { var c1 = ratCross(r); if (c1 && rng() < 0.7) { var c2 = l.c; r.l = c1; r.s = c2; r.dir = rng() < 0.5 ? 1 : -1; r.cool = 6; } else { r.dir = -r.dir; r.s = clamp(r.s, l.a + 0.5, l.b - 0.5); } }
+        if (r.stuck > 1.2) { r.side = -r.side; r.stuck = 0; r.bad++; if (r.bad > 2) { r.bad = 0; if (dpx > 24) ratLine(r, true); else { r.dir = -r.dir; } } }
+      } else if (r.st === 'chase') {
+        if (safe || ECO.money <= 0 || dpx > 24) { r.st = 'roam'; return; }
+        ratStep(r, px, py, 50, dt); n.dir = Math.abs(px - n.x) > Math.abs(py - n.y) ? (px > n.x ? 3 : 2) : (py > n.y ? 0 : 1);
+        if (r.stuck > 1.5) { r.stuck = 0; r.st = 'roam'; r.cd = 6; }
+        if (dpx < 1.5) {
+          var amt = Math.min(ECO.money, Math.max(5, Math.floor(ECO.money * 0.3))); ECO.money -= amt; r.loot = amt; ecoSave(); ecoUI(2);
+          toast('🦹 ¡Un ratero te quitó $' + amt + '! Persíguelo y tócalo para recuperarlo'); if (audio && soundOn && audio.thud) audio.thud();
+          r.st = 'flee'; r.t = 7; r.hold = 0;
+        }
+      } else if (r.st === 'flee') {
+        r.t -= dt; r.hold -= dt; var ax = n.x - px, ay = n.y - py, al = Math.hypot(ax, ay) || 1;
+        ratStep(r, n.x + ax / al * 60, n.y + ay / al * 60, 70, dt); if (r.stuck > 0.5) { r.stuck = 0; ratStep(r, n.x - ay / al * 60, n.y + ax / al * 60, 70, 0.3); }
+        if (dpx < 1.4 && !safe) { ECO.money += r.loot; ecoSave(); ecoUI(1); toast('💪 ¡Atrapaste al ratero! Recuperaste $' + r.loot); r.loot = 0; r.st = 'roam'; r.cd = 40; ratLine(r, false); }
+        else if (r.t <= 0) { r.st = 'roam'; r.cd = 25; r.loot = 0; ratLine(r, dpx > 18); }
+      }
+    });
+  }
   function setupVendors() {
     addJairo();
+    setupRats();
     addVend('chela', 'señora', 'Doña Chela, estampitas y velas', placeXY('catedral'), '#7A4AB0');
     addVend('carmen', 'señora', 'Doña Carmen, empanadas', placeXY('panaderia'), '#E8463C');
     addVend('catire', 'llanero', 'El Catire, frutas', placeXY('mercado'), '#F2B01E');
@@ -4176,7 +4241,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { rats: function () { return RATS; }, ratTick: function (d) { ratTick(d); }, mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 
