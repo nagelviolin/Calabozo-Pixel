@@ -1575,7 +1575,9 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   Array.prototype.forEach.call(document.querySelectorAll('[data-q]'), function (b) { b.addEventListener('click', function () { setQuality(+b.getAttribute('data-q')); }); });
   $('blackout').addEventListener('click', function () { dark = !dark; darkSince = gameMin; this.setAttribute('aria-pressed', dark ? 'true' : 'false'); $('hudDark').hidden = !dark; updateSitters(); if (audio) audio.setMode(); });
   // el navegador solo deja sonar el audio tras el primer toque: se activa ahí
-  function unlockAudio() { if (!soundOn) return; if (!audio) audio = makeAudio(); if (audio) audio.setOn(true); }
+  // en teléfono el juego siempre va en horizontal: se pide pantalla completa y se bloquea la orientación con el primer toque
+  function lockLandscape() { if (!MOB) return; try { if (isStandalone()) { screen.orientation.lock('landscape').catch(function () {}); } else goFull(); } catch (e) {} }
+  function unlockAudio() { lockLandscape(); if (!soundOn) return; if (!audio) audio = makeAudio(); if (audio) audio.setOn(true); }
   ['pointerdown', 'keydown', 'touchstart'].forEach(function (ev) { var f = function () { unlockAudio(); window.removeEventListener(ev, f, true); }; window.addEventListener(ev, f, true); });
   $('sound').addEventListener('click', function () { soundOn = !soundOn; this.setAttribute('aria-pressed', soundOn ? 'true' : 'false'); if (soundOn && !audio) audio = makeAudio(); if (audio) audio.setOn(soundOn); });
   $('phoneview').addEventListener('click', function () { var on = this.getAttribute('aria-pressed') !== 'true'; this.setAttribute('aria-pressed', on ? 'true' : 'false'); stage.classList.toggle('phone', on); fit(); });
