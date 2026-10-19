@@ -220,6 +220,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 /* dinero y vidas */
 .hud .eco { display: flex; align-items: center; gap: 9px; margin-top: 2px; font-weight: 700; color: var(--fg); }
 .hud .eco .money { color: #8FE3A0; font: 700 15px/1.1 var(--display); }
+.hud .eco .bank { color: #9CC8FF; font: 700 12px/1.1 var(--display); opacity: 0.95; }
 .hud .eco .hearts { display: inline-flex; gap: 2px; letter-spacing: 0; }
 .hud .eco .h { font-size: 15px; line-height: 1; color: #FF4D5E; text-shadow: 0 1px 0 rgba(0,0,0,0.5); }
 .hud .eco .h.off { color: #3C4A43; }
@@ -241,6 +242,15 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .place { margin-top: 36px; }
 .misbtn { position: absolute; top: 10px; right: 160px; width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--line); background: rgba(10, 17, 14, 0.85); color: var(--fg); font-size: 20px; line-height: 1; padding: 0; cursor: pointer; z-index: 6; display: inline-flex; align-items: center; justify-content: center; }
 .misbtn[hidden] { display: none; }
+.phbtn { right: 214px; }
+.bk { display: flex; flex-direction: column; gap: 8px; }
+.bk .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.bk .big { font: 800 30px/1 var(--display); color: #9CC8FF; }
+.bk .cash { font: 700 18px/1 var(--display); color: #8FE3A0; }
+.bk .lab { font: 700 11.5px/1 var(--body); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.bk .mv { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding: 5px 0; border-top: 1px solid var(--line); }
+.bk .mv .p { color: #8FE3A0; font-weight: 700; } .bk .mv .n { color: #FF8A8A; font-weight: 700; } .bk .mv small { color: var(--muted); }
+.bk .note { font-size: 12.5px; color: var(--muted); }
 .misbtn.on { border-color: var(--accent); }
 .rolact { bottom: 196px; background: var(--accent); color: var(--accent-ink); border-color: #FFFFFF; }
 .rolact[hidden] { display: none; }
@@ -269,6 +279,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .stage.map-open .mtrk, .stage.map-open .misbtn, .stage.map-open .rolact { display: none !important; }
 .stage.dialog-open .misbtn { display: none; }
 @media (max-width: 520px) {
+  .stage .phbtn { top: calc(max(10px, env(safe-area-inset-top, 0px)) + 112px); right: calc(max(10px, env(safe-area-inset-right, 0px)) + 56px); }
   .stage .misbtn { top: calc(max(10px, env(safe-area-inset-top, 0px)) + 112px); right: max(10px, env(safe-area-inset-right, 0px)); }
   .stage .mtrk { top: calc(max(10px, env(safe-area-inset-top, 0px)) + 168px); }
   .stage.mission-on .place { margin-top: 140px; }
@@ -298,6 +309,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   .fab { bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 126px); }
   .rolact { bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 186px); }
   .misbtn { top: max(10px, env(safe-area-inset-top, 0px)); right: calc(max(10px, env(safe-area-inset-right, 0px)) + 206px); }
+  .phbtn { right: calc(max(10px, env(safe-area-inset-right, 0px)) + 260px); }
   .mic { right: max(10px, env(safe-area-inset-right, 0px)); bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 64px); }
 }
 /* teclado abierto: el chat se pega justo encima del teclado */
@@ -327,6 +339,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       <div class="chip mini"><canvas id="mm" role="button" tabindex="0" aria-label="Minimapa: tócalo para verlo en grande"></canvas></div>
       <div class="mtrk" id="mtrk" hidden><b id="mtT"></b><span id="mtS"></span></div>
       <button type="button" class="misbtn" id="misBtn" aria-label="Misiones" hidden>📋</button>
+      <button type="button" class="misbtn phbtn" id="phBtn" aria-label="Mi cuenta del banco" hidden>📱</button>
       <button type="button" class="fab rolact" id="rolAct" hidden></button>
       <div class="mod" id="mod" hidden role="dialog" aria-modal="true" aria-labelledby="modT"><div class="modc"><h2 id="modT"></h2><div class="modb" id="modB"></div><div class="modbtns" id="modBtns"></div></div></div>
       <div class="ecoflash" id="ecoFlash"></div>
@@ -1603,6 +1616,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (t.kind === 'npc' && t.o.vend) { vendorTalk(t.o); return; }
     if (t.kind === 'npc' && t.o.taxi) { taxiTalk(t.o); return; }
     if (t.kind === 'npc') { name = t.o.name; lines = npcLines(t.o); if (!t.o.sit) t.o.dir = faceTo(t.o, player); t.o.wait = 4; }
+    else if (t.kind === 'shop' && isBank(t.o)) { if (dark) { toast('🏦 Sin luz no hay sistema: vuelve cuando llegue la luz'); return; } bankUI(); return; }
     else if (t.kind === 'shop') { if (t.o.sign === 'CAFÉ CALABOZO' && IN.enter) { IN.enter(); return; } name = t.o.sign || (t.o.k === 'casa' ? 'Casa' : 'Negocio'); lines = shopLines(t.o); }
     else if (t.kind === 'statue') { name = 'Simón Bolívar'; lines = ['Estatua del Libertador en la Plaza Bolívar de Calabozo.', 'Todo pueblo de Venezuela tiene su Plaza Bolívar. Aquí se cita la gente: «nos vemos en la plaza».']; }
     dlg = { name: name, lines: lines, i: 0 }; $('dlg').hidden = false; stage.classList.add('dialog-open'); $('act').hidden = true; showLine();
@@ -1687,7 +1701,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (!target || target.kind === 'shop') { var bm = null, bd2 = 26; PARKED.forEach(function (o) { if (o.by) return; var d2 = Math.hypot(o.x - player.x, o.y - player.y); if (d2 < bd2) { bd2 = d2; bm = o; } }); if (bm) target = { kind: 'moto', o: bm }; }
     }
     var act = $('act');
-    if (target && !dlg) { act.hidden = false; act.textContent = target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : 'Entrar (E)') : (target.kind === 'statue' ? 'Mirar (E)' : (target.o.vend ? 'Comprar a ' : (target.o.taxi ? 'Mototaxi: ' : 'Hablar con ')) + target.o.name.split(',')[0] + ' (E)'); }
+    if (target && !dlg) { act.hidden = false; act.textContent = target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : (isBank(target.o) ? 'Entrar al banco (E)' : 'Entrar (E)')) : (target.kind === 'statue' ? 'Mirar (E)' : (target.o.vend ? 'Comprar a ' : (target.o.taxi ? 'Mototaxi: ' : 'Hablar con ')) + target.o.name.split(',')[0] + ' (E)'); }
     else act.hidden = true;
     hudTimer -= dt;
     if (hudTimer <= 0) {
@@ -2854,7 +2868,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 
   // ---------------------------------------------------------------- dinero y vidas
   // Cada persona tiene dinero y 5 vidas. Sin vidas: te llevan bien lejos, vuelves con 5 vidas y sin un centavo.
-  var ECO = { money: 100, lives: 5, key: 'calabozo-eco-invitado', hurtT: 0, MAXV: 5, loaded: false, rol: null, intro: false, rolNuevo: false, matraca: 0, evT: 20 };
+  var ECO = { money: 100, lives: 5, key: 'calabozo-eco-invitado', hurtT: 0, MAXV: 5, loaded: false, rol: null, intro: false, rolNuevo: false, matraca: 0, evT: 20, bank: 0, mov: [] };
   var ECO_FUN = [
     ['¡Chávez te jaló las patas!', 'Te mandaron pal 2017. Comienza otra vez y no la cagues, ¡la patria sigue!']
   ];
@@ -2862,20 +2876,21 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     ECO.key = 'calabozo-eco-' + (uid || 'invitado'); ECO.loaded = true; ECO.matraca = 0;
     var j = null; try { j = JSON.parse(localStorage.getItem(ECO.key) || 'null'); } catch (e) {}
     if (j && isFinite(+j.m) && isFinite(+j.l)) { ECO.money = Math.max(0, Math.floor(+j.m)); ECO.lives = clamp(Math.round(+j.l * 2) / 2, 0.5, ECO.MAXV); ECO.rol = ROLES[j.r] ? j.r : null; }
-    else { ECO.money = (typeof OL !== 'undefined' && OL && OL.profile && isFinite(+OL.profile.coins)) ? Math.max(0, Math.floor(+OL.profile.coins)) : 100; ECO.lives = ECO.MAXV; ECO.rol = null; }
+    ECO.bank = (j && isFinite(+j.b)) ? Math.max(0, Math.floor(+j.b)) : 0; ECO.mov = (j && Array.isArray(j.v)) ? j.v.filter(function (q) { return q && isFinite(+q.a) && isFinite(+q.bal); }).slice(0, 20).map(function (q) { return { k: q.k === 'ret' ? 'ret' : 'dep', a: Math.floor(+q.a), bal: Math.floor(+q.bal), ts: String(q.ts || '').split(' · ')[0].slice(0, 12) }; }) : [];
+    if (j && isFinite(+j.m) && isFinite(+j.l)) {} else { ECO.money = (typeof OL !== 'undefined' && OL && OL.profile && isFinite(+OL.profile.coins)) ? Math.max(0, Math.floor(+OL.profile.coins)) : 100; ECO.lives = ECO.MAXV; ECO.rol = null; }
     if (!ECO.rol) { ECO.rol = nuevoRol(null); ECO.intro = true; }
     if (MS) misCancel();
     ecoUI(0); ecoSave(); shareRol();
   }
   function ecoSave() {
-    try { localStorage.setItem(ECO.key, JSON.stringify({ m: ECO.money, l: ECO.lives, r: ECO.rol })); } catch (e) {}
+    try { localStorage.setItem(ECO.key, JSON.stringify({ m: ECO.money, l: ECO.lives, r: ECO.rol, b: ECO.bank, v: ECO.mov.slice(0, 20) })); } catch (e) {}
     // copia en la cuenta (si el servidor lo permite); lo que cuenta para jugar es lo guardado aquí
     try { if (typeof OL !== 'undefined' && OL && OL.on && OL.sb && OL.user && OL.profile) { OL.profile.coins = ECO.money; var q = OL.sb.from('profiles').update({ coins: ECO.money }).eq('id', OL.user.id); if (q && q.then) q.then(function () {}, function () {}); } } catch (e) {}
   }
   function ecoUI(kind) {
     var e = $('hudEco'); if (!e) return; var h = '';
     for (var i = 0; i < ECO.MAXV; i++) h += '<span class="h' + (ECO.lives >= i + 1 ? '' : (ECO.lives >= i + 0.5 ? ' half' : ' off')) + '">♥</span>';
-    e.innerHTML = '<span class="money">$' + ECO.money + '</span><span class="hearts" aria-label="' + ECO.lives + ' de ' + ECO.MAXV + ' vidas">' + h + '</span>';
+    e.innerHTML = '<span class="money">$' + ECO.money + '</span>' + (ECO.bank > 0 ? '<span class="bank" title="En tu cuenta del banco">🏦$' + ECO.bank + '</span>' : '') + '<span class="hearts" aria-label="' + ECO.lives + ' de ' + ECO.MAXV + ' vidas">' + h + '</span>';
     var rr = $('hudRol'); if (rr && ECO.rol && ROLES[ECO.rol]) rr.textContent = ROLES[ECO.rol].emo + ' ' + ROLES[ECO.rol].name;
     if (kind) { e.classList.remove('bump', 'hit'); void e.offsetWidth; e.classList.add(kind === 1 ? 'bump' : 'hit'); }
   }
@@ -2908,7 +2923,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (ride) dismountMoto(true); keys = {}; joy.x = joy.y = 0; closeDialog(); if (chatOpen) closeChat(); if (mapOpen) closeMap();
     var pos = sitioLejano(); player.x = pos[0]; player.y = pos[1]; player.a = Math.random() * Math.PI * 2; player.va = 0;
     var m = ECO_FUN[Math.floor(Math.random() * ECO_FUN.length)];
-    $('ecoMsgT').textContent = m[0]; $('ecoMsgP').textContent = m[1] + (perdido ? ' Perdiste $' + perdido + '.' : ''); $('ecoMsg').hidden = false;
+    $('ecoMsgT').textContent = m[0]; $('ecoMsgP').textContent = m[1] + (perdido ? ' Perdiste $' + perdido + ' de efectivo.' : '') + (ECO.bank > 0 ? ' Lo que tenías en el banco sigue a salvo: $' + ECO.bank + '.' : ''); $('ecoMsg').hidden = false;
     shareMotos();
   }
   $('ecoMsgB').addEventListener('click', function () { $('ecoMsg').hidden = true; try { stage.focus({ preventScroll: true }); } catch (e) {} if (ECO.rolNuevo) { ECO.rolNuevo = false; roleIntro(true); } });
@@ -3040,7 +3055,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     $('mtT').textContent = '📋 ' + m.name; $('mtS').textContent = txt + (extra ? ' — ' + extra : ''); t.hidden = false;
   }
   function misTick(dt) {
-    var vb = $('misBtn'), ra = $('rolAct'); if (vb) { vb.hidden = gateOpen; vb.classList.toggle('on', !!MS); }
+    var vb = $('misBtn'), ra = $('rolAct'), pb = $('phBtn'); if (pb) pb.hidden = gateOpen; if (vb) { vb.hidden = gateOpen; vb.classList.toggle('on', !!MS); }
     var a = ACTS[ROLES[ECO.rol] && ROLES[ECO.rol].act]; if (ra) { ra.hidden = gateOpen || !a; if (a) ra.textContent = a.label; }
     if (ECO.intro && !gateOpen && !modOpen && !mapOpen && !dlg && ECO.loaded) { ECO.intro = false; roleIntro(false); }
     // el Comisario pilla al policía con la matraca
@@ -3345,6 +3360,41 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var sp = Math.min(d, 34 * dt); n.x += dx / d * sp; n.y += dy / d * sp; n.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 3 : 2) : (dy > 0 ? 0 : 1); n.moving = true; n.t += dt;
     }
   }
+  // ---- banco: Banesco, junto al Supermercado La Criolla 22. Lo que depositas no te lo roban ni lo pierdes al morir.
+  function isBank(b) { if (!b || b.k !== 'banco' || !/banesco/i.test(b.sign || '')) return false; var bp = placeXY('banesco'); return Math.hypot(b.x + b.w / 2 - bp[0], b.y + b.h / 2 - bp[1]) < 14; }
+  function movAdd(k, a) { ECO.mov.unshift({ k: k, a: a, bal: ECO.bank, ts: clockText().split(' · ')[0] }); if (ECO.mov.length > 20) ECO.mov.length = 20; }
+  function bankDo(k, a) {
+    a = Math.floor(a); if (!(a > 0)) return;
+    if (k === 'dep') { if (ECO.money < a) { toast('No tienes tanto efectivo'); return; } ECO.money -= a; ECO.bank += a; movAdd('dep', a); toast('🏦 Depositaste $' + a + ' · Saldo $' + ECO.bank); }
+    else { if (ECO.bank < a) { toast('No tienes tanto en la cuenta'); return; } ECO.bank -= a; ECO.money += a; movAdd('ret', a); toast('💵 Retiraste $' + a + ' · Saldo $' + ECO.bank); }
+    ecoSave(); ecoUI(k === 'dep' ? 2 : 1);
+  }
+  function bankCard(withMov) {
+    var n = el('div', 'bk');
+    var r1 = el('div', 'row'); r1.appendChild(el('span', 'lab', 'En tu cuenta')); r1.appendChild(el('span', 'big', '$' + ECO.bank)); n.appendChild(r1);
+    var r2 = el('div', 'row'); r2.appendChild(el('span', 'lab', 'Efectivo en el bolsillo')); r2.appendChild(el('span', 'cash', '$' + ECO.money)); n.appendChild(r2);
+    if (withMov) {
+      n.appendChild(el('div', 'lab', 'Últimos movimientos'));
+      if (!ECO.mov.length) n.appendChild(el('div', 'note', 'Todavía no tienes movimientos. Deposita en el Banesco, al lado de La Criolla 22.'));
+      ECO.mov.slice(0, 8).forEach(function (q) { var row = el('div', 'mv'); row.appendChild(el('span', null, q.k === 'dep' ? 'Depósito' : 'Retiro')); var amt = el('span', q.k === 'dep' ? 'p' : 'n', (q.k === 'dep' ? '+$' : '−$') + q.a); row.appendChild(amt); var sm = el('small', null, 'saldo $' + q.bal + ' · ' + q.ts); row.appendChild(sm); n.appendChild(row); });
+    }
+    n.appendChild(el('div', 'note', 'El dinero en la cuenta no te lo roban los rateros ni lo pierdes si te mueres.'));
+    return n;
+  }
+  function bankUI() {
+    var b = [];
+    if (ECO.money >= 10) b.push({ t: 'Depositar $10', cls: 'primary', fn: function () { bankDo('dep', 10); bankUI(); } });
+    if (ECO.money >= 50) b.push({ t: 'Depositar $50', cls: 'primary', fn: function () { bankDo('dep', 50); bankUI(); } });
+    if (ECO.money > 0) b.push({ t: 'Depositar todo ($' + ECO.money + ')', cls: 'primary', fn: function () { bankDo('dep', ECO.money); bankUI(); } });
+    if (ECO.bank >= 50) b.push({ t: 'Retirar $50', fn: function () { bankDo('ret', 50); bankUI(); } });
+    if (ECO.bank > 0) b.push({ t: 'Retirar todo ($' + ECO.bank + ')', fn: function () { bankDo('ret', ECO.bank); bankUI(); } });
+    b.push({ t: 'Salir' });
+    modShow({ title: '🏦 Banesco', node: bankCard(false), col: true, btns: b });
+  }
+  function phoneUI() { if (gateOpen || modOpen) return; modShow({ title: '📱 Banesco Móvil', node: bankCard(true), btns: [{ t: 'Cerrar' }] }); }
+  $('phBtn').addEventListener('click', phoneUI);
+  window.addEventListener('keydown', function (e) { if ((e.key === 'p' || e.key === 'P') && !modOpen && !mapOpen && !gateOpen && inStage()) { e.preventDefault(); phoneUI(); } });
+
   // ---- botones y teclas
   $('misBtn').addEventListener('click', function () { openBoard(); });
   $('rolAct').addEventListener('click', function () { rolAction(); });
@@ -4242,7 +4292,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { rats: function () { return RATS; }, ratTick: function (d) { ratTick(d); }, mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { bank: { ui: function () { bankUI(); }, phone: function () { phoneUI(); }, isBank: function (b) { return isBank(b); } }, rats: function () { return RATS; }, ratTick: function (d) { ratTick(d); }, mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 
