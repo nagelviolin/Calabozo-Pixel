@@ -2815,7 +2815,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var sc = 1, sw = 160 / sc, sh = 120 / sc, sx = clamp(player.x / TS - sw / 2, 0, W - sw), sy = clamp(player.y / TS - sh / 2, 0, H - sh);
     mctx.imageSmoothingEnabled = false; mctx.drawImage(mmBase, sx, sy, sw, sh, 0, 0, 160, 120);
     if (hour === 3) { mctx.fillStyle = dark ? 'rgba(4,6,16,0.6)' : 'rgba(10,14,40,0.4)'; mctx.fillRect(0, 0, 160, 120); }
-    drawPlayersMini(sx, sy); misMarcas(sx, sy, sc, mctx);
+    drawRoute(mctx, function (x, y) { return [(x - sx) * sc, (y - sy) * sc]; }, 2.4); drawPlayersMini(sx, sy); misMarcas(sx, sy, sc, mctx);
     var mx = (player.x / TS - sx) * sc, my = (player.y / TS - sy) * sc;
     mctx.fillStyle = 'rgba(245,179,1,0.35)'; mctx.beginPath(); mctx.moveTo(mx, my); mctx.arc(mx, my, 22, player.a - FOV / 2, player.a + FOV / 2); mctx.closePath(); mctx.fill();
     mctx.fillStyle = '#FFFFFF'; mctx.strokeStyle = '#0E1713'; mctx.lineWidth = 1.5; mctx.beginPath(); mctx.arc(mx, my, 3.5, 0, Math.PI * 2); mctx.fill(); mctx.stroke();
@@ -3048,10 +3048,56 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   // ---- pin de destino: se pone tocando el mapa grande; al cerrar el mapa una flecha te guía y al llegar se borra
   var PIN = null, pinT = 0;
   try { var pj = JSON.parse(localStorage.getItem('calabozo-pin') || 'null'); if (pj && isFinite(+pj.x) && isFinite(+pj.y)) PIN = { x: +pj.x, y: +pj.y, name: String(pj.name || 'Destino').slice(0, 40), r: +pj.r > 0 ? +pj.r : 4 }; } catch (e) {}
+  // ---- ruta por las calles hasta el pin (línea azul en el minimapa y en el mapa grande)
+  var RG = null, ROUTE = null, routeT = -9, routeFrom = [0, 0];
+  function routeGraph() {
+    if (RG) return RG; var idx = {}, nodes = [], adj = [];
+    function nid(x, y) { var k = Math.round(x * 2) + ',' + Math.round(y * 2); if (idx[k] === undefined) { idx[k] = nodes.length; nodes.push([x, y]); adj.push([]); } return idx[k]; }
+    SEGS.forEach(function (sg, i) { var a = nid(sg.x1, sg.y1), b = nid(sg.x2, sg.y2); if (a === b) return; var d = Math.hypot(sg.x2 - sg.x1, sg.y2 - sg.y1); adj[a].push([b, d]); adj[b].push([a, d]); sg._a = a; sg._b = b; sg._L = d; });
+    return (RG = { nodes: nodes, adj: adj });
+  }
+  function snapSeg(x, y) {   // punto de calle más cercano
+    var best = null, bd = 1e9;
+    SEGS.forEach(function (sg, i) {
+      if (sg._a === undefined) return; var dx = sg.x2 - sg.x1, dy = sg.y2 - sg.y1, L2 = dx * dx + dy * dy, t = L2 ? clamp(((x - sg.x1) * dx + (y - sg.y1) * dy) / L2, 0, 1) : 0, px = sg.x1 + t * dx, py = sg.y1 + t * dy, d = Math.hypot(x - px, y - py);
+      if (d < bd) { bd = d; best = { i: i, t: t, x: px, y: py, d: d }; }
+    });
+    return best;
+  }
+  function routeCalc(fx, fy, tx, ty) {
+    var G0 = routeGraph(), N = G0.nodes.length, A = snapSeg(fx, fy), B = snapSeg(tx, ty); if (!A || !B) return null;
+    var sa = SEGS[A.i], sb = SEGS[B.i], pts = [[fx, fy], [A.x, A.y]];
+    if (A.i === B.i) { pts.push([B.x, B.y], [tx, ty]); return pts; }
+    var dist = new Float64Array(N).fill(1e9), prev = new Int32Array(N).fill(-1), done = new Uint8Array(N), heap = [];
+    function push(n, d) { heap.push([d, n]); var i = heap.length - 1; while (i > 0) { var pa = (i - 1) >> 1; if (heap[pa][0] <= heap[i][0]) break; var t = heap[pa]; heap[pa] = heap[i]; heap[i] = t; i = pa; } }
+    function pop() { var top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; var i = 0; for (;;) { var l = i * 2 + 1, r = l + 1, m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; var t = heap[m]; heap[m] = heap[i]; heap[i] = t; i = m; } } return top; }
+    dist[sa._a] = A.t * sa._L; push(sa._a, dist[sa._a]); if ((1 - A.t) * sa._L < dist[sa._b]) { dist[sa._b] = (1 - A.t) * sa._L; push(sa._b, dist[sa._b]); }
+    var endA = sb._a, endB = sb._b, best = 1e9, bestEnd = -1;
+    while (heap.length) {
+      var h = pop(), u = h[1]; if (done[u]) continue; done[u] = 1; if (h[0] >= best) break;
+      if (u === endA && h[0] + B.t * sb._L < best) { best = h[0] + B.t * sb._L; bestEnd = u; }
+      if (u === endB && h[0] + (1 - B.t) * sb._L < best) { best = h[0] + (1 - B.t) * sb._L; bestEnd = u; }
+      var ad = G0.adj[u]; for (var k = 0; k < ad.length; k++) { var v = ad[k][0], nd = h[0] + ad[k][1]; if (nd < dist[v]) { dist[v] = nd; prev[v] = u; push(v, nd); } }
+    }
+    if (bestEnd < 0) return null;
+    var chain = []; for (var c = bestEnd; c !== -1; c = prev[c]) { chain.push(G0.nodes[c]); if (c === sa._a || c === sa._b) { if (prev[c] === -1) break; } }
+    chain.reverse(); chain.forEach(function (q) { pts.push([q[0], q[1]]); }); pts.push([B.x, B.y], [tx, ty]); return pts;
+  }
+  function routeUpdate(force) {
+    if (!PIN) { ROUTE = null; return; }
+    if (!force && (time - routeT < 1.5 || Math.hypot(player.x / TS - routeFrom[0], player.y / TS - routeFrom[1]) < 2.5)) return;
+    routeT = time; routeFrom = [player.x / TS, player.y / TS];
+    try { ROUTE = routeCalc(player.x / TS, player.y / TS, PIN.x, PIN.y); } catch (e) { ROUTE = null; }
+  }
+  function drawRoute(g, map, lw) {
+    if (!ROUTE || ROUTE.length < 2) return; g.save(); g.lineJoin = 'round'; g.lineCap = 'round';
+    [['#0E1713', lw + 2.5], ['#3B9BFF', lw]].forEach(function (c) { g.strokeStyle = c[0]; g.lineWidth = c[1]; g.beginPath(); ROUTE.forEach(function (q, i) { var m = map(q[0], q[1]); if (i) g.lineTo(m[0], m[1]); else g.moveTo(m[0], m[1]); }); g.stroke(); });
+    g.restore();
+  }
   function pinSave() { try { if (PIN) localStorage.setItem('calabozo-pin', JSON.stringify(PIN)); else localStorage.removeItem('calabozo-pin'); } catch (e) {} }
   function pinUI() { var b = $('bmPinOff'); if (b) b.hidden = !PIN; }
-  function clearPin() { PIN = null; pinSave(); pinUI(); misBeams(); var h = $('pinHud'); if (h) h.hidden = true; if (mapOpen) drawBigMap(); }
-  function setPin(x, y, name, r) { PIN = { x: clamp(x, 1, W - 1), y: clamp(y, 1, H - 1), name: name, r: r }; pinSave(); pinUI(); misBeams(); toast('📍 Destino marcado: ' + name); if (mapOpen) drawBigMap(); }
+  function clearPin() { PIN = null; ROUTE = null; pinSave(); pinUI(); misBeams(); var h = $('pinHud'); if (h) h.hidden = true; if (mapOpen) drawBigMap(); }
+  function setPin(x, y, name, r) { PIN = { x: clamp(x, 1, W - 1), y: clamp(y, 1, H - 1), name: name, r: r }; routeUpdate(true); pinSave(); pinUI(); misBeams(); toast('📍 Destino marcado: ' + name); if (mapOpen) drawBigMap(); }
   function pinFromMap(sx, sy) {
     var d = BM.dpr, wx = BM.cx + (sx - bmc.width / 2) / BM.z, wy = BM.cy + (sy - bmc.height / 2) / BM.z;
     if (PIN) { var q0 = bmToScr(PIN.x, PIN.y); if (Math.hypot(q0[0] - sx, q0[1] - sy) < 24 * d) { clearPin(); toast('📍 Pin quitado'); return; } }
@@ -3061,6 +3107,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function pinTick(dt) {
     var h = $('pinHud'); if (!h) return;
     if (!PIN || gateOpen || IN.active) { if (!h.hidden) h.hidden = true; return; }
+    routeUpdate(false);
     var d = dT([PIN.x, PIN.y]);
     if (d < PIN.r) { var nm = PIN.name; clearPin(); toast('📍 ¡Llegaste a ' + nm + '!'); return; }
     if (h.hidden) h.hidden = false;
@@ -3491,6 +3538,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       });
     }
     misTargets().forEach(function (t) { var q = bmToScr(t[0], t[1]); dot(q[0], q[1], '#FFD23F', 6); label(q[0], q[1], '★ Misión', '#FFD23F', true); });
+    drawRoute(g, bmToScr, 4 * d);
     if (PIN) {
       var pq = bmToScr(PIN.x, PIN.y), pd = Math.round(dT([PIN.x, PIN.y]) * (D.mpt || 2));
       g.save(); g.setLineDash([6 * d, 6 * d]); g.strokeStyle = 'rgba(255,92,138,0.8)'; g.lineWidth = 2 * d; g.beginPath(); g.moveTo(me[0], me[1]); g.lineTo(pq[0], pq[1]); g.stroke(); g.restore();
@@ -4334,7 +4382,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { pin: { set: function (x, y, n, r) { setPin(x, y, n || 'Prueba', r || 4); }, get: function () { return PIN; }, tap: function (x, y) { pinFromMap(x, y); } }, bank: { ui: function () { bankUI(); }, phone: function () { phoneUI(); }, isBank: function (b) { return isBank(b); } }, rats: function () { return RATS; }, ratTick: function (d) { ratTick(d); }, mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { ruta: function () { return ROUTE; }, pin: { set: function (x, y, n, r) { setPin(x, y, n || 'Prueba', r || 4); }, get: function () { return PIN; }, tap: function (x, y) { pinFromMap(x, y); } }, bank: { ui: function () { bankUI(); }, phone: function () { phoneUI(); }, isBank: function (b) { return isBank(b); } }, rats: function () { return RATS; }, ratTick: function (d) { ratTick(d); }, mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 
