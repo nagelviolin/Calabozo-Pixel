@@ -3366,7 +3366,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (!BUF[k]) return false; var sr = ac.createBufferSource(), g = ac.createGain(); sr.buffer = BUF[k]; g.gain.value = clamp(vol === undefined ? 1 : vol, 0, 1.4); sr.connect(g); g.connect(master); sr.start(); return true;
     }
     api.beep = function (vol) { if (!play('beep', vol)) api.honk(true); };
-    api.mama = function (vol) { play('mama', vol); };
+    api.mama = function (vol) { play('mama', (vol === undefined ? 1 : vol) * 0.4); };
     api.setMode(); return api;
   }
 
