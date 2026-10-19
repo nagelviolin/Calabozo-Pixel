@@ -1617,6 +1617,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     }
     if (moving && !ride) walkPh += dt * (keys.shift ? 13 : 9);
     misTick(dt); atropelloTick(dt); tumbleTick(dt);
+    engineTick();
     if (audio && audio.motor) { motorT -= dt; if (motorT <= 0) { motorT = 0.1; audio.motor(!!ride && soundOn && !IN.active, ride ? ride.v : 0); } }
     var walkers = 0;
     for (var i = npcs.length - 1; i >= 0; i--) { var nn = npcs[i]; if (nn.tum || nn.back) { npcFly(nn, dt); continue; } if (nn.stat) continue; walkers++; if (Math.hypot(nn.x - player.x, nn.y - player.y) / TS > 55) { npcs.splice(i, 1); continue; } if (!(dlg && target && target.o === nn)) npcWalk(nn, dt); }
@@ -3124,6 +3125,20 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (t < 0.8) { var v = TUMBLE.v0 * (1 - t / 0.8), mx = TUMBLE.dx * v * dt, my = TUMBLE.dy * v * dt; if (freeAt(player.x + mx, player.y)) player.x += mx; if (freeAt(player.x, player.y + my)) player.y += my; }
     if (t >= TUM_DUR) TUMBLE = null;
   }
+  // ---- motos ajenas: el motor de cada una suena según qué tan cerca está de ti
+  var engLast = 0, engPrev = {}, engId = 0;
+  function engineTick() {
+    if (!audio || !audio.engines) return; var h = time - engLast; if (h < 0.1) return; engLast = time;
+    var list = [], cur = {}, px = player.x, py = player.y, rx = -Math.sin(player.a), ry = Math.cos(player.a), i;
+    function add(id, x, y, spd) {
+      var dx = (x - px) / TS, dy = (y - py) / TS, d = Math.hypot(dx, dy); if (!(d <= 42)) return;
+      var pd = engPrev[id]; cur[id] = d; list.push({ id: id, d: d, pan: clamp((dx * rx + dy * ry) / (d + 3), -1, 1), spd: spd, vr: pd === undefined ? 0 : clamp((d - pd) / h, -30, 30) });
+    }
+    for (i = 0; i < cars.length; i++) { var c = cars[i]; if (c.type !== 'moto') continue; if (!c._eid) c._eid = ++engId; add(c._eid, c.x, c.y, c.stop > 0 ? 0 : c.speed); }
+    Object.keys(players).forEach(function (k) { var q = players[k]; if (q.moto && !q.inn) add('p' + k, q.x, q.y, q.spd || 0); });
+    list.sort(function (a, b) { return a.d - b.d; }); if (list.length > audio.nv) list.length = audio.nv;
+    engPrev = cur; audio.engines(soundOn && !IN.active ? list : []);
+  }
   function atropelloTick(dt) {
     var ks = Object.keys(players), hit = null;
     for (var i = 0; i < ks.length; i++) {
@@ -3366,6 +3381,32 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (!BUF[k]) return false; var sr = ac.createBufferSource(), g = ac.createGain(); sr.buffer = BUF[k]; g.gain.value = clamp(vol === undefined ? 1 : vol, 0, 1.4); sr.connect(g); g.connect(master); sr.start(); return true;
     }
     api.beep = function (vol) { if (!play('beep', vol)) api.honk(true); };
+    // motores de las motos ajenas (tráfico y jugadores): mismo timbre sintético que el tuyo, con volumen, filtro y lado según la distancia
+    var NV = MOB ? 3 : 5;
+    function initVoices() {
+      var vs = [];
+      for (var i = 0; i < NV; i++) {
+        var o1 = ac.createOscillator(), o2 = ac.createOscillator(), lpf = ac.createBiquadFilter(), g = ac.createGain(), pan = ac.createStereoPanner ? ac.createStereoPanner() : null;
+        o1.type = 'sawtooth'; o2.type = 'square'; lpf.type = 'lowpass'; lpf.frequency.value = 500; g.gain.value = 0; o1.connect(lpf); o2.connect(lpf); lpf.connect(g); if (pan) { g.connect(pan); pan.connect(master); } else g.connect(master); o1.start(); o2.start();
+        vs.push({ id: null, o1: o1, o2: o2, lpf: lpf, g: g, pan: pan });
+      }
+      api._v = vs;
+    }
+    api.nv = NV;
+    api.engines = function (list) {
+      if (!api._v) initVoices(); var vs = api._v, t = ac.currentTime, used = {}, i;
+      list.forEach(function (e) { used[e.id] = 1; });
+      vs.forEach(function (v) { if (v.id !== null && !used[v.id]) { v.id = null; v.g.gain.setTargetAtTime(0, t, 0.1); } });
+      list.forEach(function (e) {
+        var v = null; for (i = 0; i < vs.length; i++) if (vs[i].id === e.id) { v = vs[i]; break; }
+        if (!v) { for (i = 0; i < vs.length; i++) if (vs[i].id === null) { v = vs[i]; break; } if (!v) return; v.id = e.id; }
+        var k = clamp(1 - e.d / 40, 0, 1), dop = clamp(171 / (171 + e.vr), 0.9, 1.1), f = (30 + e.spd * 0.42) * dop;
+        v.o1.frequency.setTargetAtTime(f, t, 0.08); v.o2.frequency.setTargetAtTime(f * 0.5, t, 0.08);
+        v.lpf.frequency.setTargetAtTime(250 + (130 + e.spd * 3) * (0.35 + 0.65 * k), t, 0.1);
+        v.g.gain.setTargetAtTime(Math.pow(k, 2) * (0.05 + Math.min(0.06, e.spd / 2500)), t, 0.08);
+        if (v.pan) v.pan.pan.setTargetAtTime(e.pan * 0.9, t, 0.08);
+      });
+    };
     // grito del atropellado que oye el conductor: más bajito y con reverb (eco de cuarto grande)
     var rvb = null;
     function reverb() {
@@ -3374,7 +3415,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       rvb = ac.createConvolver(); rvb.buffer = ir; var wg = ac.createGain(); wg.gain.value = 1.1; rvb.connect(wg); wg.connect(master); return rvb;
     }
     api.mamaEco = function () {
-      if (!BUF.mama) return; var sr = ac.createBufferSource(), dry = ac.createGain(), wet = ac.createGain(); sr.buffer = BUF.mama; dry.gain.value = 0.12; wet.gain.value = 0.3;
+      if (!BUF.mama) return; var sr = ac.createBufferSource(), dry = ac.createGain(), wet = ac.createGain(); sr.buffer = BUF.mama; dry.gain.value = 0.08; wet.gain.value = 0.2;
       sr.connect(dry); dry.connect(master); sr.connect(wet); wet.connect(reverb()); sr.start();
     };
     api.mama = function (vol) { play('mama', (vol === undefined ? 1 : vol) * 0.4); };
