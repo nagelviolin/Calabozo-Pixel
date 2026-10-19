@@ -1107,7 +1107,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   // Unidades: 1 = un píxel de los personajes planos de antes (la cara mide 9 x 7). Miran hacia +z.
   var VOX = (function () {
     if (typeof THREE === 'undefined') return null;
-    var C = new THREE.Color(), INK = new THREE.Color('#16120F'), cache = {};
+    var C = new THREE.Color(), INK = new THREE.Color('#16120F'), cache = {}, V_DOWN = new THREE.Vector3(0, -1, 0), V_A = new THREE.Vector3(), V_B = new THREE.Vector3();
     function acc() { return { p: [], c: [], i: [] }; }
     function add(g, b, hex, ink) {
       var p = b.attributes.position.array, n = b.attributes.normal.array, ix = b.index.array, base = g.p.length / 3, i;
@@ -1129,7 +1129,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     function geo(g) { var b = new THREE.BufferGeometry(); b.setAttribute('position', new THREE.Float32BufferAttribute(g.p, 3)); b.setAttribute('color', new THREE.Float32BufferAttribute(g.c, 3)); b.setIndex(g.i); b.computeBoundingSphere(); return b; }
     function parts(o) {
       var sig = JSON.stringify(o); if (cache[sig]) return cache[sig];
-      var body = acc(), leg = acc(), arm = acc(), sk = o.skin, top = o.top, bot = o.bottom, shoe = o.shoe || '#2B2B2B', hair = o.hair, hc = o.hatc, q;
+      var body = acc(), leg = acc(), arm = acc(), trump = acc(), sk = o.skin, top = o.top, bot = o.bottom, shoe = o.shoe || '#2B2B2B', hair = o.hair, hc = o.hatc, q;
       // piernas: pivote en la cadera
       if (o.dress) box(leg, 2.6, 5, 2.6, 0, -5.4, 0, sk);
       else if (o.shorts) { box(leg, 4, 3, 4, 0, -3, 0, bot); box(leg, 3.4, 2.4, 3.4, 0, -5.4, 0, sk); }
@@ -1139,6 +1139,14 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       box(arm, 2.4, 5, 3, 0, -5, 0, top); box(arm, 2.4, 1.6, 3, 0, -6.6, 0, sk);
       // cuerpo
       box(body, 11, 7, 6, 0, 6.6, 0, top);
+      if (o.charro) {   // traje de mariachi: camisa blanca, moño rojo, botones y cinturón de plata, franjas en el pantalón
+        var sv = '#C9CDD2', gd = '#E3B23C';
+        box(body, 3.4, 6.2, 0.3, 0, 7.2, 3.1, '#F2F2F2', false); box(body, 3.6, 1.1, 0.7, 0, 11.6, 3.3, '#C8302E', false); box(body, 0.9, 1.3, 0.8, 0, 11.5, 3.5, '#8E1F1F', false);
+        for (q = 0; q < 4; q++) { box(body, 0.9, 0.9, 0.35, -4.3, 7.6 + q * 1.35, 3.1, sv, false); box(body, 0.9, 0.9, 0.35, 4.3, 7.6 + q * 1.35, 3.1, sv, false); }
+        box(body, 11.4, 0.9, 6.4, 0, 6.7, 0, sv, false); box(body, 1.8, 1.2, 0.5, 0, 6.6, 3.3, gd, false);
+        box(body, 2.4, 0.6, 3.2, -6.5, 12.9, 0, sv, false); box(body, 2.4, 0.6, 3.2, 6.5, 12.9, 0, sv, false);
+        box(leg, 0.45, 5.2, 1, -2.05, -5.4, 0, sv, false); box(leg, 0.45, 5.2, 1, 2.05, -5.4, 0, sv, false);
+      }
       if (o.vest) { box(body, 11.4, 6, 6.4, 0, 7.4, 0, o.vest, false); box(body, 11.6, 0.8, 6.6, 0, 10, 0, '#F2F2F2', false); }
       if (o.dress) { box(body, 12, 4.4, 7.4, 0, 3.6, 0, bot); if (o.pattern) for (q = 0; q < 5; q++) box(body, 1, 1, 0.3, -4 + q * 2, 5 + (q % 2) * 1.6, 3.8, o.pattern, false); }
       if (o.bag) box(body, 2.4, 4, 3, 9.4, 7, 0, o.bag);
@@ -1155,22 +1163,39 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         if (hs === 'largo') { box(body, 9.6, 10, 1.6, 0, 10.4, -4, hair); box(body, 1, 7, 5, -4.7, 12.6, -1.6, hair, false); box(body, 1, 7, 5, 4.7, 12.6, -1.6, hair, false); }
         if (hs === 'rolos') { box(body, 2, 2, 2, -2.6, 21.4, 0, '#F28CB1'); box(body, 2, 2, 2, 0.4, 21.4, -1, '#8CC4E6'); box(body, 2, 2, 2, 3, 21.4, 0.6, '#F28CB1'); }
       }
+      if (o.hat === 'charro') {   // sombrero charro: ala ancha negra con filo de plata, copa alta con cinta
+        var cb = hc || '#17171A'; box(body, 19.2, 0.5, 19.2, 0, 19.5, 0, '#C9CDD2', false); box(body, 18, 0.9, 18, 0, 19.9, 0, cb);
+        box(body, 9.8, 5.4, 9.8, 0, 20.7, 0, cb); box(body, 10.1, 1.1, 10.1, 0, 20.9, 0, '#C9CDD2', false); box(body, 8, 1.3, 8, 0, 26.1, 0, cb, false);
+      }
       if (o.hat === 'gorra') { var gc = hc || '#C8302E'; box(body, 9.8, 3, 8.8, 0, 19.6, 0, gc); box(body, 8.6, 0.8, 4, 0, 19.6, 5.6, shade(gc, 0.85)); }
       if (o.hat === 'llanero') { var lc = hc || '#D8C08A'; box(body, 16, 0.8, 16, 0, 19.8, 0, lc); box(body, 9.4, 3.8, 9.4, 0, 20.4, 0, lc); box(body, 9.6, 0.9, 9.6, 0, 20.6, 0, '#6B4A2A', false); }
       if (o.hat === 'casco') { box(body, 10.6, 6.6, 9.6, 0, 16.2, -0.2, hc || '#222222'); box(body, 7.6, 2.2, 0.5, 0, 16.4, 4.65, '#8CC4E6', false); }
-      return (cache[sig] = { body: geo(body), leg: geo(leg), arm: geo(arm), s: o.kid ? 0.78 : 1 });
+      if (o.trumpet) {   // trompeta dorada en el eje +z, con la boquilla frente a la boca
+        box(trump, 1.7, 1.7, 1.2, 0, 13.7, 4.6, '#C9A02E'); box(trump, 1.2, 1.2, 8, 0, 13.9, 9.4, '#E3B23C', false); box(trump, 1.1, 1.1, 7.6, 0, 12.2, 9.2, '#D9A52C', false);
+        box(trump, 1.1, 2.1, 1.1, 0, 12.4, 4.2, '#D9A52C', false);
+        for (q = 0; q < 3; q++) { box(trump, 0.9, 2.2, 0.9, 0, 15, 7.4 + q * 1.3, '#E3B23C', false); box(trump, 1.3, 0.5, 1.3, 0, 17.1, 7.4 + q * 1.3, '#C9CDD2', false); }
+        box(trump, 2.6, 2.6, 1.6, 0, 13.3, 13.2, '#E3B23C', false); box(trump, 4, 4, 0.9, 0, 12.6, 14.6, '#F3CF62'); box(trump, 5.2, 5.2, 0.6, 0, 12, 15.4, '#F7DD85');
+      }
+      return (cache[sig] = { body: geo(body), leg: geo(leg), arm: geo(arm), trump: o.trumpet ? geo(trump) : null, s: o.kid ? 0.78 : (o.tall ? 1.36 : 1), w: o.thin ? 0.76 : 1 });
     }
     // personaje articulado: brazos y piernas giran en hombros y caderas
     function rig(o, mat) {
-      var P = parts(o), root = new THREE.Group(), inner = new THREE.Group(); root.add(inner); inner.scale.setScalar(P.s); root.rotation.order = 'YXZ';
+      var P = parts(o), root = new THREE.Group(), inner = new THREE.Group(); root.add(inner); inner.scale.set(P.s * P.w, P.s, P.s * P.w); root.rotation.order = 'YXZ';
       inner.add(new THREE.Mesh(P.body, mat));
       function limb(g, x, y) { var piv = new THREE.Group(); piv.position.set(x, y, 0); piv.add(new THREE.Mesh(g, mat)); inner.add(piv); return piv; }
-      var r = { root: root, inner: inner, s: P.s, legL: limb(P.leg, -2.3, 6.6), legR: limb(P.leg, 2.3, 6.6), armL: limb(P.arm, -6.9, 13.2), armR: limb(P.arm, 6.9, 13.2) };
+      var tr = null; if (P.trump) { tr = new THREE.Mesh(P.trump, mat); tr.visible = false; tr.scale.setScalar(0.7); tr.position.set(0, 4.2, 1.3); inner.add(tr); }
+      var r = { root: root, inner: inner, s: P.s, trump: tr, legL: limb(P.leg, -2.3, 6.6), legR: limb(P.leg, 2.3, 6.6), armL: limb(P.arm, -6.9, 13.2), armR: limb(P.arm, 6.9, 13.2) };
       r.pose = function (kind, t) {
         if (kind === 'walk') { var w = Math.sin((t || 0) * 9); r.legL.rotation.set(w * 0.6, 0, 0); r.legR.rotation.set(-w * 0.6, 0, 0); r.armL.rotation.set(-w * 0.5, 0, 0.06); r.armR.rotation.set(w * 0.5, 0, -0.06); }
         else if (kind === 'sit') { r.legL.rotation.set(-1.45, 0, 0); r.legR.rotation.set(-1.45, 0, 0); r.armL.rotation.set(-0.5, 0, 0.05); r.armR.rotation.set(-0.5, 0, -0.05); }
         else if (kind === 'ride') { r.legL.rotation.set(-1.15, 0, -0.18); r.legR.rotation.set(-1.15, 0, 0.18); r.armL.rotation.set(-1.15, 0, -0.12); r.armR.rotation.set(-1.15, 0, 0.12); }
+        else if (kind === 'trumpet') {   // toca la trompeta: los dos brazos al frente y la trompeta sube y baja un poco
+          var bb = Math.sin((t || 0) * 4.2) * 0.05; r.legL.rotation.set(0, 0, 0); r.legR.rotation.set(0, 0, 0);
+          r.armR.quaternion.setFromUnitVectors(V_DOWN, V_A.set(-0.6, 0.1 + bb, 0.79).normalize()); r.armL.quaternion.setFromUnitVectors(V_DOWN, V_B.set(0.55, 0.08 - bb, 0.83).normalize());
+          if (r.trump) { r.trump.visible = true; r.trump.rotation.x = -bb * 0.6; r.trump.position.y = 4.2 + bb * 3; }
+        }
         else { r.legL.rotation.set(0, 0, 0); r.legR.rotation.set(0, 0, 0); r.armL.rotation.set(0, 0, 0.05); r.armR.rotation.set(0, 0, -0.05); }
+        if (r.trump && kind !== 'trumpet') r.trump.visible = false;
       };
       r.pose('stand'); return r;
     }
@@ -1240,6 +1265,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     llanero: ['Compadre Goyo', 'Don Florentino', 'El catire Ramiro', 'Don Eulogio', 'Compadre Chepe'],
     joven: ['Kevin', 'Yorbelis', 'El gocho', 'Mariangel', 'Jhonaiker', 'Daniela'],
     niño: ['Luisito', 'Josué', 'La niña Valeria', 'Chuíto'],
+    mariachi: ['Sr Jairo'],
     mototaxi: ['El gocho de la moto', 'Moto 23', 'Wilmer, mototaxista'],
     chismosa: ['Doña Cruz, la de la esquina', 'La comadre Hilda'],
     abuelo: ['Don Nicanor', 'Doña Petra', 'Don Pío', 'Doña Chela', 'Don Anselmo']
@@ -1250,6 +1276,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     llanero: [['¡Epa, compadre! Usted no es de por aquí, ¿verdad?', 'Se le nota en el paso. Aquí caminamos despacito, por el sol.'], ['Calabozo es tierra de Lazo Martí, de garceros y de sabana abierta.'], ['En el llano uno se levanta con las gallinas y se acuesta con las chicharras.']],
     joven: [['Chamo, ¿tienes datos? Aquí no agarra la señal.'], ['Esta noche hay toque en la plaza. Si no se va la luz, claro.'], ['¿Viste el partido de la Vinotinto? ¡Qué golazo, vale!']],
     niño: [['¿Juegas chapita? Nos falta uno.'], ['¡Mi mamá me mandó a comprar pan y se me olvidó cuál!'], ['¿Tú sabes dónde venden raspados? Yo quiero de colita.']],
+    mariachi: [['¡Ay, mijo! Cuarenta años tocando serenatas en Calabozo y todavía me tiemblan los labios.', 'Si quiere una canción para la novia, dígame. La propina es sagrada.'], ['Esta trompeta me la regaló mi papá. Sonaba bonito hasta cuando desafinaba.', '¡Viva Venezuela, carajo! Y viva la serenata.']],
     mototaxi: [['¿Pa\' dónde va? Lo llevo al Terminal rapidito.'], ['La gasolina está fea. Hoy me tocó cola desde las cuatro de la mañana.']],
     chismosa: [['Mija, ven acá… ¿supiste lo de la vecina de la esquina?', 'No, no, yo no digo nada. Pero que se vio, se vio.'], ['Yo no soy chismosa, yo me entero, que es distinto.']],
     abuelo: [['En mis tiempos esta calle era de tierra y por aquí pasaban los caballos.'], ['Siéntese un ratico, que a esta hora pega la brisa.'], ['Aquí sacamos las sillas todas las tardes. Es lo mejor que tiene el pueblo.', 'Uno se entera de todo sin moverse.']]
@@ -1264,6 +1291,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     llanero: function (r) { return { skin: pick(r, SKINS.slice(1)), hair: '#2B1B14', hs: 'corto', top: pick(r, ['#F4F1E8', '#D9C79A', '#C9D6E0']), bottom: '#3A3226', shoe: '#6B4A2A', hat: 'llanero', hatc: pick(r, ['#D8C08A', '#C9AE72', '#E6D5A8']), mous: true }; },
     joven: function (r) { return { skin: pick(r, SKINS), hair: pick(r, HAIRS.slice(0, 4)), hs: r() < 0.4 ? 'largo' : 'corto', top: pick(r, ['#6E1423', '#6E1423', '#2E6FB7', '#F2F2F2', '#2B2B2E', '#F2C230']), bottom: pick(r, ['#2B3550', '#4A4A4A', '#7A6A4A']), shorts: r() < 0.5, shoe: pick(r, ['#F2F2F2', '#2B2B2B']), hat: r() < 0.25 ? 'gorra' : null, hatc: '#2B2B2E' }; },
     niño: function (r) { return { skin: pick(r, SKINS), hair: pick(r, HAIRS.slice(0, 4)), hs: r() < 0.4 ? 'largo' : 'corto', top: pick(r, ['#F2C230', '#E8463C', '#5DB8C9', '#F2F2F2']), bottom: '#2B3550', shorts: true, shoe: '#F2F2F2', kid: true }; },
+    mariachi: function () { return { skin: '#D9A87E', hair: '#E6E1D6', hs: 'corto', mous: true, top: '#17171A', bottom: '#17171A', shoe: '#1E1A16', hat: 'charro', hatc: '#17171A', charro: true, trumpet: true, tall: true, thin: true }; },
     mototaxi: function (r) { return { skin: pick(r, SKINS), hair: '#1E1712', hs: 'corto', top: '#2B2B2E', vest: pick(r, ['#E86A2E', '#3FBF5F']), bottom: '#2B3550', shoe: '#2B2B2B', hat: 'casco', hatc: pick(r, ['#222', '#C8302E', '#F2F2F2']) }; },
     chismosa: function (r) { return { skin: pick(r, SKINS), hair: '#2B1B14', hs: 'rolos', dress: true, top: '#F28CB1', bottom: '#9C4DCC', pattern: '#FFFFFF', shoe: '#F2F2F2' }; },
     abuelo: function (r) { return { skin: pick(r, SKINS), hair: '#D8D0C0', hs: r() < 0.5 ? 'calvo' : 'corto', top: pick(r, ['#F2F2F2', '#C9D6E0', '#E6D5A8']), bottom: '#4A4A4A', shoe: '#2B2B2B', mous: r() < 0.5 }; }
@@ -2195,6 +2223,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         var R = e.r, tum = n.tum ? time - n.tum.t0 : -1; e.face += wrapA(NYAW[n.dir || 0] - e.face) * 0.2;
         R.root.position.set(x, 0, z); R.root.rotation.set(0, e.face, 0);
         if (n.sit) { R.pose('sit'); if (nst < 24) { nQ.setFromAxisAngle(motoUp, e.face); nP.set(x, 0, z); nM4.compose(nP, nQ, motoS); STO.setMatrixAt(nst++, nM4); } }
+        else if (n.trumpet && !n.moving) R.pose('trumpet', time);
         else R.pose(n.moving ? 'walk' : 'stand', n.t);
         if (tum >= 0 && tum < 2.2) tumbleRig(R, tum, n.tum.sp, e.face);
       }
@@ -3195,7 +3224,12 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var n = newNpc('mototaxi', f.x, f.y, { stat: true, fixed: true, dir: rd[2], name: name, lines: ['¿Pa\' dónde va, mi amor? Yo lo llevo rapidito.'], taxi: true }); n.home = [f.x, f.y]; npcs.push(n);
     NPCMOTOS.push({ x: f.x - rd[1] * 14, y: f.y + rd[0] * 14, hx: -rd[1], hy: rd[0] });
   }
+  // el Sr Jairo, mariachi ya mayor, toca la trompeta frente a su casa (Carrera 13 con Calle 5)
+  function addJairo() {
+    var f = findFree(569, 364, [4, 6, 7]), rd = roadDir(Math.floor(f.x / TS), Math.floor(f.y / TS)), n = newNpc('mariachi', f.x, f.y, { stat: true, fixed: true, dir: rd[2], name: 'Sr Jairo', trumpet: true }); n.home = [f.x, f.y]; npcs.push(n);
+  }
   function setupVendors() {
+    addJairo();
     addVend('chela', 'señora', 'Doña Chela, estampitas y velas', placeXY('catedral'), '#7A4AB0');
     addVend('carmen', 'señora', 'Doña Carmen, empanadas', placeXY('panaderia'), '#E8463C');
     addVend('catire', 'llanero', 'El Catire, frutas', placeXY('mercado'), '#F2B01E');
@@ -3359,7 +3393,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var gm = ac.createOscillator(); gm.frequency.value = 7; var gmg = ac.createGain(); gmg.gain.value = 4; gm.connect(gmg); gmg.connect(go.frequency); gm.start(); go.connect(lp); lp.connect(gen); go.start();
     var api = {
       setOn: function (on) { if (ac.state === 'suspended') ac.resume(); master.gain.setTargetAtTime(on ? 0.5 : 0, ac.currentTime, 0.2); },
-      setMode: function () { if (api._amb) api._amb.gain.setTargetAtTime(hour === 3 ? 0.14 : 0.2, ac.currentTime, 0.6); },
+      setMode: function () { if (api._amb) api._amb.gain.setTargetAtTime(hour === 3 ? 0.14 : (hour === 2 ? 0.07 : 0), ac.currentTime, 1.5); },
       honk: function (moto) { var o = ac.createOscillator(), g = ac.createGain(); o.type = 'square'; o.frequency.value = moto ? 880 : 420; g.gain.value = 0; o.connect(g); g.connect(master); var t = ac.currentTime; g.gain.setValueAtTime(0.06, t); g.gain.setValueAtTime(0, t + 0.18); if (!moto) { g.gain.setValueAtTime(0.06, t + 0.26); g.gain.setValueAtTime(0, t + 0.44); } o.start(t); o.stop(t + 0.5); }
     };
     api.thud = function () { var t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.28); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4); o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.45); var n2 = ac.createBufferSource(); n2.buffer = nb; var g2 = ac.createGain(); g2.gain.setValueAtTime(0.25, t); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.18); n2.connect(g2); g2.connect(master); n2.start(t); n2.stop(t + 0.2); };
@@ -3387,7 +3421,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var vs = [];
       for (var i = 0; i < NV; i++) {
         var o1 = ac.createOscillator(), o2 = ac.createOscillator(), o2g = ac.createGain(), lpf = ac.createBiquadFilter(), hpf = ac.createBiquadFilter(), g = ac.createGain(), pan = ac.createStereoPanner ? ac.createStereoPanner() : null;
-        o1.type = 'sawtooth'; o2.type = 'square'; o2g.gain.value = 0.3; lpf.type = 'lowpass'; lpf.frequency.value = 900; hpf.type = 'highpass'; hpf.frequency.value = 130; g.gain.value = 0; o1.connect(lpf); o2.connect(o2g); o2g.connect(lpf); lpf.connect(hpf); hpf.connect(g); if (pan) { g.connect(pan); pan.connect(master); } else g.connect(master); o1.start(); o2.start();
+        o1.type = 'sawtooth'; o2.type = 'square'; o2g.gain.value = 0.35; lpf.type = 'lowpass'; lpf.frequency.value = 700; hpf.type = 'highpass'; hpf.frequency.value = 90; g.gain.value = 0; o1.connect(lpf); o2.connect(o2g); o2g.connect(lpf); lpf.connect(hpf); hpf.connect(g); if (pan) { g.connect(pan); pan.connect(master); } else g.connect(master); o1.start(); o2.start();
         vs.push({ id: null, o1: o1, o2: o2, lpf: lpf, g: g, pan: pan });
       }
       api._v = vs;
@@ -3400,9 +3434,9 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       list.forEach(function (e) {
         var v = null; for (i = 0; i < vs.length; i++) if (vs[i].id === e.id) { v = vs[i]; break; }
         if (!v) { for (i = 0; i < vs.length; i++) if (vs[i].id === null) { v = vs[i]; break; } if (!v) return; v.id = e.id; }
-        var k = clamp(1 - e.d / 40, 0, 1), dop = clamp(171 / (171 + e.vr), 0.9, 1.1), f = (68 + e.spd * 0.9) * dop;
-        v.o1.frequency.setTargetAtTime(f, t, 0.08); v.o2.frequency.setTargetAtTime(f * 2, t, 0.08);
-        v.lpf.frequency.setTargetAtTime(500 + (900 + e.spd * 6) * (0.3 + 0.7 * k), t, 0.1);
+        var k = clamp(1 - e.d / 40, 0, 1), dop = clamp(171 / (171 + e.vr), 0.9, 1.1), f = (46 + e.spd * 0.58) * dop;
+        v.o1.frequency.setTargetAtTime(f, t, 0.08); v.o2.frequency.setTargetAtTime(f * 1.5, t, 0.08);
+        v.lpf.frequency.setTargetAtTime(350 + (500 + e.spd * 3) * (0.3 + 0.7 * k), t, 0.1);
         v.g.gain.setTargetAtTime(Math.pow(k, 2.2) * (0.02 + Math.min(0.025, e.spd / 6000)), t, 0.08);
         if (v.pan) v.pan.pan.setTargetAtTime(e.pan * 0.9, t, 0.08);
       });
