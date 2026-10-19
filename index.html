@@ -250,6 +250,10 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .bk .lab { font: 700 11.5px/1 var(--body); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
 .bk .mv { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding: 5px 0; border-top: 1px solid var(--line); }
 .bk .mv .p { color: #8FE3A0; font-weight: 700; } .bk .mv .n { color: #FF8A8A; font-weight: 700; } .bk .mv small { color: var(--muted); }
+.orow { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+.orow b { font: 700 14px/1.2 var(--body); } .orow small { display: block; color: var(--muted); font-size: 12px; }
+.orow .btn { min-height: 38px; padding: 0 12px; font-size: 13px; flex: 0 0 auto; }
+#hudNet { cursor: pointer; pointer-events: auto; }
 .bk .note { font-size: 12.5px; color: var(--muted); }
 .misbtn.on { border-color: var(--accent); }
 .rolact { bottom: 196px; background: var(--accent); color: var(--accent-ink); border-color: #FFFFFF; }
@@ -3202,6 +3206,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     else if (d.t === 'atrop') { var qa = players[d.id]; if (qa) { if (audio && soundOn && audio.mama) { var dq = Math.hypot(qa.x - player.x, qa.y - player.y) / TS; if (dq < 18) audio.mama(0.8 * (1 - dq / 18)); } qa.tumbleAt = time; qa.tumbleSp = d.sp === -1 ? -1 : 1; var ax = +d.x, ay = +d.y, adx = +d.dx, ady = +d.dy, av = +d.v0; if ([ax, ay, adx, ady, av].every(isFinite)) qa.tum = { t0: time, x0: clamp(ax, 0, W * TS), y0: clamp(ay, 0, H * TS), dx: adx, dy: ady, v0: clamp(av, 60, 260) }; } }
     else if (d.t === 'golpe' && d.to === me) { var gh = +d.h, gv = +d.v; if (isFinite(gh) && isFinite(gv)) atropellado(Math.cos(gh), Math.sin(gh), clamp(gv, 40, 230)); }
     else if (d.t === 'chisme' && d.to === me) chismeRecibido(d);
+    else if (d.t === 'ubic' && d.to === me) ubicRecibida(d);
     else if (d.t === 'viral') chismeViral(d);
     else if (d.t === 'desm' && d.to === me) {
       desmN[d.id] = (desmN[d.id] || 0) + 1; toast('✖ ' + cleanName(d.fn) + ' desmintió tu chisme');
@@ -3471,7 +3476,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     b.push({ t: 'Salir' });
     modShow({ title: '🏦 Banesco', node: bankCard(false), col: true, btns: b });
   }
-  function phoneUI() { if (gateOpen || modOpen) return; modShow({ title: '📱 Banesco Móvil', node: bankCard(true), btns: [{ t: 'Cerrar' }] }); }
+  function phoneUI() { if (gateOpen || modOpen) return; modShow({ title: '📱 Mi teléfono', node: bankCard(true), btns: [{ t: '👥 Conectados · enviar ubicación', cls: 'primary', fn: function () { onlineUI(false); } }, { t: 'Cerrar' }] }); }
   $('phBtn').addEventListener('click', phoneUI);
   window.addEventListener('keydown', function (e) { if ((e.key === 'p' || e.key === 'P') && !modOpen && !mapOpen && !gateOpen && inStage()) { e.preventDefault(); phoneUI(); } });
 
@@ -3866,6 +3871,40 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     clearInterval(OL.pollT); OL.pollT = setInterval(function () { if (OL.on) { refreshConvos(); pendingInvites(); } }, 20000);
     toast('Hola, ' + OL.profile.name);
   }
+  // ---- enviar mi ubicación a un jugador conectado (le llega un aviso con botón «Ir ahí» que pone el pin)
+  var ubicOut = {}, ubicIn = {};
+  function onlineUI(test) {
+    if (gateOpen || modOpen) return;
+    if (!test && !enLinea()) { toast('Entra con tu cuenta para ver a los conectados'); return; }
+    var ids = Object.keys(players).filter(function (k) { return !muted[k]; }).sort(function (a, b) { return Math.hypot(players[a].x - player.x, players[a].y - player.y) - Math.hypot(players[b].x - player.x, players[b].y - player.y); });
+    var n = el('div', 'modb');
+    if (!ids.length) n.appendChild(el('p', null, 'Ahora mismo no hay nadie más conectado.'));
+    else {
+      n.appendChild(el('p', null, 'Elige a quién enviarle tu ubicación. Le llegará un aviso con un botón para ir hasta ti.'));
+      ids.forEach(function (k) {
+        var q = players[k], row = el('div', 'orow'), box = el('div', null), nm = el('b', null, (q.moto ? '🏍 ' : '') + cleanName(q.name || 'Vecino')), dm = Math.round(Math.hypot(q.x - player.x, q.y - player.y) / TS * (D.mpt || 2));
+        box.appendChild(nm); box.appendChild(el('small', null, 'a ' + (dm >= 1000 ? (dm / 1000).toFixed(1).replace('.', ',') + ' km' : dm + ' m') + ' de ti'));
+        var b = el('button', 'btn primary', '📍 Enviar mi ubicación'); b.type = 'button';
+        b.addEventListener('click', function () { sendUbic(k, cleanName(q.name || 'Vecino'), b); });
+        row.appendChild(box); row.appendChild(b); n.appendChild(row);
+      });
+    }
+    modShow({ title: '👥 Conectados', node: n, btns: [{ t: 'Cerrar' }] });
+  }
+  function sendUbic(id, name, btn) {
+    if (ubicOut[id] && time - ubicOut[id] < 10) { toast('Espera unos segundos para volver a enviarle tu ubicación'); return; }
+    ubicOut[id] = time; var tx = player.x / TS, ty = player.y / TS, place = streetName(tx, ty);
+    ecoSend({ t: 'ubic', to: id, from: OL && OL.user ? OL.user.id : '', fn: (OL && OL.profile && OL.profile.name) || 'Alguien', x: Math.round(tx * 10) / 10, y: Math.round(ty * 10) / 10, n: place });
+    btn.textContent = 'Enviada ✓'; btn.disabled = true; toast('📍 Le enviaste tu ubicación a ' + name);
+  }
+  function ubicRecibida(d) {
+    var x = +d.x, y = +d.y; if (!isFinite(x) || !isFinite(y) || x < 0 || y < 0 || x > W || y > H || gateOpen) return;
+    var from = String(d.from || ''); if (muted[from]) return; if (ubicIn[from] && time - ubicIn[from] < 5) return; ubicIn[from] = time;
+    var name = cleanName(String(d.fn || 'Alguien')), place = String(d.n || '').replace(/[<>]/g, '').slice(0, 60) || 'su ubicación', dm = Math.round(Math.hypot(x - player.x / TS, y - player.y / TS) * (D.mpt || 2));
+    var node = el('div', 'modb'); node.appendChild(el('p', null, place)); node.appendChild(el('p', 'lema', 'Está a ' + (dm >= 1000 ? (dm / 1000).toFixed(1).replace('.', ',') + ' km' : dm + ' m') + ' de ti.'));
+    modShow({ title: '📍 ' + name + ' te envió su ubicación', node: node, col: true, life: 30000, btns: [{ t: 'Ir ahí (poner pin)', cls: 'primary', fn: function () { setPin(x, y, 'Ubicación de ' + name, 6); } }, { t: 'Ahora no' }] });
+  }
+  $('hudNet').addEventListener('click', function () { onlineUI(false); });
   function setNet() {
     var e = $('hudNet'); if (!OL.on) { e.style.display = 'none'; return; }
     var n = Object.keys(players).length + 1;
@@ -4382,7 +4421,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { ruta: function () { return ROUTE; }, pin: { set: function (x, y, n, r) { setPin(x, y, n || 'Prueba', r || 4); }, get: function () { return PIN; }, tap: function (x, y) { pinFromMap(x, y); } }, bank: { ui: function () { bankUI(); }, phone: function () { phoneUI(); }, isBank: function (b) { return isBank(b); } }, rats: function () { return RATS; }, ratTick: function (d) { ratTick(d); }, mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { ubic: { ui: function () { onlineUI(true); }, recv: function (d) { ubicRecibida(d); } }, ruta: function () { return ROUTE; }, pin: { set: function (x, y, n, r) { setPin(x, y, n || 'Prueba', r || 4); }, get: function () { return PIN; }, tap: function (x, y) { pinFromMap(x, y); } }, bank: { ui: function () { bankUI(); }, phone: function () { phoneUI(); }, isBank: function (b) { return isBank(b); } }, rats: function () { return RATS; }, ratTick: function (d) { ratTick(d); }, mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 
