@@ -335,6 +335,100 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   .stage.kb #chatList { flex: 1 1 auto; height: auto; max-height: 4em; padding: 3px 8px; gap: 2px; }
   .stage.kb .chatpanel form { padding: 4px; }
 }
+/* teléfono en horizontal: interfaz compacta para dejar ver el juego */
+@media (pointer: coarse) and (max-height: 520px) {
+  .chip { padding: 3px 7px; font-size: 11px; line-height: 1.25; border-width: 1.5px; border-radius: 5px; }
+  .hud { top: max(8px, env(safe-area-inset-top, 0px)); left: max(8px, env(safe-area-inset-left, 0px)); max-width: calc(100% - 300px); gap: 0; }
+  .hud b { font-size: 12.5px; line-height: 1.15; }
+  .hud .eco { gap: 6px; margin-top: 1px; }
+  .hud .eco .money { font-size: 12.5px; } .hud .eco .bank { font-size: 10.5px; } .hud .eco .h { font-size: 12px; } .hud .rol { font-size: 10.5px; }
+  .mini { top: max(8px, env(safe-area-inset-top, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); padding: 1.5px; }
+  .mini canvas { width: 104px; }
+  .gear { top: max(8px, env(safe-area-inset-top, 0px)); right: calc(max(8px, env(safe-area-inset-right, 0px)) + 116px); width: 34px; height: 34px; border-width: 1.5px; }
+  .gear svg { width: 17px; height: 17px; }
+  .misbtn { top: max(8px, env(safe-area-inset-top, 0px)); right: calc(max(8px, env(safe-area-inset-right, 0px)) + 157px); width: 34px; height: 34px; font-size: 16px; border-width: 1.5px; }
+  .phbtn { right: calc(max(8px, env(safe-area-inset-right, 0px)) + 198px); }
+  .place { top: calc(max(8px, env(safe-area-inset-top, 0px)) + 58px); left: max(8px, env(safe-area-inset-left, 0px)); }
+  .place small { font-size: 9.5px; }
+  .toast { top: 44px; font-size: 11px; }
+  .hint { font-size: 12px; padding: 8px 12px; max-width: min(300px, 80%); }
+  .joy { width: 96px; height: 96px; left: max(12px, env(safe-area-inset-left, 0px)); bottom: max(10px, env(safe-area-inset-bottom, 0px)); border-width: 2px; }
+  .joy::before { inset: 16px; }
+  .joyk { width: 40px; height: 40px; margin: -20px 0 0 -20px; border-width: 2px; }
+  .act { right: max(8px, env(safe-area-inset-right, 0px)); bottom: max(8px, env(safe-area-inset-bottom, 0px)); min-height: 38px; padding: 0 14px; font-size: 13px; border-radius: 7px; }
+  .mic { width: 40px; height: 40px; right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 46px); }
+  .mic svg { width: 20px; height: 20px; }
+  .fab { min-height: 34px; padding: 0 11px; font-size: 12px; border-radius: 17px; right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 92px); border-width: 1.5px; }
+  .rolact { bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 132px); }
+  .chatlive { bottom: 112px; font-size: 12px; }
+  .mtrk { top: calc(max(8px, env(safe-area-inset-top, 0px)) + 74px); padding: 3px 8px; border-width: 1.5px; }
+  .mtrk b { font-size: 11px; } .mtrk span { font-size: 11px; }
+  .pinhud { padding: 3px 10px 3px 7px; gap: 7px; border-width: 1.5px; bottom: max(8px, env(safe-area-inset-bottom, 0px)); max-width: calc(100% - 300px); }
+  .pinhud .parrow { font-size: 22px; } .pinhud b { font-size: 11px; } .pinhud small { font-size: 11px; }
+  .modc { padding: 10px 12px; gap: 8px; border-width: 2px; width: min(94%, 420px); }
+  .modc h2 { font-size: 15px; } .modb { font-size: 12.5px; gap: 6px; }
+  .modbtns .btn, .orow .btn { min-height: 36px; min-width: 36px; padding: 0 12px; font-size: 13px; }
+  .bk .big { font-size: 24px; } .bk .cash { font-size: 15px; } .bk .mv { font-size: 12.5px; padding: 3px 0; }
+  .bmb { width: 38px; height: 38px; font-size: 18px; border-width: 1.5px; }
+  .bmback { min-height: 38px; padding: 0 14px; font-size: 13px; }
+  .bmtop { padding: 4px 8px; } .bmtop b { font-size: 13px; } .bmtop span { font-size: 11px; } .bmtop small { font-size: 10.5px; }
+  .bmpinoff { min-height: 30px; font-size: 12px; }
+}
+/* ===== interfaz de juego: translúcida, sin cajas pesadas, iconos en vez de texto (el mundo se ve) ===== */
+:root { --hud-bg: rgba(7, 12, 10, 0.46); --hud-line: rgba(255, 255, 255, 0.28); }
+.chip { background: var(--hud-bg); border: 1px solid var(--hud-line); border-radius: 3px; color: #FFFFFF; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
+.chip.hud { background: linear-gradient(90deg, rgba(5, 9, 8, 0.66) 0%, rgba(5, 9, 8, 0.4) 72%, rgba(5, 9, 8, 0) 100%); border: 0; border-left: 3px solid var(--accent); border-radius: 0; padding: 4px 32px 4px 8px; }
+.hud b { text-transform: uppercase; letter-spacing: 0.06em; }
+.hud span { color: rgba(255, 255, 255, 0.74); }
+.chip.mini { border-radius: 50%; padding: 0; border: 1.5px solid rgba(255, 255, 255, 0.55); box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.32); overflow: hidden; background: rgba(7, 12, 10, 0.5); }
+.mini canvas { width: 104px; height: 104px; object-fit: cover; border-radius: 50%; }
+.gear, .misbtn, .mic, .bmb, #chatFab { background: var(--hud-bg); border: 1px solid rgba(255, 255, 255, 0.34); color: #FFFFFF; box-shadow: none; }
+.misbtn svg { width: 55%; height: 55%; }
+.misbtn.on { border-color: var(--accent); color: var(--accent); }
+#chatFab { width: 46px; height: 46px; min-height: 0; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; bottom: 74px; }
+#chatFab[hidden] { display: none; }
+#chatFab svg { width: 52%; height: 52%; }
+#chatFab .bd { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: #D7263D; color: #FFFFFF; font: 700 10.5px/17px var(--body); font-style: normal; text-align: center; display: none; text-shadow: none; }
+#chatFab .bd[data-k="near"] { background: #1FB6C9; color: #04161A; }
+#chatFab .bd:not(:empty) { display: block; }
+.fab.rolact { background: rgba(245, 179, 1, 0.9); color: #1A1200; border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 3px; min-height: 36px; font-size: 12.5px; letter-spacing: 0.04em; text-transform: uppercase; }
+.joy { background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.1) 100%); border: 1.5px solid rgba(255, 255, 255, 0.3); }
+.joy::before { border: 0; }
+.joyk { background: rgba(255, 255, 255, 0.55); border: 1.5px solid rgba(255, 255, 255, 0.85); box-shadow: none; }
+.act { width: 58px; height: 58px; min-height: 0; padding: 0; border-radius: 50%; background: rgba(245, 179, 1, 0.9); border: 2px solid rgba(255, 255, 255, 0.85); color: #1A1200; display: flex; align-items: center; justify-content: center; max-width: none; }
+.act[hidden] { display: none; }
+.act svg { width: 46%; height: 46%; }
+.act small { position: absolute; right: calc(100% + 9px); top: 50%; transform: translateY(-50%); white-space: nowrap; max-width: 52vw; overflow: hidden; text-overflow: ellipsis; font: 600 11.5px/1 var(--body); color: #FFFFFF; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); background: linear-gradient(270deg, rgba(5, 9, 8, 0.72), rgba(5, 9, 8, 0.3)); border-right: 3px solid var(--accent); padding: 5px 9px; }
+.toast.chip { background: linear-gradient(90deg, rgba(5, 9, 8, 0) 0%, rgba(5, 9, 8, 0.74) 16%, rgba(5, 9, 8, 0.74) 84%, rgba(5, 9, 8, 0) 100%); border: 0; border-radius: 0; padding: 5px 30px; font-size: 12px; box-shadow: inset 0 -1px 0 rgba(245, 179, 1, 0.55); }
+.chip.place { background: linear-gradient(90deg, rgba(5, 9, 8, 0.6), rgba(5, 9, 8, 0.2)); border: 0; border-left: 3px solid var(--accent); border-radius: 0; }
+.mtrk { background: linear-gradient(90deg, rgba(5, 9, 8, 0.72), rgba(5, 9, 8, 0.3)); border: 0; border-left: 3px solid var(--accent); border-radius: 0; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
+.pinhud { background: linear-gradient(90deg, rgba(5, 9, 8, 0.72), rgba(5, 9, 8, 0.3)); border: 0; border-left: 3px solid #FF5C8A; border-radius: 0; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
+.mod { background: rgba(4, 8, 6, 0.6); }
+.modc { overflow: hidden; }
+.modb { overflow: auto; flex: 1 1 auto; min-height: 0; }
+.modbtns { flex: 0 0 auto; }
+.modc, .chatpanel, .dialog, .invite, .ecomsg { background: rgba(9, 15, 13, 0.93); border: 1px solid rgba(255, 255, 255, 0.2); border-top: 3px solid var(--accent); border-radius: 2px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px)); }
+.ecomsg { border-top-color: #D7263D; }
+.modc h2 { font: 700 12px/1 var(--display); text-transform: uppercase; letter-spacing: 0.13em; color: var(--accent); padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.14); }
+.modbtns .btn, .modb .btn, .invite .btn, .chatpanel .btn, .ecomsg .btn { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 2px; font: 700 12px var(--body); text-transform: uppercase; letter-spacing: 0.05em; color: #FFFFFF; }
+.modbtns .btn.primary, .modb .btn.primary, .invite .btn.primary, .chatpanel .btn.primary, .ecomsg .btn.primary, .dnext { background: var(--accent); color: #1A1200; border-color: var(--accent); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); }
+.dnext { border-radius: 0; font: 700 12px var(--body); text-transform: uppercase; letter-spacing: 0.06em; }
+.dname { border-radius: 0; text-transform: uppercase; letter-spacing: 0.08em; font-size: 11.5px; clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 100%, 0 100%); padding-right: 14px; }
+.bmtop { background: linear-gradient(90deg, rgba(5, 9, 8, 0.72), rgba(5, 9, 8, 0.3)); border: 0; border-left: 3px solid var(--accent); border-radius: 0; }
+@media (pointer: coarse) and (max-height: 520px) {
+  .mini canvas { width: 88px; height: 88px; }
+  .gear { right: calc(max(8px, env(safe-area-inset-right, 0px)) + 98px); }
+  .misbtn { right: calc(max(8px, env(safe-area-inset-right, 0px)) + 139px); }
+  .phbtn { right: calc(max(8px, env(safe-area-inset-right, 0px)) + 180px); }
+  .hud { max-width: calc(100% - 280px); }
+  #chatFab { width: 38px; height: 38px; bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 54px); right: max(8px, env(safe-area-inset-right, 0px)); }
+  .mic { bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 98px); }
+  .act { width: 48px; height: 48px; min-height: 0; padding: 0; }
+  .act small { font-size: 11px; padding: 4px 8px; }
+  .fab.rolact { min-height: 30px; padding: 0 10px; font-size: 11px; bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 146px); }
+  .modc h2 { font-size: 11px; }
+  .modbtns .btn, .modb .btn, .orow .btn { font-size: 11.5px; }
+}
 </style>
 
 <div class="wrap">
@@ -352,8 +446,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       <button type="button" class="gear" id="cfgBtn" aria-label="Ajustes"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
       <div class="chip mini"><canvas id="mm" role="button" tabindex="0" aria-label="Minimapa: tócalo para verlo en grande"></canvas></div>
       <div class="mtrk" id="mtrk" hidden><b id="mtT"></b><span id="mtS"></span></div>
-      <button type="button" class="misbtn" id="misBtn" aria-label="Misiones" hidden>📋</button>
-      <button type="button" class="misbtn phbtn" id="phBtn" aria-label="Mi cuenta del banco" hidden>📱</button>
+      <button type="button" class="misbtn" id="misBtn" aria-label="Misiones" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 8.5h6M9 12.5h6M9 16.5h4"/></svg></button>
+      <button type="button" class="misbtn phbtn" id="phBtn" aria-label="Mi teléfono: cuenta del banco y conectados" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg></button>
       <button type="button" class="fab rolact" id="rolAct" hidden></button>
       <div class="mod" id="mod" hidden role="dialog" aria-modal="true" aria-labelledby="modT"><div class="modc"><h2 id="modT"></h2><div class="modb" id="modB"></div><div class="modbtns" id="modBtns"></div></div></div>
       <div class="ecoflash" id="ecoFlash"></div>
@@ -369,7 +463,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         <button type="button" class="dp right" data-k="right" aria-label="Girar a la derecha"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 6a7 7 0 1 1-2 6"/><path d="M7 2v4h4"/></svg></button>
       </div>
       <div class="joy" id="joy" role="application" aria-label="Palanca para caminar: arrastra en la dirección que quieres ir"><div class="joyk" id="joyKnob"></div></div>
-      <button type="button" class="fab" id="chatFab" hidden>Chat</button>
+      <button type="button" class="fab" id="chatFab" hidden aria-label="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><i class="bd" id="chatBd"></i></button>
       <button type="button" class="mic" id="micBtn" hidden aria-label="Mantén pulsado para hablar con quien esté cerca"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/></svg><span class="mict" id="micT"></span></button>
       <button type="button" class="act" id="act" hidden>Hablar (E)</button>
       <div class="chatlive" id="chatLive" aria-live="polite"></div>
@@ -1556,8 +1650,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function endDrag() { drag = null; }
   var joy = { x: 0, y: 0, id: null };
   (function () {
-    var base = $('joy'), knob = $('joyKnob'), R = 40;
-    function set(e) { var r = base.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2), d = Math.hypot(dx, dy), k = d > R ? R / d : 1; dx *= k; dy *= k; knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; joy.x = dx / R; joy.y = dy / R; }
+    var base = $('joy'), knob = $('joyKnob');
+    function set(e) { var r = base.getBoundingClientRect(), R = Math.max(22, r.width * 0.3), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2), d = Math.hypot(dx, dy), k = d > R ? R / d : 1; dx *= k; dy *= k; knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; joy.x = dx / R; joy.y = dy / R; }
     function end(e) { if (e.pointerId !== joy.id) return; joy.id = null; joy.x = joy.y = 0; knob.style.transform = ''; }
     base.addEventListener('pointerdown', function (e) { joy.id = e.pointerId; try { base.setPointerCapture(e.pointerId); } catch (er) {} begin(); set(e); e.preventDefault(); });
     base.addEventListener('pointermove', function (e) { if (e.pointerId === joy.id) set(e); });
@@ -1623,6 +1717,20 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   function showLine() { $('dname').textContent = dlg.name; $('dtext').textContent = dlg.lines[dlg.i]; $('dnext').textContent = dlg.i < dlg.lines.length - 1 ? 'Siguiente' : 'Cerrar'; }
   function closeDialog() { dlg = null; $('dlg').hidden = true; stage.classList.remove('dialog-open'); }
+  var ACT_ICONS = {
+    chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+    door: '<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M4 21h16"/><circle cx="14.5" cy="12.5" r="0.9" fill="currentColor"/>',
+    bike: '<circle cx="6" cy="16" r="3.2"/><circle cx="18" cy="16" r="3.2"/><path d="M6 16l3-6h5l3 6M9 10L8 7H6M14 10l-1.5 6"/>',
+    down: '<path d="M12 4v14M6 12l6 7 6-7"/>',
+    eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    bag: '<path d="M6 8h12l1 12H5L6 8z"/><path d="M9 8a3 3 0 0 1 6 0"/>'
+  };
+  function actSet(el, text) {
+    if (el._t === text) return; el._t = text;
+    var k = /Montar|Mototaxi/.test(text) ? 'bike' : (/Bajar/.test(text) ? 'down' : (/Mirar/.test(text) ? 'eye' : (/Comprar/.test(text) ? 'bag' : (/Entrar|puerta/.test(text) ? 'door' : 'chat'))));
+    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ACT_ICONS[k] + '</svg>';
+    var sm = document.createElement('small'); sm.textContent = text.replace(/\s*\(E\)\s*$/, ''); el.appendChild(sm); el.setAttribute('aria-label', text);
+  }
   function action() {
     if (IN.active && !dlg) return;
     if (dlg) { dlg.i++; if (dlg.i >= dlg.lines.length) closeDialog(); else showLine(); return; }
@@ -1718,7 +1826,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (!target || target.kind === 'shop') { var bm = null, bd2 = 26; PARKED.forEach(function (o) { if (o.by) return; var d2 = Math.hypot(o.x - player.x, o.y - player.y); if (d2 < bd2) { bd2 = d2; bm = o; } }); if (bm) target = { kind: 'moto', o: bm }; }
     }
     var act = $('act');
-    if (target && !dlg) { act.hidden = false; act.textContent = target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : (isBank(target.o) ? 'Entrar al banco (E)' : 'Entrar (E)')) : (target.kind === 'statue' ? 'Mirar (E)' : (target.o.vend ? 'Comprar a ' : (target.o.taxi ? 'Mototaxi: ' : 'Hablar con ')) + target.o.name.split(',')[0] + ' (E)'); }
+    if (target && !dlg) { act.hidden = false; actSet(act, target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : (isBank(target.o) ? 'Entrar al banco (E)' : 'Entrar (E)')) : (target.kind === 'statue' ? 'Mirar (E)' : (target.o.vend ? 'Comprar a ' : (target.o.taxi ? 'Mototaxi: ' : 'Hablar con ')) + target.o.name.split(',')[0] + ' (E)')); }
     else act.hidden = true;
     hudTimer -= dt;
     if (hudTimer <= 0) {
@@ -2039,7 +2147,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     }
 
     // ---- carga progresiva alrededor del jugador
-    var RLOAD = 78, RDROP = 105, scanT = 0, cQueue = [];
+    var RLOAD = MOB ? 90 : 100, RDROP = RLOAD + 27, scanT = 0, cQueue = [];
     function scan() {
       var px = player.x / TS, py = player.y / TS, i, d;
       bQueue.length = 0; cQueue.length = 0;
@@ -2069,11 +2177,12 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         else if (has && dd2 > RDROP) { var s = props.get(o.pi); if (s) scene.remove(s); props.delete(o.pi); }
       }
     }
-    function pump(ms) {
-      var t0 = performance.now();
-      while (performance.now() - t0 < ms) {
-        if (cQueue.length) { var q = cQueue.pop(); if (!chunks.has(q.key)) chunks.set(q.key, makeChunk(q.cx, q.cy)); }
-        else if (bQueue.length) { var b = bQueue.pop(); if (!blds.has(b.i)) makeBuilding(b); }
+    // construye lo que falta del mapa y sube sus texturas a la GPU aquí mismo (antes se subían al aparecer en pantalla y daban tirones)
+    function pump(ms, maxItems) {
+      var t0 = performance.now(), n = 0;
+      while (performance.now() - t0 < ms && n < maxItems) {
+        if (cQueue.length) { var q = cQueue.pop(); if (!chunks.has(q.key)) { var nc = makeChunk(q.cx, q.cy); chunks.set(q.key, nc); try { renderer.initTexture(nc.tex); } catch (e) {} n++; } }
+        else if (bQueue.length) { var b = bQueue.pop(); if (!blds.has(b.i)) { makeBuilding(b); var r = blds.get(b.i); if (r) r.mats.forEach(function (m) { try { if (m.map) renderer.initTexture(m.map); if (m.emissiveMap) renderer.initTexture(m.emissiveMap); } catch (e) {} }); n++; } }
         else break;
       }
     }
@@ -2298,7 +2407,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     render3d = function () {
       if (hour !== lastHour) applyPhase();
       scanT -= 1; if (scanT <= 0) { scanT = 12; scan(); }
-      pump(quality === 2 ? 3 : 5);
+      pump(quality === 2 ? 3 : 5, (ride && Math.abs(ride.v) > 50) ? 1 : 4);   // yendo rápido en moto: un solo elemento por cuadro para no dar tirones
       var px = player.x / TS, pz = player.y / TS, a = player.a, ph = PH[hour];
       var bob = Math.abs(Math.sin(walkPh)) * (quality === 2 ? 0.05 : 0.03);
       if (ride) {
@@ -3463,7 +3572,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (withMov) {
       n.appendChild(el('div', 'lab', 'Últimos movimientos'));
       if (!ECO.mov.length) n.appendChild(el('div', 'note', 'Todavía no tienes movimientos. Deposita en el Banesco, al lado de La Criolla 22.'));
-      ECO.mov.slice(0, 8).forEach(function (q) { var row = el('div', 'mv'); row.appendChild(el('span', null, q.k === 'dep' ? 'Depósito' : 'Retiro')); var amt = el('span', q.k === 'dep' ? 'p' : 'n', (q.k === 'dep' ? '+$' : '−$') + q.a); row.appendChild(amt); var sm = el('small', null, 'saldo $' + q.bal + ' · ' + q.ts); row.appendChild(sm); n.appendChild(row); });
+      ECO.mov.slice(0, innerHeight < 480 ? 4 : 8).forEach(function (q) { var row = el('div', 'mv'); row.appendChild(el('span', null, q.k === 'dep' ? 'Depósito' : 'Retiro')); var amt = el('span', q.k === 'dep' ? 'p' : 'n', (q.k === 'dep' ? '+$' : '−$') + q.a); row.appendChild(amt); var sm = el('small', null, 'saldo $' + q.bal + ' · ' + q.ts); row.appendChild(sm); n.appendChild(row); });
     }
     n.appendChild(el('div', 'note', 'El dinero en la cuenta no te lo roban los rateros ni lo pierdes si te mueres.'));
     return n;
@@ -4058,7 +4167,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function updateFab() {
     var n = 0; Object.keys(unread).forEach(function (k) { if (convos[k] || k === roomKey()) n += unread[k] || 0; });
     var inTalk = Object.keys(convos).some(function (id) { return convoOthers(convos[id]).length > 0; });
-    $('chatFab').textContent = n ? 'Chat (' + n + ')' : (nearCount && !inTalk && !OL.legacy ? 'Charlar · ' + nearCount : 'Chat');
+    var nearOn = !n && nearCount && !inTalk && !OL.legacy, bd = $('chatBd'); bd.textContent = n ? (n > 9 ? '9+' : n) : (nearOn ? nearCount : ''); bd.setAttribute('data-k', n ? 'unread' : 'near'); $('chatFab').setAttribute('aria-label', n ? 'Chat: ' + n + ' sin leer' : (nearOn ? 'Charlar: ' + nearCount + ' cerca' : 'Chat'));
     $('chatBtn').textContent = n ? 'Chat (' + n + ')' : 'Chat (T)';
   }
 
