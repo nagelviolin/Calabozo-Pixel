@@ -2260,7 +2260,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       renderer.setPixelRatio(ratio); renderer.setSize(w, h, false);
       glc.style.imageRendering = ratio < 0.99 ? 'pixelated' : 'auto';
       camera.aspect = w / h;
-      var vf = 2 * Math.atan(Math.tan(FOV / 2) / camera.aspect); camera.fov = baseFov = clamp(vf * 180 / Math.PI, 38, 88); camera.updateProjectionMatrix();
+      var vf = 2 * Math.atan(Math.tan(FOV / 2) / camera.aspect); camera.fov = baseFov = clamp(vf * 180 / Math.PI, 54, 88);   // en pantallas muy anchas (teléfono horizontal) el campo vertical no baja de 54°: antes quedaba en 38° y todo se veía aplastado y estirado a los lados camera.updateProjectionMatrix();
     };
     R3.warm = function (ms) { scan(); pump(ms); };
     var vtmp = new THREE.Vector3();
