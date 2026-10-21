@@ -4536,5 +4536,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 })();
 </script>
 
-<script>if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); }); }</script>
+<script>var __apk = !!window.Capacitor || (location.hostname === 'localhost' && location.protocol === 'https:' && !/^(8|3)\d{3}$/.test(location.port));   // dentro de la app Android los archivos ya están en el teléfono: no hace falta copia aparte
+if ('serviceWorker' in navigator && __apk) { navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }).catch(function () {}); if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }).catch(function () {}); }
+if ('serviceWorker' in navigator && !__apk) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); }); navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.t === 'nueva') { try { var t = document.getElementById('toast'); t.textContent = '⬇ Hay una versión nueva del juego: ciérralo y ábrelo otra vez'; t.hidden = false; setTimeout(function () { t.hidden = true; }, 6000); } catch (er) {} } }); }</script>
 </html>
