@@ -1484,12 +1484,13 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function motoCol(o) { return o && o.mc !== undefined ? o.mc : MOTOCOL[(o ? o.id : 0) & 3]; }
   var LAYT = 5;   // segundos que queda tumbado quien le roban la moto
   function layT(t, dur) { if (!dur) return t; return t < 1.3 ? t : (t < dur - 0.9 ? 1.3 : 1.3 + (t - (dur - 0.9))); }
-  var ride = null, rideTip = false, motorT = 0, myParks = {}, robCd = {};
+  var ride = null, rideTip = false, motorT = 0, myParks = {}, robCd = {}, pas = null, pasCount = 0;   // pas: voy de pasajero en la moto de otro jugador
   function wrapAng(a) { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; }
   function hitParked(x, y) { var i; for (i = 0; i < PARKED.length; i++) { var o = PARKED[i]; if (!o.by && Math.hypot(o.x - x, o.y - y) < 11) return true; } for (i = 0; i < NPCMOTOS.length; i++) { if (Math.hypot(NPCMOTOS[i].x - x, NPCMOTOS[i].y - y) < 10) return true; } return false; }
   function myLook() { var av = (OL.on && OL.profile && OL.profile.avatar) ? cleanAvatar(OL.profile.avatar) : defAvatar(); return { look: lookFrom(av), sig: JSON.stringify(av) }; }
   function shareMotos() { try { if (OL.on && OL.chan && OL.conn) OL.chan.track(myPresence()); } catch (e) {} }
   function mountMoto(o) {
+    pas = null;
     if (o.by && o.by !== 'me') { var who = players[o.by]; toast('Esa moto la está usando ' + ((who && who.name) || 'otra persona')); return; }
     o.by = 'me';
     var L = myLook(); ride = { x: o.x, y: o.y, a: Math.atan2(o.hy, o.hx), v: 0, steer: 0, lean: 0, look: L.look, sig: L.sig, src: o, mid: o.id };
@@ -1513,7 +1514,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function pBlock(x, y, ox, oy, rPed, rMoto) {
     var ks = Object.keys(players);
     for (var i = 0; i < ks.length; i++) {
-      var q = players[ks[i]]; if (q.inn) continue; var r = q.moto ? rMoto : rPed; if (!r) continue;
+      var q = players[ks[i]]; if (q.inn || q.pg) continue; var r = q.moto ? rMoto : rPed; if (!r) continue;
       var d1 = Math.hypot(x - q.x, y - q.y); if (d1 < r && d1 < Math.hypot(ox - q.x, oy - q.y)) return true;
     }
     for (var j = 0; j < npcs.length && rPed; j++) { var nn = npcs[j]; if (nn.tum) continue; var d2 = Math.hypot(x - nn.x, y - nn.y); if (d2 < rPed && d2 < Math.hypot(ox - nn.x, oy - nn.y)) return true; }
@@ -1544,7 +1545,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (Math.abs(R.v) > 60 && !(R.hitT > time)) {
       var ks = Object.keys(players), fxh = R.x + ca * 8 * sg, fyh = R.y + sa * 8 * sg;
       for (var ih = 0; ih < ks.length; ih++) {
-        var qh = players[ks[ih]]; if (qh.moto || qh.inn) continue;
+        var qh = players[ks[ih]]; if (qh.moto || qh.inn || qh.pg) continue;
         if (Math.hypot(qh.x - fxh, qh.y - fyh) < 13) {
           var vh = Math.abs(R.v); R.hitT = time + 1.2; R.v *= 0.35; if (audio && soundOn && audio.thud) audio.thud();
           toast('💥 ¡Atropellaste a ' + (qh.name || 'alguien') + '!'); if (audio && soundOn && audio.mamaEco) audio.mamaEco();
@@ -1740,7 +1741,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   };
   function actSet(el, text) {
     if (el._t === text) return; el._t = text;
-    var k = /Parar/.test(text) ? 'hand' : /Robar/.test(text) ? 'bike' : /Montar|Mototaxi/.test(text) ? 'bike' : (/Bajar/.test(text) ? 'down' : (/Mirar/.test(text) ? 'eye' : (/Comprar/.test(text) ? 'bag' : (/Entrar|puerta/.test(text) ? 'door' : 'chat'))));
+    var k = /Subir/.test(text) ? 'bike' : /Parar/.test(text) ? 'hand' : /Robar/.test(text) ? 'bike' : /Montar|Mototaxi/.test(text) ? 'bike' : (/Bajar/.test(text) ? 'down' : (/Mirar/.test(text) ? 'eye' : (/Comprar/.test(text) ? 'bag' : (/Entrar|puerta/.test(text) ? 'door' : 'chat'))));
     el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ACT_ICONS[k] + '</svg>';
     var sm = document.createElement('small'); sm.textContent = text.replace(/\s*\(E\)\s*$/, ''); el.appendChild(sm); el.setAttribute('aria-label', text);
   }
@@ -1749,6 +1750,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (dlg) { dlg.i++; if (dlg.i >= dlg.lines.length) closeDialog(); else showLine(); return; }
     if (!target) return;
     var t = target, name, lines;
+    if (t.kind === 'subir') { subirPas(t.id, t.o); return; }
+    if (t.kind === 'bajarpas') { bajarPas(); return; }
     if (t.kind === 'parar') { pararMoto(t.o); return; }
     if (t.kind === 'robnpc') { robarNpc(t.o); return; }
     if (t.kind === 'robplayer') { robarJugador(t.id, t.o); return; }
@@ -1795,7 +1798,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var fwd = (keys.up ? 1 : 0) - (keys.down ? 1 : 0), str = (keys.sr ? 1 : 0) - (keys.sl ? 1 : 0);
       var jm = Math.hypot(joy.x, joy.y), jOn = jm > 0.14;
       if (jOn) { fwd += -joy.y; str += joy.x; }
-      if (fwd || str) {
+      if ((fwd || str) && !pas) {
         var sp = ((keys.shift || jm > 0.95) ? 80 : 44) * dt * (jOn ? Math.min(1, jm / 0.85) : 1), ca = Math.cos(player.a), sa = Math.sin(player.a);
         var mx = (ca * fwd - sa * str), my = (sa * fwd + ca * str), n = Math.hypot(mx, my); mx = mx / n * sp; my = my / n * sp;
         if (freeAt(player.x + mx, player.y) && !hitVehicle(player.x + mx, player.y) && !hitParked(player.x + mx, player.y) && !pBlock(player.x + mx, player.y, player.x, player.y, 9, 11)) { player.x += mx; moving = true; }
@@ -1804,7 +1807,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     }
     if (moving && !ride) walkPh += dt * (keys.shift ? 13 : 9);
     misTick(dt); atropelloTick(dt); tumbleTick(dt);
-    ratTick(dt); engineTick(); pinTick(dt);
+    ratTick(dt); engineTick(); pinTick(dt); pasajeroTick();
     if (audio && audio.motor) { motorT -= dt; if (motorT <= 0) { motorT = 0.1; audio.motor(!!ride && soundOn && !IN.active, ride ? ride.v : 0); } }
     var walkers = 0;
     for (var i = npcs.length - 1; i >= 0; i--) { var nn = npcs[i]; if (nn.lay) { if (time - nn.lay.t0 > LAYT) nn.lay = null; else continue; } if (nn.tum || nn.back) { npcFly(nn, dt); continue; } if (nn.stat) continue; walkers++; if (Math.hypot(nn.x - player.x, nn.y - player.y) / TS > 55) { npcs.splice(i, 1); continue; } if (!(dlg && target && target.o === nn)) npcWalk(nn, dt); }
@@ -1833,6 +1836,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     // a quién tienes enfrente
     target = null;
     if (ride && !dlg) target = { kind: 'unride' };
+    else if (pas && !dlg) target = { kind: 'bajarpas' };
     else if (!dlg) {
       var ca2 = Math.cos(player.a), sa2 = Math.sin(player.a), best = 40;
       npcs.forEach(function (n) { var dx = n.x - player.x, dy = n.y - player.y, d = Math.hypot(dx, dy); if (d < best && d > 0.1 && (dx * ca2 + dy * sa2) / d > 0.55) { best = d; target = { kind: 'npc', o: n }; } });
@@ -1844,7 +1848,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (!target || target.kind === 'shop') { var bm = null, bd2 = 26; PARKED.forEach(function (o) { if (o.by) return; var d2 = Math.hypot(o.x - player.x, o.y - player.y); if (d2 < bd2) { bd2 = d2; bm = o; } }); if (bm) target = { kind: 'moto', o: bm }; }
     }
     var act = $('act');
-    if (target && !dlg) { act.hidden = false; actSet(act, target.kind === 'parar' ? 'Parar moto (E)' : target.kind === 'robnpc' ? 'Robar moto (E)' : target.kind === 'robplayer' ? 'Tumbar y robar moto (E)' : target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : (isBank(target.o) ? 'Entrar al banco (E)' : 'Entrar (E)')) : (target.kind === 'statue' ? 'Mirar (E)' : (target.o.vend ? 'Comprar a ' : (target.o.taxi ? 'Mototaxi: ' : 'Hablar con ')) + target.o.name.split(',')[0] + ' (E)')); }
+    if (target && !dlg) { act.hidden = false; actSet(act, target.kind === 'subir' ? 'Subirme atrás (E)' : target.kind === 'bajarpas' ? 'Bajar (E)' : target.kind === 'parar' ? 'Parar moto (E)' : target.kind === 'robnpc' ? 'Robar moto (E)' : target.kind === 'robplayer' ? 'Tumbar y robar moto (E)' : target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : (isBank(target.o) ? 'Entrar al banco (E)' : 'Entrar (E)')) : (target.kind === 'statue' ? 'Mirar (E)' : (target.o.vend ? 'Comprar a ' : (target.o.taxi ? 'Mototaxi: ' : 'Hablar con ')) + target.o.name.split(',')[0] + ' (E)')); }
     else act.hidden = true;
     hudTimer -= dt;
     if (hudTimer <= 0) {
@@ -1853,7 +1857,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (gk(Math.floor(player.x / TS), Math.floor(player.y / TS)) === 6 || gk(Math.floor(player.x / TS), Math.floor(player.y / TS)) === 2) { var pl = null, bd = 40; POIS.forEach(function (p) { if (p[3] !== 'plaza') return; var d = Math.hypot(p[0] - player.x / TS, p[1] - player.y / TS); if (d < bd) { bd = d; pl = p; } }); if (pl) stn = pl[2]; }
       if (stn !== lastStreet) { $('hudStreet').textContent = stn; lastStreet = stn; }
       $('hudClock').textContent = clockText();
-      var hsp = $('hudSpeed'); if (ride) { hsp.hidden = false; hsp.textContent = 'En moto · ' + Math.round(Math.abs(ride.v) * 0.45) + ' km/h'; } else hsp.hidden = true;
+      var hsp = $('hudSpeed'); if (ride) { hsp.hidden = false; hsp.textContent = 'En moto · ' + Math.round(Math.abs(ride.v) * 0.45) + ' km/h'; } else if (pas) { hsp.hidden = false; hsp.textContent = 'De pasajero'; } else hsp.hidden = true;
       if (dark) { var mins = Math.max(0, Math.floor(gameMin - darkSince)); $('hudDark').textContent = 'Sin luz desde hace ' + (mins >= 60 ? Math.floor(mins / 60) + ' h ' : '') + (mins % 60) + ' min'; }
       var near = null;
       if (target && target.kind === 'shop' && (target.o.sign || target.o.k !== 'casa')) near = [0, 0, target.o.sign || POI_LABEL[target.o.k], target.o.k];
@@ -2148,6 +2152,10 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         if (e && e.sig !== p.sig) { scene.remove(e.r.root); avs.delete(k); e = null; }
         if (!e) { e = { r: VOX.rig(p.look, VXMAT), sig: p.sig, face: 0 }; e.r.root.scale.setScalar(VK); scene.add(e.r.root); avs.set(k, e); }
         var R = e.r; R.root.visible = !p.inn; if (p.inn) return;
+        if (p.pg) {   // va sentado atrás en la moto de su conductor
+          var dr = driverOf(p.pg);
+          if (dr) { var cap = Math.cos(dr.a), sap = Math.sin(dr.a); R.root.scale.setScalar(VK * RIDE_S); R.root.position.set(dr.x / TS - cap * (RBACK + 0.31), SEAT - HIP + 0.02, dr.y / TS - sap * (RBACK + 0.31)); R.root.rotation.set(0, Math.atan2(cap, sap), 0); R.pose('ride'); if (dr.wp > 0.01) riderPitch(R.root, dr.x / TS, dr.y / TS, cap, sap, dr.wp); return; }
+        }
         var sx = p.x / TS, sz = p.y / TS;
         if (p.tum) { var tt0 = time - p.tum.t0; if (tt0 >= 0 && tt0 < 2.2) { var dd0 = vueloDist(p.tum.v0, tt0); p.x = p.tum.x0 + p.tum.dx * dd0; p.y = p.tum.y0 + p.tum.dy * dd0; sx = p.x / TS; sz = p.y / TS; } else p.tum = null; }
         if (p.moto) {
@@ -2460,6 +2468,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         camR.on = false; if (camera.fov !== baseFov) { camera.fov = baseFov; camera.updateProjectionMatrix(); }
         if (TUMBLE) { var tp = tumblePose(layT(TUMBLE.t, TUMBLE.dur), TUMBLE.spin); camera.rotation.order = 'YXZ'; camera.position.set(px, tp.y, pz); camera.rotation.set(tp.pitch, -a - Math.PI / 2 + tp.yaw, tp.roll); }
         else { if (camera.rotation.order !== 'XYZ') camera.rotation.order = 'XYZ'; camera.position.set(px, EYE + bob, pz); camera.rotation.set(0, -a - Math.PI / 2, 0); }
+        if (pas && !TUMBLE) { var pdd = driverOf(pas.id); if (pdd) { var pcx = Math.cos(pdd.a), pcz = Math.sin(pdd.a); camera.position.set(px - pcx * 0.3 - pcz * 0.42, EYE + 0.5, pz - pcz * 0.3 + pcx * 0.42); } }   // de pasajero: la cámara asoma por encima del hombro del conductor
       }
       dome.position.copy(camera.position); stars.position.copy(camera.position);
       var sd = sunSpr.userData.dir; if (sunSpr.visible && sd) sunSpr.position.set(px + sd[0] * 380, sd[1] * 380, pz + sd[2] * 380);
@@ -3443,8 +3452,9 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     });
     if (best) return best;
     Object.keys(players).forEach(function (k) {
-      var q = players[k]; if (!q.moto || q.inn || (robCd[k] && time - robCd[k] < 20)) return; var dx = q.x - player.x, dy = q.y - player.y, d = Math.hypot(dx, dy);
-      if (d < 58 && d > 1 && (dx * ca + dy * sa) / d > 0.1 && d < bd) { bd = d; best = { kind: 'robplayer', o: q, id: k }; }
+      var q = players[k]; if (!q.moto || q.inn) return; var dx = q.x - player.x, dy = q.y - player.y, d = Math.hypot(dx, dy), fr = d > 1 ? (dx * ca + dy * sa) / d : 0;
+      if (d < 58 && d > 1 && fr > 0.35 && !(robCd[k] && time - robCd[k] < 20) && d < bd) { bd = d; best = { kind: 'robplayer', o: q, id: k }; }
+      else if (d < 46 && fr <= 0.35 && (q.spd || 0) < 45 && d < bd && !Object.keys(players).some(function (z) { return players[z].pg === k; })) { bd = d; best = { kind: 'subir', o: q, id: k }; }
     });
     return best;
   }
@@ -3472,12 +3482,32 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     toast('😱 ¡Te robaron la moto! Quedaste tumbado…'); if (audio && soundOn && audio.thud) audio.thud();
     if (enLinea()) ecoSend({ t: 'atrop', id: OL.user.id, sp: sp, x: Math.round(player.x), y: Math.round(player.y), dx: +(-ca).toFixed(3), dy: +(-sa).toFixed(3), v0: 70, dur: LAYT });
   }
+  // ---- pasajero: quien se acerca a una moto puede subirse atrás y viaja con su conductor
+  function driverOf(id) {
+    if (OL && OL.user && id === OL.user.id) return ride ? { x: ride.x, y: ride.y, a: ride.a, wp: ride.wp || 0 } : null;
+    var q = players[id]; return q && q.moto && !q.inn ? { x: q.x, y: q.y, a: q.mang || 0, wp: q.wp || 0 } : null;
+  }
+  function subirPas(k, q) { if (pas || ride) return; pas = { id: k, t: 0 }; keys = {}; joy.x = joy.y = 0; toast('🏍 Te subiste atrás de ' + (q.name || 'otro jugador') + '. Pulsa E para bajarte'); }
+  function bajarPas() {
+    if (!pas) return; var d = driverOf(pas.id), a0 = d ? d.a : player.a, ca = Math.cos(a0), sa = Math.sin(a0), bx = d ? d.x : player.x, by = d ? d.y : player.y, at = null;
+    [[-sa * 16, ca * 16], [sa * 16, -ca * 16], [-ca * 22, -sa * 22], [ca * 22, sa * 22]].forEach(function (o) { if (!at && freeAt(bx + o[0], by + o[1])) at = [bx + o[0], by + o[1]]; });
+    if (at) { player.x = at[0]; player.y = at[1]; } pas = null; toast('Te bajaste de la moto');
+  }
+  function pasajeroTick() {
+    if (pas) {
+      var d = driverOf(pas.id);
+      if (!d || ride || TUMBLE) bajarPas();
+      else { player.x = d.x - Math.cos(d.a) * 9; player.y = d.y - Math.sin(d.a) * 9; if (!pas.t) { pas.t = 1; player.a = d.a; } }
+    }
+    var myId = OL && OL.user ? OL.user.id : null, n = 0, nm = ''; if (myId && ride) Object.keys(players).forEach(function (k) { if (players[k].pg === myId) { n++; nm = players[k].name || 'Alguien'; } });
+    if (n !== pasCount) { toast(n > pasCount ? '🧍 ' + nm + ' se subió atrás de tu moto' : 'Tu pasajero se bajó'); pasCount = n; }
+  }
   function atropelloTick(dt) {
     var ks = Object.keys(players), hit = null;
     for (var i = 0; i < ks.length; i++) {
       var q = players[ks[i]]; if (q.lx === undefined) { q.lx = q.x; q.ly = q.y; q.spd = 0; }
       if (dt > 0) q.spd = q.spd * 0.6 + 0.4 * Math.hypot(q.x - q.lx, q.y - q.ly) / dt; q.lx = q.x; q.ly = q.y;
-      if (!hit && q.moto && !q.inn && !ride && !TUMBLE && q.spd > 45 && Math.hypot(q.x - player.x, q.y - player.y) < 13) hit = q;
+      if (!hit && q.moto && !q.inn && !ride && !pas && !TUMBLE && q.spd > 45 && Math.hypot(q.x - player.x, q.y - player.y) < 13) hit = q;
     }
     if (hit) { var h = hit.mang || 0; atropellado(Math.cos(h) * 0.8 + (player.x - hit.x) * 0.02, Math.sin(h) * 0.8 + (player.y - hit.y) * 0.02, hit.spd); }
   }
@@ -4145,7 +4175,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var d = m && m.payload, p = d && players[d.id]; if (!p) return;
     var x = +d.x, y = +d.y; if (!isFinite(x) || !isFinite(y)) return;
     p.tx = clamp(x, 0, W * TS); p.ty = clamp(y, 0, H * TS);
-    p.moto = d.m ? 1 : 0; p.mid = +d.r; p.mk = isFinite(+d.k) ? clamp(Math.floor(+d.k), 0, 2) : undefined; p.wT = clamp(+d.w || 0, 0, 1); if (isFinite(+d.a)) p.mangT = +d.a;
+    p.moto = d.m ? 1 : 0; p.mid = +d.r; p.mk = isFinite(+d.k) ? clamp(Math.floor(+d.k), 0, 2) : undefined; p.wT = clamp(+d.w || 0, 0, 1); p.pg = typeof d.pg === 'string' ? d.pg.slice(0, 48) : ''; if (isFinite(+d.a)) p.mangT = +d.a;
     var mo = PARKED[+d.r]; if (p.moto && mo && mo.by !== 'me') mo.by = d.id;
   }
   function onlineTick(dt) {
@@ -4166,7 +4196,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var moved = Math.abs(player.x - lastX) + Math.abs(player.y - lastY) > 1;
     if ((moved && sendT > (ride ? 0.1 : 0.2)) || sendT > 3) {
       sendT = 0; lastX = player.x; lastY = player.y;
-      try { OL.chan.send({ type: 'broadcast', event: 'pos', payload: { id: OL.user.id, x: Math.round(player.x), y: Math.round(player.y), m: ride ? 1 : 0, r: ride ? ride.mid : -1, a: ride ? +ride.a.toFixed(2) : 0, k: ride ? motoCol(ride.src) : 0, w: ride ? +(ride.wp || 0).toFixed(1) : 0 } }); } catch (e) {}
+      try { OL.chan.send({ type: 'broadcast', event: 'pos', payload: { id: OL.user.id, x: Math.round(player.x), y: Math.round(player.y), m: ride ? 1 : 0, r: ride ? ride.mid : -1, a: ride ? +ride.a.toFixed(2) : 0, k: ride ? motoCol(ride.src) : 0, w: ride ? +(ride.wp || 0).toFixed(1) : 0, pg: pas ? pas.id : '' } }); } catch (e) {}
     }
   }
 
@@ -4623,7 +4653,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { robo: { wheelie: function () { startWheelie(); }, parar: function (c) { pararMoto(c); }, robar: function (c) { robarNpc(c); }, target: function () { return target; }, ride: function () { return ride; } }, ubic: { ui: function () { onlineUI(true); }, recv: function (d) { ubicRecibida(d); } }, ruta: function () { return ROUTE; }, pin: { set: function (x, y, n, r) { setPin(x, y, n || 'Prueba', r || 4); }, get: function () { return PIN; }, tap: function (x, y) { pinFromMap(x, y); } }, bank: { ui: function () { bankUI(); }, phone: function () { phoneUI(); }, isBank: function (b) { return isBank(b); } }, rats: function () { return RATS; }, ratTick: function (d) { ratTick(d); }, mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { pas: { get: function () { return pas; }, bajar: function () { bajarPas(); } }, robo: { wheelie: function () { startWheelie(); }, parar: function (c) { pararMoto(c); }, robar: function (c) { robarNpc(c); }, target: function () { return target; }, ride: function () { return ride; } }, ubic: { ui: function () { onlineUI(true); }, recv: function (d) { ubicRecibida(d); } }, ruta: function () { return ROUTE; }, pin: { set: function (x, y, n, r) { setPin(x, y, n || 'Prueba', r || 4); }, get: function () { return PIN; }, tap: function (x, y) { pinFromMap(x, y); } }, bank: { ui: function () { bankUI(); }, phone: function () { phoneUI(); }, isBank: function (b) { return isBank(b); } }, rats: function () { return RATS; }, ratTick: function (d) { ratTick(d); }, mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 
