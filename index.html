@@ -385,6 +385,9 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .gear, .misbtn, .mic, .bmb, #chatFab { background: var(--hud-bg); border: 1px solid rgba(255, 255, 255, 0.34); color: #FFFFFF; box-shadow: none; }
 .misbtn svg { width: 55%; height: 55%; }
 .misbtn.on { border-color: var(--accent); color: var(--accent); }
+#whBtn { position: absolute; right: calc(max(10px, env(safe-area-inset-right, 0px)) + 70px); bottom: max(10px, env(safe-area-inset-bottom, 0px)); width: 48px; height: 48px; border-radius: 50%; background: var(--hud-bg); border: 1px solid rgba(255, 255, 255, 0.34); color: #FFFFFF; display: none; align-items: center; justify-content: center; padding: 0; z-index: 5; cursor: pointer; }
+.stage.riding #whBtn { display: inline-flex; }
+#whBtn svg { width: 56%; height: 56%; }
 #chatFab { width: 46px; height: 46px; min-height: 0; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; bottom: 74px; }
 #chatFab[hidden] { display: none; }
 #chatFab svg { width: 52%; height: 52%; }
@@ -424,6 +427,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   #chatFab { width: 38px; height: 38px; bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 54px); right: max(8px, env(safe-area-inset-right, 0px)); }
   .mic { bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 98px); }
   .act { width: 48px; height: 48px; min-height: 0; padding: 0; }
+  #whBtn { width: 40px; height: 40px; right: calc(max(8px, env(safe-area-inset-right, 0px)) + 58px); bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
   .act small { font-size: 11px; padding: 4px 8px; }
   .fab.rolact { min-height: 30px; padding: 0 10px; font-size: 11px; bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 146px); }
   .modc h2 { font-size: 11px; }
@@ -449,6 +453,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       <button type="button" class="misbtn" id="misBtn" aria-label="Misiones" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 8.5h6M9 12.5h6M9 16.5h4"/></svg></button>
       <button type="button" class="misbtn phbtn" id="phBtn" aria-label="Mi teléfono: cuenta del banco y conectados" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg></button>
       <button type="button" class="fab rolact" id="rolAct" hidden></button>
+      <button type="button" id="whBtn" aria-label="Caballito (tecla C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="18" r="3"/><circle cx="19.5" cy="8.5" r="2.6"/><path d="M5.5 18l6.5-5.5h5l2.5-4M12 12.5l-1.2-3.6"/></svg></button>
       <div class="mod" id="mod" hidden role="dialog" aria-modal="true" aria-labelledby="modT"><div class="modc"><h2 id="modT"></h2><div class="modb" id="modB"></div><div class="modbtns" id="modBtns"></div></div></div>
       <div class="ecoflash" id="ecoFlash"></div>
       <div class="ecomsg" id="ecoMsg" hidden role="alertdialog" aria-labelledby="ecoMsgT"><b id="ecoMsgT"></b><p id="ecoMsgP"></p><button type="button" class="btn primary" id="ecoMsgB">Seguir</button></div>
@@ -1475,7 +1480,11 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     while (out.length < 4) { var f = findFree(cx + 10 + out.length * 2, cy + 14, [4, 6, 7]); out.push({ id: out.length, x: f.x, y: f.y, hx: 1, hy: 0, by: null, t: 0 }); }
     return out;
   })();
-  var ride = null, rideTip = false, motorT = 0, myParks = {};
+  var MOTOCOL = [0, 1, 2, 1];   // 0 azul · 1 rosada · 2 roja (motos de la plaza)
+  function motoCol(o) { return o && o.mc !== undefined ? o.mc : MOTOCOL[(o ? o.id : 0) & 3]; }
+  var LAYT = 5;   // segundos que queda tumbado quien le roban la moto
+  function layT(t, dur) { if (!dur) return t; return t < 1.3 ? t : (t < dur - 0.9 ? 1.3 : 1.3 + (t - (dur - 0.9))); }
+  var ride = null, rideTip = false, motorT = 0, myParks = {}, robCd = {};
   function wrapAng(a) { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; }
   function hitParked(x, y) { var i; for (i = 0; i < PARKED.length; i++) { var o = PARKED[i]; if (!o.by && Math.hypot(o.x - x, o.y - y) < 11) return true; } for (i = 0; i < NPCMOTOS.length; i++) { if (Math.hypot(NPCMOTOS[i].x - x, NPCMOTOS[i].y - y) < 10) return true; } return false; }
   function myLook() { var av = (OL.on && OL.profile && OL.profile.avatar) ? cleanAvatar(OL.profile.avatar) : defAvatar(); return { look: lookFrom(av), sig: JSON.stringify(av) }; }
@@ -1514,14 +1523,17 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var R = ride, thr = (keys.up ? 1 : 0) - (keys.down ? 1 : 0), st = (keys.right ? 1 : 0) - (keys.left ? 1 : 0) + (keys.sr ? 1 : 0) - (keys.sl ? 1 : 0);
     if (Math.hypot(joy.x, joy.y) > 0.14) { thr += -joy.y; st += joy.x; }
     thr = clamp(thr, -1, 1); st = clamp(st, -1, 1);
+    if (R.wh > 0) { R.wh -= dt; if (R.wh <= 0 || R.v < 25) { R.wh = 0; R.whCd = 1.2; } } else if (R.whCd > 0) R.whCd -= dt;
+    R.wp = (R.wp || 0) + ((R.wh > 0 ? 1 : 0) - (R.wp || 0)) * Math.min(1, dt * 6);
     var MAXV = keys.shift ? 190 : 150;                                  // 150 px/s ≈ 67 km/h
+    if (R.wh > 0) MAXV = Math.min(MAXV, 125);
     if (thr > 0.05) R.v += thr * (R.v < 0 ? 260 : 95) * dt;
     else if (thr < -0.05) R.v += thr * (R.v > 0 ? 230 : 70) * dt;       // frena y, ya parado, da marcha atrás despacito
     else R.v -= Math.sign(R.v) * Math.min(Math.abs(R.v), 40 * dt);
     R.v = clamp(R.v, -35, MAXV);
     R.steer += (st - R.steer) * Math.min(1, dt * 8);
     var grip = clamp(Math.abs(R.v) / 40, 0, 1) * (1 - Math.min(0.45, Math.abs(R.v) / 400));
-    R.a += R.steer * grip * 2.3 * dt * (R.v >= 0 ? 1 : -1);
+    R.a += R.steer * grip * 2.3 * dt * (R.v >= 0 ? 1 : -1) * (R.wh > 0 ? 0.55 : 1);
     var ca = Math.cos(R.a), sa = Math.sin(R.a), nx = R.x + ca * R.v * dt, ny = R.y + sa * R.v * dt, sg = R.v >= 0 ? 1 : -1;
     function ok(x, y) { var fx = x + ca * 9 * sg, fy = y + sa * 9 * sg; return freeAt(x, y) && freeAt(fx, fy) && !hitVehicle(fx, fy) && !hitParked(fx, fy) && !pBlock(fx, fy, R.x + ca * 9 * sg, R.y + sa * 9 * sg, Math.abs(R.v) > 60 ? 0 : 11, 14); }
     if (ok(nx, ny)) { R.x = nx; R.y = ny; }
@@ -1723,11 +1735,12 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     bike: '<circle cx="6" cy="16" r="3.2"/><circle cx="18" cy="16" r="3.2"/><path d="M6 16l3-6h5l3 6M9 10L8 7H6M14 10l-1.5 6"/>',
     down: '<path d="M12 4v14M6 12l6 7 6-7"/>',
     eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
-    bag: '<path d="M6 8h12l1 12H5L6 8z"/><path d="M9 8a3 3 0 0 1 6 0"/>'
+    bag: '<path d="M6 8h12l1 12H5L6 8z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+    hand: '<path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V11M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.5a6 6 0 0 1-5-2.7L3.7 15a1.5 1.5 0 0 1 2.5-1.6L8 15"/>'
   };
   function actSet(el, text) {
     if (el._t === text) return; el._t = text;
-    var k = /Montar|Mototaxi/.test(text) ? 'bike' : (/Bajar/.test(text) ? 'down' : (/Mirar/.test(text) ? 'eye' : (/Comprar/.test(text) ? 'bag' : (/Entrar|puerta/.test(text) ? 'door' : 'chat'))));
+    var k = /Parar/.test(text) ? 'hand' : /Robar/.test(text) ? 'bike' : /Montar|Mototaxi/.test(text) ? 'bike' : (/Bajar/.test(text) ? 'down' : (/Mirar/.test(text) ? 'eye' : (/Comprar/.test(text) ? 'bag' : (/Entrar|puerta/.test(text) ? 'door' : 'chat'))));
     el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ACT_ICONS[k] + '</svg>';
     var sm = document.createElement('small'); sm.textContent = text.replace(/\s*\(E\)\s*$/, ''); el.appendChild(sm); el.setAttribute('aria-label', text);
   }
@@ -1736,6 +1749,9 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (dlg) { dlg.i++; if (dlg.i >= dlg.lines.length) closeDialog(); else showLine(); return; }
     if (!target) return;
     var t = target, name, lines;
+    if (t.kind === 'parar') { pararMoto(t.o); return; }
+    if (t.kind === 'robnpc') { robarNpc(t.o); return; }
+    if (t.kind === 'robplayer') { robarJugador(t.id, t.o); return; }
     if (t.kind === 'moto') { mountMoto(t.o); return; }
     if (t.kind === 'unride') { dismountMoto(false); return; }
     if (t.kind === 'npc' && t.o.vend) { vendorTalk(t.o); return; }
@@ -1791,14 +1807,15 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     ratTick(dt); engineTick(); pinTick(dt);
     if (audio && audio.motor) { motorT -= dt; if (motorT <= 0) { motorT = 0.1; audio.motor(!!ride && soundOn && !IN.active, ride ? ride.v : 0); } }
     var walkers = 0;
-    for (var i = npcs.length - 1; i >= 0; i--) { var nn = npcs[i]; if (nn.tum || nn.back) { npcFly(nn, dt); continue; } if (nn.stat) continue; walkers++; if (Math.hypot(nn.x - player.x, nn.y - player.y) / TS > 55) { npcs.splice(i, 1); continue; } if (!(dlg && target && target.o === nn)) npcWalk(nn, dt); }
+    for (var i = npcs.length - 1; i >= 0; i--) { var nn = npcs[i]; if (nn.lay) { if (time - nn.lay.t0 > LAYT) nn.lay = null; else continue; } if (nn.tum || nn.back) { npcFly(nn, dt); continue; } if (nn.stat) continue; walkers++; if (Math.hypot(nn.x - player.x, nn.y - player.y) / TS > 55) { npcs.splice(i, 1); continue; } if (!(dlg && target && target.o === nn)) npcWalk(nn, dt); }
     var want = hour === 3 ? (dark ? 3 : 5) : (hour === 1 ? 7 : 9);
     if (walkers < want) spawnWalker(time < 2);
     for (i = cars.length - 1; i >= 0; i--) {
       var c = cars[i], l = c.l, blocked = false;
+      if (c.halt > 0) { c.halt -= dt; c.speed = Math.max(0, c.speed - 260 * dt); if (c.halt <= 0) { c.speed = c.v0 || 140; c.honk = 0; } }
       var fx = c.x + c.hx * (c.hw + 18), fy = c.y + c.hy * (c.hh2 + 18);
       // las motos NO frenan por ti: si estás en su carril, te avisan con la bocina y, si no te mueves, te atropellan
-      if (!ride && !TUMBLE) {
+      if (!ride && !TUMBLE && !(c.halt > 0)) {
         var pdx = player.x - c.x, pdy = player.y - c.y, ahead = pdx * c.hx + pdy * c.hy, lat = Math.abs(pdx * c.hy - pdy * c.hx);
         if (ahead > 8 && ahead < 250 && lat < 18 && c.honk <= 0) { c.honk = 3.4; if (audio && soundOn) audio.beep(clamp(1 - ahead / 300, 0.35, 1)); toast('📣 ¡Beep beep! Viene una moto'); }
         if (ahead > -10 && ahead < 15 && lat < 10 && c.stop === 0 && c.speed > 45) { atropellado(c.hx, c.hy, c.speed); }
@@ -1819,6 +1836,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     else if (!dlg) {
       var ca2 = Math.cos(player.a), sa2 = Math.sin(player.a), best = 40;
       npcs.forEach(function (n) { var dx = n.x - player.x, dy = n.y - player.y, d = Math.hypot(dx, dy); if (d < best && d > 0.1 && (dx * ca2 + dy * sa2) / d > 0.55) { best = d; target = { kind: 'npc', o: n }; } });
+      var mt = motoTarget(ca2, sa2); if (mt) target = mt;
       if (!target) {
         for (var s = 4; s <= 30; s += 2) { var tx = Math.floor((player.x + ca2 * s) / TS), ty = Math.floor((player.y + sa2 * s) / TS), bid = (tx >= 0 && ty >= 0 && tx < W && ty < H) ? BID[ty * W + tx] : 0; if (bid) { target = { kind: 'shop', o: B[bid - 1] }; break; } if (COLL[ty * W + tx]) break; }
       }
@@ -1826,7 +1844,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (!target || target.kind === 'shop') { var bm = null, bd2 = 26; PARKED.forEach(function (o) { if (o.by) return; var d2 = Math.hypot(o.x - player.x, o.y - player.y); if (d2 < bd2) { bd2 = d2; bm = o; } }); if (bm) target = { kind: 'moto', o: bm }; }
     }
     var act = $('act');
-    if (target && !dlg) { act.hidden = false; actSet(act, target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : (isBank(target.o) ? 'Entrar al banco (E)' : 'Entrar (E)')) : (target.kind === 'statue' ? 'Mirar (E)' : (target.o.vend ? 'Comprar a ' : (target.o.taxi ? 'Mototaxi: ' : 'Hablar con ')) + target.o.name.split(',')[0] + ' (E)')); }
+    if (target && !dlg) { act.hidden = false; actSet(act, target.kind === 'parar' ? 'Parar moto (E)' : target.kind === 'robnpc' ? 'Robar moto (E)' : target.kind === 'robplayer' ? 'Tumbar y robar moto (E)' : target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : (isBank(target.o) ? 'Entrar al banco (E)' : 'Entrar (E)')) : (target.kind === 'statue' ? 'Mirar (E)' : (target.o.vend ? 'Comprar a ' : (target.o.taxi ? 'Mototaxi: ' : 'Hablar con ')) + target.o.name.split(',')[0] + ' (E)')); }
     else act.hidden = true;
     hudTimer -= dt;
     if (hudTimer <= 0) {
@@ -2134,14 +2152,14 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         if (p.tum) { var tt0 = time - p.tum.t0; if (tt0 >= 0 && tt0 < 2.2) { var dd0 = vueloDist(p.tum.v0, tt0); p.x = p.tum.x0 + p.tum.dx * dd0; p.y = p.tum.y0 + p.tum.dy * dd0; sx = p.x / TS; sz = p.y / TS; } else p.tum = null; }
         if (p.moto) {
           var ca = Math.cos(p.mang || 0), sa = Math.sin(p.mang || 0);
-          R.root.scale.setScalar(VK * RIDE_S); R.root.position.set(sx - ca * RBACK, SEAT - HIP, sz - sa * RBACK); R.root.rotation.set(0, Math.atan2(ca, sa), 0); R.pose('ride');
+          R.root.scale.setScalar(VK * RIDE_S); R.root.position.set(sx - ca * RBACK, SEAT - HIP, sz - sa * RBACK); R.root.rotation.set(0, Math.atan2(ca, sa), 0); R.pose('ride'); if ((p.wp || 0) > 0.01) riderPitch(R.root, sx, sz, ca, sa, p.wp);
           return;
         }
         var dx = p.tx - p.x, dz = p.ty - p.y;
         if (p.moving && Math.hypot(dx, dz) > 0.5) e.face += wrapA(Math.atan2(dx, dz) - e.face) * 0.25;
         else if (!p.moving && e.face === 0) e.face = [0, Math.PI, -Math.PI / 2, Math.PI / 2][p.dir || 0];
         R.root.scale.setScalar(VK); R.root.position.set(sx, 0, sz); R.root.rotation.set(0, e.face, 0); R.pose(p.moving ? 'walk' : 'stand', p.t);
-        if (p.tumbleAt !== undefined) { var tt = time - p.tumbleAt; if (tt >= 0 && tt < 2.2) { R.root.position.set(sx, 0, sz); tumbleRig(R, tt, p.tumbleSp || 1, e.face); } }
+        if (p.tumbleAt !== undefined) { var tt = time - p.tumbleAt; if (tt >= 0 && tt < (p.tumbleDur || 2.2)) { R.root.position.set(sx, 0, sz); tumbleRig(R, layT(tt, p.tumbleDur), p.tumbleSp || 1, e.face); } }
       });
       avs.forEach(function (e, k) { if (!players[k]) { scene.remove(e.r.root); avs.delete(k); } });
     }
@@ -2302,9 +2320,18 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var riderM4 = new THREE.Matrix4(), riderQ = new THREE.Quaternion(), riderP = new THREE.Vector3();
     // el faro del modelo mira hacia -X: para ir en la dirección (hx, hz) se gira atan2(hz, -hx)
     var MOTO_TINT = [[1, 1, 1], [1, 0.34, 0.64], [0.92, 0.1, 0.13]], PARKCOL = [0, 1, 2, 1];   // 0 azul · 1 rosada · 2 roja
-    function putMoto(x, z, hx, hz, lean, dist, lit, mc) {
-      motoQ.setFromAxisAngle(motoUp, Math.atan2(hz, -hx)); if (lean) { motoQ2.setFromAxisAngle(motoX, lean); motoQ.multiply(motoQ2); }
-      motoP.set(x, 0, z); motoM4.compose(motoP, motoQ, motoS);
+    var motoQy = new THREE.Quaternion(), motoQ3 = new THREE.Quaternion(), motoZ = new THREE.Vector3(0, 0, 1), tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), pvQ = new THREE.Quaternion(), pvN = new THREE.Vector3();
+    // caballito: la moto se inclina hacia atrás girando sobre la rueda trasera (0,38 casillas detrás del centro)
+    function riderPitch(root, rx, rz, ca, sa, wp) {
+      pvN.set(-sa, 0, ca); pvQ.setFromAxisAngle(pvN, 0.62 * wp); root.quaternion.premultiply(pvQ);
+      tmpA.set(rx - ca * 0.38, 0, rz - sa * 0.38); root.position.sub(tmpA).applyQuaternion(pvQ).add(tmpA);
+    }
+    function putMoto(x, z, hx, hz, lean, dist, lit, mc, wp) {
+      var yawA = Math.atan2(hz, -hx); motoQ.setFromAxisAngle(motoUp, yawA); motoQy.copy(motoQ); if (lean) { motoQ2.setFromAxisAngle(motoX, lean); motoQ.multiply(motoQ2); }
+      if (wp > 0.01) { motoQ3.setFromAxisAngle(motoZ, -0.62 * wp); motoQ.multiply(motoQ3); }
+      motoP.set(x, 0, z);
+      if (wp > 0.01) { tmpA.set(0.38, 0, 0).applyQuaternion(motoQy); tmpB.set(0.38, 0, 0).applyQuaternion(motoQ); motoP.add(tmpA).sub(tmpB); }
+      motoM4.compose(motoP, motoQ, motoS);
       if (lit && hour === 3 && dist < 46 && nl < MLMAX) { MLX[nl * 4] = x; MLX[nl * 4 + 1] = z; MLX[nl * 4 + 2] = hx; MLX[nl * 4 + 3] = hz; nl++; }
       var tt = MOTO_TINT[mc || 0] || MOTO_TINT[0];
       if (dist < MOTO_NEAR || !motoFar) { if (motoNear && nN < MOTO_CAP) { motoNear.geometry.attributes.motoTint.setXYZ(nN, tt[0], tt[1], tt[2]); motoNear.setMatrixAt(nN++, motoM4); } }
@@ -2379,6 +2406,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         else if (n.trumpet && !n.moving) R.pose('trumpet', time);
         else R.pose(n.moving ? 'walk' : 'stand', n.t);
         if (tum >= 0 && tum < 2.2) tumbleRig(R, tum, n.tum.sp, e.face);
+        if (n.lay) tumbleRig(R, layT(time - n.lay.t0, LAYT), n.lay.sp, e.face);
       }
       for (var id in NRIG) if (!seen[id]) { scene.remove(NRIG[id].r.root); delete NRIG[id]; }
       for (i = 0; i < VSTALLS.length && ns < NCAP; i++) {
@@ -2400,13 +2428,13 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         var vi = Math.max(0, RIDERCOL.indexOf(c.rider)) * 2 + (Math.floor(c.speed * 10) % 2);
         if (cnt[vi] < 32) { riderQ.setFromAxisAngle(motoUp, Math.atan2(c.hx, c.hy)); riderP.set(x - c.hx * RBACK, SEAT - HIP, z - c.hy * RBACK); riderM4.compose(riderP, riderQ, motoS); RIDERS[vi].setMatrixAt(cnt[vi]++, riderM4); }
       }
-      for (i = 0; i < PARKED.length; i++) { var o = PARKED[i]; if (o.by) continue; var ox = o.x / TS, oz = o.y / TS, od = Math.hypot(ox - px, oz - pz); if (od <= vis) putMoto(ox, oz, o.hx, o.hy, 0, od, false, PARKCOL[o.id % 4]); }
+      for (i = 0; i < PARKED.length; i++) { var o = PARKED[i]; if (o.by) continue; var ox = o.x / TS, oz = o.y / TS, od = Math.hypot(ox - px, oz - pz); if (od <= vis) putMoto(ox, oz, o.hx, o.hy, 0, od, false, motoCol(o)); }
       for (i = 0; i < NPCMOTOS.length; i++) { var nm = NPCMOTOS[i], nx = nm.x / TS, nz = nm.y / TS, nd = Math.hypot(nx - px, nz - pz); if (nd <= vis) putMoto(nx, nz, nm.hx, nm.hy, 0, nd, false, i % 3); }
-      Object.keys(players).forEach(function (k) { var p = players[k]; if (!p.moto || p.inn) return; var x2 = p.x / TS, z2 = p.y / TS; putMoto(x2, z2, Math.cos(p.mang || 0), Math.sin(p.mang || 0), 0, Math.hypot(x2 - px, z2 - pz), true, PARKCOL[(+p.mid) & 3]); });
+      Object.keys(players).forEach(function (k) { var p = players[k]; if (!p.moto || p.inn) return; var x2 = p.x / TS, z2 = p.y / TS; putMoto(x2, z2, Math.cos(p.mang || 0), Math.sin(p.mang || 0), 0, Math.hypot(x2 - px, z2 - pz), true, p.mk !== undefined ? p.mk : PARKCOL[(+p.mid) & 3], p.wp || 0); });
       if (ride) {
-        var ca = Math.cos(ride.a), sa = Math.sin(ride.a), rx = ride.x / TS, rz = ride.y / TS; putMoto(rx, rz, ca, sa, ride.lean, 0, true, PARKCOL[(ride.mid | 0) & 3]);
+        var ca = Math.cos(ride.a), sa = Math.sin(ride.a), rx = ride.x / TS, rz = ride.y / TS; putMoto(rx, rz, ca, sa, ride.lean, 0, true, motoCol(ride.src), ride.wp || 0);
         if (!myRig || mySig !== ride.sig) { if (myRig) scene.remove(myRig.root); myRig = VOX.rig(ride.look, VXMAT); myRig.root.scale.setScalar(VK * RIDE_S); myRig.pose('ride'); scene.add(myRig.root); mySig = ride.sig; }
-        myRig.root.visible = true; myRig.root.position.set(rx - ca * RBACK, SEAT - HIP, rz - sa * RBACK); myRig.root.rotation.set(0, Math.atan2(ca, sa), -ride.lean);
+        myRig.root.visible = true; myRig.root.position.set(rx - ca * RBACK, SEAT - HIP, rz - sa * RBACK); myRig.root.rotation.set(0, Math.atan2(ca, sa), -ride.lean); if ((ride.wp || 0) > 0.01) riderPitch(myRig.root, rx, rz, ca, sa, ride.wp);
       } else if (myRig) myRig.root.visible = false;
       if (motoNear) { motoNear.count = nN; motoNear.instanceMatrix.needsUpdate = true; motoNear.geometry.attributes.motoTint.needsUpdate = true; }
       if (motoFar) { motoFar.count = nF; motoFar.instanceMatrix.needsUpdate = true; motoFar.geometry.attributes.motoTint.needsUpdate = true; }
@@ -2430,7 +2458,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         var fv = baseFov + Math.min(8, Math.abs(ride.v) / 20); if (Math.abs(camera.fov - fv) > 0.05) { camera.fov = fv; camera.updateProjectionMatrix(); }
       } else {
         camR.on = false; if (camera.fov !== baseFov) { camera.fov = baseFov; camera.updateProjectionMatrix(); }
-        if (TUMBLE) { var tp = tumblePose(TUMBLE.t, TUMBLE.spin); camera.rotation.order = 'YXZ'; camera.position.set(px, tp.y, pz); camera.rotation.set(tp.pitch, -a - Math.PI / 2 + tp.yaw, tp.roll); }
+        if (TUMBLE) { var tp = tumblePose(layT(TUMBLE.t, TUMBLE.dur), TUMBLE.spin); camera.rotation.order = 'YXZ'; camera.position.set(px, tp.y, pz); camera.rotation.set(tp.pitch, -a - Math.PI / 2 + tp.yaw, tp.roll); }
         else { if (camera.rotation.order !== 'XYZ') camera.rotation.order = 'XYZ'; camera.position.set(px, EYE + bob, pz); camera.rotation.set(0, -a - Math.PI / 2, 0); }
       }
       dome.position.copy(camera.position); stars.position.copy(camera.position);
@@ -3323,9 +3351,10 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       var pd = pend[d.id]; if (!pd || pd.n !== +d.n || pd.exp < Date.now()) return; delete pend[d.id];
       ganar(pd.n, cleanName(d.fn) + ' pagó'); if (pd.a === 'papeles') { ECO.matraca += pd.n; if (ECO.matraca >= 50) toast('Llevas $' + ECO.matraca + ' de matraca… ojo con el Comisario'); }
     } else if (d.t === 'no' && d.to === me) { delete pend[d.id]; toast(cleanName(d.fn) + (d.why === 'poor' ? ' no tiene con qué pagar' : ' no quiso pagar')); }
-    else if (d.t === 'atrop') { var qa = players[d.id]; if (qa) { if (audio && soundOn && audio.mama) { var dq = Math.hypot(qa.x - player.x, qa.y - player.y) / TS; if (dq < 18) audio.mama(0.8 * (1 - dq / 18)); } qa.tumbleAt = time; qa.tumbleSp = d.sp === -1 ? -1 : 1; var ax = +d.x, ay = +d.y, adx = +d.dx, ady = +d.dy, av = +d.v0; if ([ax, ay, adx, ady, av].every(isFinite)) qa.tum = { t0: time, x0: clamp(ax, 0, W * TS), y0: clamp(ay, 0, H * TS), dx: adx, dy: ady, v0: clamp(av, 60, 260) }; } }
+    else if (d.t === 'atrop') { var qa = players[d.id]; if (qa) { if (audio && soundOn && audio.mama) { var dq = Math.hypot(qa.x - player.x, qa.y - player.y) / TS; if (dq < 18) audio.mama(0.8 * (1 - dq / 18)); } qa.tumbleAt = time; qa.tumbleSp = d.sp === -1 ? -1 : 1; qa.tumbleDur = +d.dur > 0 ? clamp(+d.dur, 1, 8) : 0; var ax = +d.x, ay = +d.y, adx = +d.dx, ady = +d.dy, av = +d.v0; if ([ax, ay, adx, ady, av].every(isFinite)) qa.tum = { t0: time, x0: clamp(ax, 0, W * TS), y0: clamp(ay, 0, H * TS), dx: adx, dy: ady, v0: clamp(av, 60, 260) }; } }
     else if (d.t === 'golpe' && d.to === me) { var gh = +d.h, gv = +d.v; if (isFinite(gh) && isFinite(gv)) atropellado(Math.cos(gh), Math.sin(gh), clamp(gv, 40, 230)); }
     else if (d.t === 'chisme' && d.to === me) chismeRecibido(d);
+    else if (d.t === 'robo' && d.to === me) robado(d);
     else if (d.t === 'ubic' && d.to === me) ubicRecibida(d);
     else if (d.t === 'viral') chismeViral(d);
     else if (d.t === 'desm' && d.to === me) {
@@ -3376,7 +3405,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function tumbleTick(dt) {
     if (!TUMBLE) return; TUMBLE.t += dt; var t = TUMBLE.t;
     if (t < 0.8) { var v = TUMBLE.v0 * (1 - t / 0.8), mx = TUMBLE.dx * v * dt, my = TUMBLE.dy * v * dt; if (freeAt(player.x + mx, player.y)) player.x += mx; if (freeAt(player.x, player.y + my)) player.y += my; }
-    if (t >= TUM_DUR) TUMBLE = null;
+    if (t >= (TUMBLE.dur || TUM_DUR)) TUMBLE = null;
   }
   // ---- motos ajenas: el motor de cada una suena según qué tan cerca está de ti
   var engLast = 0, engPrev = {}, engId = 0;
@@ -3391,6 +3420,57 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     Object.keys(players).forEach(function (k) { var q = players[k]; if (q.moto && !q.inn) add('p' + k, q.x, q.y, q.spd || 0); });
     list.sort(function (a, b) { return a.d - b.d; }); if (list.length > audio.nv) list.length = audio.nv;
     engPrev = cur; audio.engines(soundOn && !IN.active ? list : []);
+  }
+  // ---- caballito: levantas la rueda delantera un rato (necesita velocidad)
+  function startWheelie() {
+    if (!ride || ride.wh > 0 || ride.whCd > 0) return;
+    if (ride.v < 45) { toast('Necesitas más velocidad para el caballito'); return; }
+    ride.wh = 2.6; toast('🏍 ¡Caballito!');
+  }
+  // ---- robar motos: se para al motorizado, se le tumba y te vas con su moto
+  function extraMoto(x, y, hx, hy, mc) {
+    var o = null; for (var i = 4; i < PARKED.length; i++) if (!PARKED[i].by && Math.hypot(PARKED[i].x - player.x, PARKED[i].y - player.y) > 800) { o = PARKED[i]; break; }
+    if (!o) { if (PARKED.length >= 16) return null; o = { id: PARKED.length, by: null, t: 0 }; PARKED.push(o); }
+    o.x = x; o.y = y; o.hx = hx; o.hy = hy; o.mc = mc; o.by = null; return o;
+  }
+  function motoTarget(ca, sa) {
+    var best = null, bd = 1e9;
+    cars.forEach(function (c) {
+      if (c.type !== 'moto') return; var dx = c.x - player.x, dy = c.y - player.y, d = Math.hypot(dx, dy); if (d < 1) return;
+      if (c.halt > 0) { if (c.speed < 30 && d < 58 && d < bd) { bd = d; best = { kind: 'robnpc', o: c }; } return; }
+      var ahead = -(dx * c.hx + dy * c.hy), lat = Math.abs(dx * c.hy - dy * c.hx);   // la moto viene hacia ti por su carril
+      if (ahead > 10 && ahead < 150 && lat < 26 && d < bd) { bd = d; best = { kind: 'parar', o: c }; }
+    });
+    if (best) return best;
+    Object.keys(players).forEach(function (k) {
+      var q = players[k]; if (!q.moto || q.inn || (robCd[k] && time - robCd[k] < 20)) return; var dx = q.x - player.x, dy = q.y - player.y, d = Math.hypot(dx, dy);
+      if (d < 58 && d > 1 && (dx * ca + dy * sa) / d > 0.1 && d < bd) { bd = d; best = { kind: 'robplayer', o: q, id: k }; }
+    });
+    return best;
+  }
+  function pararMoto(c) { c.v0 = c.v0 || c.speed; c.halt = 9; c.honk = 2; if (audio && soundOn) audio.honk(true); toast('✋ ¡Pare ahí! La moto frena…'); }
+  function robarNpc(c) {
+    var i = cars.indexOf(c); if (i < 0) return;
+    var o = extraMoto(c.x, c.y, c.hx, c.hy, c.mc || 0); if (!o) { toast('No hay dónde dejar otra moto, prueba más tarde'); return; }
+    cars.splice(i, 1);
+    var v = newNpc('joven', c.x + c.hy * 10, c.y - c.hx * 10); v.look.top = c.rider; v.name = 'Motorizado'; v.lines = [pick(Math.random, ['¡Mi moto! ¡Al ladrón, al ladrón!', '¡Ay, mi moto, carajo!', 'Me robaron la moto… y era de mi cuñado.'])]; v.lay = { t0: time, sp: Math.random() < 0.5 ? -1 : 1 }; v.dir = faceTo(v, c); npcs.push(v);
+    mountMoto(o); if (ride) ride.v = 35; if (audio && soundOn && audio.thud) audio.thud();
+    toast('🏍 ¡Le robaste la moto! Sal huyendo antes de que se levante');
+  }
+  function robarJugador(k, q) {
+    robCd[k] = time; var mid = +q.mid, ca = Math.cos(q.mang || 0), sa = Math.sin(q.mang || 0);
+    var o = (mid >= 0 && mid < 4 && PARKED[mid]) ? PARKED[mid] : extraMoto(q.x, q.y, ca, sa, q.mk !== undefined ? q.mk : 0); if (!o) return;
+    ecoSend({ t: 'robo', to: k, from: OL.user.id, mid: mid });
+    o.by = null; o.x = q.x; o.y = q.y; o.hx = ca; o.hy = sa; q.moto = 0; mountMoto(o); if (ride) ride.v = 30;
+    if (audio && soundOn && audio.thud) audio.thud(); toast('🏍 ¡Le robaste la moto a ' + (q.name || 'otro jugador') + '! Huye');
+  }
+  function robado(d) {
+    if (!ride || TUMBLE) return; var o = ride.src, thief = String(d.from || ''), ca = Math.cos(ride.a), sa = Math.sin(ride.a);
+    o.by = thief; o.x = ride.x; o.y = ride.y; ride = null; stage.classList.remove('riding'); shareMotos();
+    keys = {}; joy.x = joy.y = 0; if (modOpen) modClose(true); if (mapOpen) closeMap(); closeDialog(); if (chatOpen) closeChat();
+    var sp = Math.random() < 0.5 ? -1 : 1; TUMBLE = { t: 0, dx: -ca, dy: -sa, spin: sp, v0: 70, dur: LAYT }; ECO.hurtT = time + LAYT + 2;
+    toast('😱 ¡Te robaron la moto! Quedaste tumbado…'); if (audio && soundOn && audio.thud) audio.thud();
+    if (enLinea()) ecoSend({ t: 'atrop', id: OL.user.id, sp: sp, x: Math.round(player.x), y: Math.round(player.y), dx: +(-ca).toFixed(3), dy: +(-sa).toFixed(3), v0: 70, dur: LAYT });
   }
   function atropelloTick(dt) {
     var ks = Object.keys(players), hit = null;
@@ -3602,6 +3682,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 
   // ---- botones y teclas
   $('misBtn').addEventListener('click', function () { openBoard(); });
+  $('whBtn').addEventListener('click', function () { startWheelie(); });
+  window.addEventListener('keydown', function (e) { if ((e.key === 'c' || e.key === 'C') && ride && !modOpen && !mapOpen && !gateOpen && !chatOpen && !e.ctrlKey && !e.metaKey) { e.preventDefault(); startWheelie(); } });
   $('rolAct').addEventListener('click', function () { rolAction(); });
   window.addEventListener('keydown', function (e) { if ((e.key === 'j' || e.key === 'J') && !modOpen && !mapOpen && !gateOpen && inStage()) { e.preventDefault(); openBoard(); } });
   function misMarcas(sx, sy, sc, mctx2) {
@@ -4063,14 +4145,14 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var d = m && m.payload, p = d && players[d.id]; if (!p) return;
     var x = +d.x, y = +d.y; if (!isFinite(x) || !isFinite(y)) return;
     p.tx = clamp(x, 0, W * TS); p.ty = clamp(y, 0, H * TS);
-    p.moto = d.m ? 1 : 0; p.mid = +d.r; if (isFinite(+d.a)) p.mangT = +d.a;
+    p.moto = d.m ? 1 : 0; p.mid = +d.r; p.mk = isFinite(+d.k) ? clamp(Math.floor(+d.k), 0, 2) : undefined; p.wT = clamp(+d.w || 0, 0, 1); if (isFinite(+d.a)) p.mangT = +d.a;
     var mo = PARKED[+d.r]; if (p.moto && mo && mo.by !== 'me') mo.by = d.id;
   }
   function onlineTick(dt) {
     var ks = Object.keys(players);
     for (var i = 0; i < ks.length; i++) {
       var p = players[ks[i]], dx = p.tx - p.x, dy = p.ty - p.y, d = Math.hypot(dx, dy);
-      if (p.moto) { if (p.mang === undefined) p.mang = p.mangT || 0; p.mang += wrapAng((p.mangT || 0) - p.mang) * Math.min(1, dt * 8); }
+      if (p.moto) { if (p.mang === undefined) p.mang = p.mangT || 0; p.mang += wrapAng((p.mangT || 0) - p.mang) * Math.min(1, dt * 8); p.wp = (p.wp || 0) + ((p.wT || 0) - (p.wp || 0)) * Math.min(1, dt * 8); }
       if (d > 200) { p.x = p.tx; p.y = p.ty; p.moving = false; continue; }
       if (d > 0.6) {
         var st = Math.min(1, dt * 7), nx = dx * st, ny = dy * st; p.x += nx; p.y += ny;
@@ -4084,7 +4166,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var moved = Math.abs(player.x - lastX) + Math.abs(player.y - lastY) > 1;
     if ((moved && sendT > (ride ? 0.1 : 0.2)) || sendT > 3) {
       sendT = 0; lastX = player.x; lastY = player.y;
-      try { OL.chan.send({ type: 'broadcast', event: 'pos', payload: { id: OL.user.id, x: Math.round(player.x), y: Math.round(player.y), m: ride ? 1 : 0, r: ride ? ride.mid : -1, a: ride ? +ride.a.toFixed(2) : 0 } }); } catch (e) {}
+      try { OL.chan.send({ type: 'broadcast', event: 'pos', payload: { id: OL.user.id, x: Math.round(player.x), y: Math.round(player.y), m: ride ? 1 : 0, r: ride ? ride.mid : -1, a: ride ? +ride.a.toFixed(2) : 0, k: ride ? motoCol(ride.src) : 0, w: ride ? +(ride.wp || 0).toFixed(1) : 0 } }); } catch (e) {}
     }
   }
 
@@ -4541,7 +4623,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   requestAnimationFrame(frame);
   stage.addEventListener('pointerdown', begin);
-  window.__fp = { ubic: { ui: function () { onlineUI(true); }, recv: function (d) { ubicRecibida(d); } }, ruta: function () { return ROUTE; }, pin: { set: function (x, y, n, r) { setPin(x, y, n || 'Prueba', r || 4); }, get: function () { return PIN; }, tap: function (x, y) { pinFromMap(x, y); } }, bank: { ui: function () { bankUI(); }, phone: function () { phoneUI(); }, isBank: function (b) { return isBank(b); } }, rats: function () { return RATS; }, ratTick: function (d) { ratTick(d); }, mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
+  window.__fp = { robo: { wheelie: function () { startWheelie(); }, parar: function (c) { pararMoto(c); }, robar: function (c) { robarNpc(c); }, target: function () { return target; }, ride: function () { return ride; } }, ubic: { ui: function () { onlineUI(true); }, recv: function (d) { ubicRecibida(d); } }, ruta: function () { return ROUTE; }, pin: { set: function (x, y, n, r) { setPin(x, y, n || 'Prueba', r || 4); }, get: function () { return PIN; }, tap: function (x, y) { pinFromMap(x, y); } }, bank: { ui: function () { bankUI(); }, phone: function () { phoneUI(); }, isBank: function (b) { return isBank(b); } }, rats: function () { return RATS; }, ratTick: function (d) { ratTick(d); }, mis: { start: misStart, tick: misTick, state: function () { return MS; }, cancel: misCancel, placeXY: placeXY, cars: function () { return cars; }, TL: function () { return TL; }, npcs: function () { return npcs; }, vendorTalk: vendorTalk, taxiTalk: taxiTalk, comprar: comprar, vstalls: function () { return VSTALLS; }, nmotos: function () { return NPCMOTOS; }, atropelloTick: atropelloTick, tumble: function () { return TUMBLE; }, atropellado: atropellado, tumbleTick: tumbleTick, board: openBoard, intro: roleIntro, ROLES: ROLES, MIS: MIS, onEco: onEco, act: rolAction, GHIDE: GHIDE, gallinas: gallinas }, eco: { ECO: ECO, ganar: ganar, perderVida: perderVida, sitioLejano: sitioLejano }, IN: IN, r3: R3, pl: player, motos: function () { return PARKED; }, get ride() { return ride; }, mount: function (o) { mountMoto(o); }, unmount: function () { return dismountMoto(false); }, front: function (k) { var b = B.filter(function (x) { return x.k === k; })[0]; return makeFront(b).c.toDataURL(); }, online: OL, players: players, get gate() { return gateOpen; }, G: G, W: W, info: function () { return { RW: RW, RH: RH, dyn: dyn, q: quality, ft: avgFt }; }, player: player, setHour: setHour, cars: cars, npcs: npcs, tp: function (tx, ty, a) { var p = findFree(tx, ty, [4]); player.x = p.x; player.y = p.y; if (a !== undefined) player.a = a; } };
 })();
 </script>
 
