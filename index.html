@@ -2443,6 +2443,10 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         var ca = Math.cos(ride.a), sa = Math.sin(ride.a), rx = ride.x / TS, rz = ride.y / TS; putMoto(rx, rz, ca, sa, ride.lean, 0, true, motoCol(ride.src), ride.wp || 0);
         if (!myRig || mySig !== ride.sig) { if (myRig) scene.remove(myRig.root); myRig = VOX.rig(ride.look, VXMAT); myRig.root.scale.setScalar(VK * RIDE_S); myRig.pose('ride'); scene.add(myRig.root); mySig = ride.sig; }
         myRig.root.visible = true; myRig.root.position.set(rx - ca * RBACK, SEAT - HIP, rz - sa * RBACK); myRig.root.rotation.set(0, Math.atan2(ca, sa), -ride.lean); if ((ride.wp || 0) > 0.01) riderPitch(myRig.root, rx, rz, ca, sa, ride.wp);
+      } else if (pas && driverOf(pas.id)) {   // pasajero: mi personaje va sentado atrás del conductor
+        var pg0 = driverOf(pas.id), pgc = Math.cos(pg0.a), pgs = Math.sin(pg0.a), pgl = myLook();
+        if (!myRig || mySig !== pgl.sig) { if (myRig) scene.remove(myRig.root); myRig = VOX.rig(pgl.look, VXMAT); myRig.root.scale.setScalar(VK * RIDE_S); myRig.pose('ride'); scene.add(myRig.root); mySig = pgl.sig; }
+        myRig.root.visible = true; myRig.root.position.set(pg0.x / TS - pgc * (RBACK + 0.31), SEAT - HIP + 0.02, pg0.y / TS - pgs * (RBACK + 0.31)); myRig.root.rotation.set(0, Math.atan2(pgc, pgs), 0); if (pg0.wp > 0.01) riderPitch(myRig.root, pg0.x / TS, pg0.y / TS, pgc, pgs, pg0.wp);
       } else if (myRig) myRig.root.visible = false;
       if (motoNear) { motoNear.count = nN; motoNear.instanceMatrix.needsUpdate = true; motoNear.geometry.attributes.motoTint.needsUpdate = true; }
       if (motoFar) { motoFar.count = nF; motoFar.instanceMatrix.needsUpdate = true; motoFar.geometry.attributes.motoTint.needsUpdate = true; }
@@ -2455,20 +2459,19 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       pump(quality === 2 ? 3 : 5, (ride && Math.abs(ride.v) > 50) ? 1 : 4);   // yendo rápido en moto: un solo elemento por cuadro para no dar tirones
       var px = player.x / TS, pz = player.y / TS, a = player.a, ph = PH[hour];
       var bob = Math.abs(Math.sin(walkPh)) * (quality === 2 ? 0.05 : 0.03);
-      if (ride) {
-        // tercera persona detrás de la moto; se acerca si hay una pared detrás
+      if (ride || (pas && !TUMBLE)) {
+        // tercera persona detrás de la moto (conductor o pasajero); se acerca si hay una pared detrás
         var cA = Math.cos(a), sA = Math.sin(a), back = 2.5;
         for (var bk = 0.6; bk <= 2.5; bk += 0.2) { var bx = Math.floor(px - cA * bk), by = Math.floor(pz - sA * bk); if (bx < 0 || by < 0 || bx >= W || by >= H || BID[by * W + bx]) { back = Math.max(0.6, bk - 0.3); break; } }
         var tX = px - cA * back, tZ = pz - sA * back, tY = 1.15 + back * 0.16;
         if (!camR.on) { camR.x = tX; camR.y = tY; camR.z = tZ; camR.on = true; }
         camR.x += (tX - camR.x) * 0.2; camR.y += (tY - camR.y) * 0.2; camR.z += (tZ - camR.z) * 0.2;
         camera.position.set(camR.x, camR.y, camR.z); camera.lookAt(px + cA * 2.6, 0.4, pz + sA * 2.6);
-        var fv = baseFov + Math.min(8, Math.abs(ride.v) / 20); if (Math.abs(camera.fov - fv) > 0.05) { camera.fov = fv; camera.updateProjectionMatrix(); }
+        var fv = baseFov + Math.min(8, Math.abs(ride ? ride.v : (pas && players[pas.id] ? (players[pas.id].spd || 0) : 0)) / 20); if (Math.abs(camera.fov - fv) > 0.05) { camera.fov = fv; camera.updateProjectionMatrix(); }
       } else {
         camR.on = false; if (camera.fov !== baseFov) { camera.fov = baseFov; camera.updateProjectionMatrix(); }
         if (TUMBLE) { var tp = tumblePose(layT(TUMBLE.t, TUMBLE.dur), TUMBLE.spin); camera.rotation.order = 'YXZ'; camera.position.set(px, tp.y, pz); camera.rotation.set(tp.pitch, -a - Math.PI / 2 + tp.yaw, tp.roll); }
         else { if (camera.rotation.order !== 'XYZ') camera.rotation.order = 'XYZ'; camera.position.set(px, EYE + bob, pz); camera.rotation.set(0, -a - Math.PI / 2, 0); }
-        if (pas && !TUMBLE) { var pdd = driverOf(pas.id); if (pdd) { var pcx = Math.cos(pdd.a), pcz = Math.sin(pdd.a); camera.position.set(px - pcx * 0.3 - pcz * 0.42, EYE + 0.5, pz - pcz * 0.3 + pcx * 0.42); } }   // de pasajero: la cámara asoma por encima del hombro del conductor
       }
       dome.position.copy(camera.position); stars.position.copy(camera.position);
       var sd = sunSpr.userData.dir; if (sunSpr.visible && sd) sunSpr.position.set(px + sd[0] * 380, sd[1] * 380, pz + sd[2] * 380);
@@ -2485,7 +2488,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         if (vtmp.z > 1 || vtmp.z < -1 || Math.abs(vtmp.x) > 1.2) return;
         drawRemote({ o: p, scr: [(vtmp.x * 0.5 + 0.5) * cv.width, (-vtmp.y * 0.5 + 0.5) * cv.height + 4], ty: dist }, 1);
       });
-      if (!ride && !TUMBLE) drawHand();
+      if (!ride && !pas && !TUMBLE) drawHand();
       if ((++mmN % 4) === 0) { drawMinimap(); }
     };
     applyPhase();
@@ -3497,7 +3500,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (pas) {
       var d = driverOf(pas.id);
       if (!d || ride || TUMBLE) bajarPas();
-      else { player.x = d.x - Math.cos(d.a) * 9; player.y = d.y - Math.sin(d.a) * 9; if (!pas.t) { pas.t = 1; player.a = d.a; } }
+      else { player.x = d.x - Math.cos(d.a) * 9; player.y = d.y - Math.sin(d.a) * 9; player.a = d.a; }
     }
     var myId = OL && OL.user ? OL.user.id : null, n = 0, nm = ''; if (myId && ride) Object.keys(players).forEach(function (k) { if (players[k].pg === myId) { n++; nm = players[k].name || 'Alguien'; } });
     if (n !== pasCount) { toast(n > pasCount ? '🧍 ' + nm + ' se subió atrás de tu moto' : 'Tu pasajero se bajó'); pasCount = n; }
