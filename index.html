@@ -1598,7 +1598,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var lo = Math.max(l.a, (l.o === 'H' ? px : py) - 42), hi = Math.min(l.b, (l.o === 'H' ? px : py) + 42); if (hi <= lo) return;
     var pos = near ? (lo + rng() * (hi - lo)) * TS : (dir > 0 ? lo : hi) * TS;
     if (Math.abs(pos - (l.o === 'H' ? player.x : player.y)) < 150) return;
-    var c = { l: l, dir: dir, type: type, pos: pos, col: pick(rng, CARCOL), pp: type === 'carro' && rng() < 0.45, rider: pick(rng, ['#E86A2E', '#2E6FB7', '#F2F2F2', '#6E1423', '#2F8F4E']), speed: type === 'moto' ? 125 + rng() * 60 : 46 + rng() * 16, stop: 0, honk: 0, lane: (l.wt * TS) / 8 };
+    var c = { l: l, dir: dir, type: type, pos: pos, col: pick(rng, CARCOL), pp: type === 'carro' && rng() < 0.45, mc: Math.floor(rng() * 3), rider: pick(rng, ['#E86A2E', '#2E6FB7', '#F2F2F2', '#6E1423', '#2F8F4E']), speed: type === 'moto' ? 125 + rng() * 60 : 46 + rng() * 16, stop: 0, honk: 0, lane: (l.wt * TS) / 8 };
     placeCar(c); cars.push(c);
   }
   function placeCar(c) {
@@ -2285,7 +2285,14 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         geo.setIndex(new THREE.BufferAttribute(attr(pr.indices), 1));
         // 1,15 casillas de largo; las ruedas tocan el suelo
         var k2 = MOTO_K; geo.scale(k2, k2, k2); geo.computeBoundingBox(); geo.translate(0, -geo.boundingBox.min.y, 0);
-        var m = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }), MOTO_CAP); m.count = 0; m.frustumCulled = false; scene.add(m); cb(m);
+        // los 3 colores de moto: lo azul del modelo se cambia por el color de cada instancia (azul, rosada o roja)
+        var mmat = new THREE.MeshLambertMaterial({ vertexColors: true });
+        mmat.onBeforeCompile = function (sh) {
+          sh.vertexShader = 'attribute vec3 motoTint;\nvarying vec3 vTint;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vTint = motoTint;');
+          sh.fragmentShader = 'varying vec3 vTint;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n  float blu = diffuseColor.b - max(diffuseColor.r, diffuseColor.g);\n  if (blu > 0.1 && (vTint.r + vTint.g + vTint.b) < 2.9) { diffuseColor.rgb = vTint * clamp(diffuseColor.b * 1.05, 0.2, 1.0); }');
+        };
+        geo.setAttribute('motoTint', new THREE.InstancedBufferAttribute(new Float32Array(MOTO_CAP * 3).fill(1), 3));
+        var m = new THREE.InstancedMesh(geo, mmat, MOTO_CAP); m.count = 0; m.frustumCulled = false; scene.add(m); cb(m);
       }).catch(function () {});
     }
     loadMoto('modelos/moto-azul.glb', function (m) { motoNear = m; });
@@ -2294,12 +2301,14 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var RIDERS = RIDERLOOKS.map(function (o) { var m = new THREE.InstancedMesh(VOX.baked(o, 'ride', VK * RIDE_S), VXMAT, 32); m.count = 0; m.visible = false; m.frustumCulled = false; scene.add(m); return m; });
     var riderM4 = new THREE.Matrix4(), riderQ = new THREE.Quaternion(), riderP = new THREE.Vector3();
     // el faro del modelo mira hacia -X: para ir en la dirección (hx, hz) se gira atan2(hz, -hx)
-    function putMoto(x, z, hx, hz, lean, dist, lit) {
+    var MOTO_TINT = [[1, 1, 1], [1, 0.34, 0.64], [0.92, 0.1, 0.13]], PARKCOL = [0, 1, 2, 1];   // 0 azul · 1 rosada · 2 roja
+    function putMoto(x, z, hx, hz, lean, dist, lit, mc) {
       motoQ.setFromAxisAngle(motoUp, Math.atan2(hz, -hx)); if (lean) { motoQ2.setFromAxisAngle(motoX, lean); motoQ.multiply(motoQ2); }
       motoP.set(x, 0, z); motoM4.compose(motoP, motoQ, motoS);
       if (lit && hour === 3 && dist < 46 && nl < MLMAX) { MLX[nl * 4] = x; MLX[nl * 4 + 1] = z; MLX[nl * 4 + 2] = hx; MLX[nl * 4 + 3] = hz; nl++; }
-      if (dist < MOTO_NEAR || !motoFar) { if (motoNear && nN < MOTO_CAP) motoNear.setMatrixAt(nN++, motoM4); }
-      else if (nF < MOTO_CAP) motoFar.setMatrixAt(nF++, motoM4);
+      var tt = MOTO_TINT[mc || 0] || MOTO_TINT[0];
+      if (dist < MOTO_NEAR || !motoFar) { if (motoNear && nN < MOTO_CAP) { motoNear.geometry.attributes.motoTint.setXYZ(nN, tt[0], tt[1], tt[2]); motoNear.setMatrixAt(nN++, motoM4); } }
+      else if (nF < MOTO_CAP) { motoFar.geometry.attributes.motoTint.setXYZ(nF, tt[0], tt[1], tt[2]); motoFar.setMatrixAt(nF++, motoM4); }
     }
     // ---- coches, por puestos y camionetas voxel (aparcados y del tráfico). Antes no se dibujaban en 3D y bloqueaban el paso.
     // Unidades: 1 = 1/16 de casilla; el frente mira hacia +X. La carrocería es blanca y se pinta por instancia.
@@ -2387,20 +2396,20 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       for (i = 0; i < cars.length; i++) {
         var c = cars[i]; if (c.type !== 'moto') continue;
         var x = c.x / TS, z = c.y / TS, d = Math.hypot(x - px, z - pz); if (d > vis) continue;
-        putMoto(x, z, c.hx, c.hy, 0, d, true);
+        putMoto(x, z, c.hx, c.hy, 0, d, true, c.mc);
         var vi = Math.max(0, RIDERCOL.indexOf(c.rider)) * 2 + (Math.floor(c.speed * 10) % 2);
         if (cnt[vi] < 32) { riderQ.setFromAxisAngle(motoUp, Math.atan2(c.hx, c.hy)); riderP.set(x - c.hx * RBACK, SEAT - HIP, z - c.hy * RBACK); riderM4.compose(riderP, riderQ, motoS); RIDERS[vi].setMatrixAt(cnt[vi]++, riderM4); }
       }
-      for (i = 0; i < PARKED.length; i++) { var o = PARKED[i]; if (o.by) continue; var ox = o.x / TS, oz = o.y / TS, od = Math.hypot(ox - px, oz - pz); if (od <= vis) putMoto(ox, oz, o.hx, o.hy, 0, od); }
-      for (i = 0; i < NPCMOTOS.length; i++) { var nm = NPCMOTOS[i], nx = nm.x / TS, nz = nm.y / TS, nd = Math.hypot(nx - px, nz - pz); if (nd <= vis) putMoto(nx, nz, nm.hx, nm.hy, 0, nd); }
-      Object.keys(players).forEach(function (k) { var p = players[k]; if (!p.moto || p.inn) return; var x2 = p.x / TS, z2 = p.y / TS; putMoto(x2, z2, Math.cos(p.mang || 0), Math.sin(p.mang || 0), 0, Math.hypot(x2 - px, z2 - pz), true); });
+      for (i = 0; i < PARKED.length; i++) { var o = PARKED[i]; if (o.by) continue; var ox = o.x / TS, oz = o.y / TS, od = Math.hypot(ox - px, oz - pz); if (od <= vis) putMoto(ox, oz, o.hx, o.hy, 0, od, false, PARKCOL[o.id % 4]); }
+      for (i = 0; i < NPCMOTOS.length; i++) { var nm = NPCMOTOS[i], nx = nm.x / TS, nz = nm.y / TS, nd = Math.hypot(nx - px, nz - pz); if (nd <= vis) putMoto(nx, nz, nm.hx, nm.hy, 0, nd, false, i % 3); }
+      Object.keys(players).forEach(function (k) { var p = players[k]; if (!p.moto || p.inn) return; var x2 = p.x / TS, z2 = p.y / TS; putMoto(x2, z2, Math.cos(p.mang || 0), Math.sin(p.mang || 0), 0, Math.hypot(x2 - px, z2 - pz), true, PARKCOL[(+p.mid) & 3]); });
       if (ride) {
-        var ca = Math.cos(ride.a), sa = Math.sin(ride.a), rx = ride.x / TS, rz = ride.y / TS; putMoto(rx, rz, ca, sa, ride.lean, 0, true);
+        var ca = Math.cos(ride.a), sa = Math.sin(ride.a), rx = ride.x / TS, rz = ride.y / TS; putMoto(rx, rz, ca, sa, ride.lean, 0, true, PARKCOL[(ride.mid | 0) & 3]);
         if (!myRig || mySig !== ride.sig) { if (myRig) scene.remove(myRig.root); myRig = VOX.rig(ride.look, VXMAT); myRig.root.scale.setScalar(VK * RIDE_S); myRig.pose('ride'); scene.add(myRig.root); mySig = ride.sig; }
         myRig.root.visible = true; myRig.root.position.set(rx - ca * RBACK, SEAT - HIP, rz - sa * RBACK); myRig.root.rotation.set(0, Math.atan2(ca, sa), -ride.lean);
       } else if (myRig) myRig.root.visible = false;
-      if (motoNear) { motoNear.count = nN; motoNear.instanceMatrix.needsUpdate = true; }
-      if (motoFar) { motoFar.count = nF; motoFar.instanceMatrix.needsUpdate = true; }
+      if (motoNear) { motoNear.count = nN; motoNear.instanceMatrix.needsUpdate = true; motoNear.geometry.attributes.motoTint.needsUpdate = true; }
+      if (motoFar) { motoFar.count = nF; motoFar.instanceMatrix.needsUpdate = true; motoFar.geometry.attributes.motoTint.needsUpdate = true; }
       RIDERS.forEach(function (R, j) { R.count = cnt[j]; R.visible = cnt[j] > 0; R.instanceMatrix.needsUpdate = true; });
     }
 
@@ -4054,7 +4063,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var d = m && m.payload, p = d && players[d.id]; if (!p) return;
     var x = +d.x, y = +d.y; if (!isFinite(x) || !isFinite(y)) return;
     p.tx = clamp(x, 0, W * TS); p.ty = clamp(y, 0, H * TS);
-    p.moto = d.m ? 1 : 0; if (isFinite(+d.a)) p.mangT = +d.a;
+    p.moto = d.m ? 1 : 0; p.mid = +d.r; if (isFinite(+d.a)) p.mangT = +d.a;
     var mo = PARKED[+d.r]; if (p.moto && mo && mo.by !== 'me') mo.by = d.id;
   }
   function onlineTick(dt) {
