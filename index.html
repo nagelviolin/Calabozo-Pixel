@@ -402,6 +402,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .act[hidden] { display: none; }
 .act svg { width: 46%; height: 46%; }
 .act small { position: absolute; right: calc(100% + 9px); top: 50%; transform: translateY(-50%); white-space: nowrap; max-width: 52vw; overflow: hidden; text-overflow: ellipsis; font: 600 11.5px/1 var(--body); color: #FFFFFF; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); background: linear-gradient(270deg, rgba(5, 9, 8, 0.72), rgba(5, 9, 8, 0.3)); border-right: 3px solid var(--accent); padding: 5px 9px; }
+.act2 { right: calc(max(10px, env(safe-area-inset-right, 0px)) + 70px); width: 48px; height: 48px; background: rgba(7, 12, 10, 0.55); color: #FF8A8A; border: 1px solid rgba(255, 255, 255, 0.4); }
+.act2 small { right: 0; left: auto; top: auto; bottom: calc(100% + 6px); transform: none; }
 .toast.chip { background: linear-gradient(90deg, rgba(5, 9, 8, 0) 0%, rgba(5, 9, 8, 0.74) 16%, rgba(5, 9, 8, 0.74) 84%, rgba(5, 9, 8, 0) 100%); border: 0; border-radius: 0; padding: 5px 30px; font-size: 12px; box-shadow: inset 0 -1px 0 rgba(245, 179, 1, 0.55); }
 .chip.place { background: linear-gradient(90deg, rgba(5, 9, 8, 0.6), rgba(5, 9, 8, 0.2)); border: 0; border-left: 3px solid var(--accent); border-radius: 0; }
 .mtrk { background: linear-gradient(90deg, rgba(5, 9, 8, 0.72), rgba(5, 9, 8, 0.3)); border: 0; border-left: 3px solid var(--accent); border-radius: 0; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
@@ -427,6 +429,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   #chatFab { width: 38px; height: 38px; bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 54px); right: max(8px, env(safe-area-inset-right, 0px)); }
   .mic { bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 98px); }
   .act { width: 48px; height: 48px; min-height: 0; padding: 0; }
+  .act2 { width: 40px; height: 40px; right: calc(max(8px, env(safe-area-inset-right, 0px)) + 58px); }
   #whBtn { width: 40px; height: 40px; right: calc(max(8px, env(safe-area-inset-right, 0px)) + 58px); bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
   .act small { font-size: 11px; padding: 4px 8px; }
   .fab.rolact { min-height: 30px; padding: 0 10px; font-size: 11px; bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + 146px); }
@@ -453,6 +456,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       <button type="button" class="misbtn" id="misBtn" aria-label="Misiones" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 8.5h6M9 12.5h6M9 16.5h4"/></svg></button>
       <button type="button" class="misbtn phbtn" id="phBtn" aria-label="Mi teléfono: cuenta del banco y conectados" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg></button>
       <button type="button" class="fab rolact" id="rolAct" hidden></button>
+      <button type="button" class="act act2" id="act2" hidden></button>
       <button type="button" id="whBtn" aria-label="Caballito (tecla C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="18" r="3"/><circle cx="19.5" cy="8.5" r="2.6"/><path d="M5.5 18l6.5-5.5h5l2.5-4M12 12.5l-1.2-3.6"/></svg></button>
       <div class="mod" id="mod" hidden role="dialog" aria-modal="true" aria-labelledby="modT"><div class="modc"><h2 id="modT"></h2><div class="modb" id="modB"></div><div class="modbtns" id="modBtns"></div></div></div>
       <div class="ecoflash" id="ecoFlash"></div>
@@ -1689,6 +1693,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   $('sound').addEventListener('click', function () { soundOn = !soundOn; this.setAttribute('aria-pressed', soundOn ? 'true' : 'false'); if (soundOn && !audio) audio = makeAudio(); if (audio) audio.setOn(soundOn); });
   $('phoneview').addEventListener('click', function () { var on = this.getAttribute('aria-pressed') !== 'true'; this.setAttribute('aria-pressed', on ? 'true' : 'false'); stage.classList.toggle('phone', on); fit(); });
   $('home').addEventListener('click', function () { closeDialog(); if (ride) dismountMoto(true); player.x = spawn.x; player.y = spawn.y; player.a = startA; });
+  $('act2').addEventListener('click', function () { action('alt'); });
   $('act').addEventListener('click', action); $('dnext').addEventListener('click', action);
   if (window.ResizeObserver) new ResizeObserver(fit).observe(stage); else window.addEventListener('resize', fit);
 
@@ -1730,6 +1735,9 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   function showLine() { $('dname').textContent = dlg.name; $('dtext').textContent = dlg.lines[dlg.i]; $('dnext').textContent = dlg.i < dlg.lines.length - 1 ? 'Siguiente' : 'Cerrar'; }
   function closeDialog() { dlg = null; $('dlg').hidden = true; stage.classList.remove('dialog-open'); }
+  function actLabel(target) {
+    return target.kind === 'subir' ? 'Subirme atrás (E)' : target.kind === 'bajarpas' ? 'Bajar (E)' : target.kind === 'parar' ? 'Parar moto (E)' : target.kind === 'robnpc' ? 'Robar moto (E)' : target.kind === 'robplayer' ? 'Tumbar y robar moto (E)' : target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : (isBank(target.o) ? 'Entrar al banco (E)' : 'Entrar (E)')) : (target.kind === 'statue' ? 'Mirar (E)' : (target.o.vend ? 'Comprar a ' : (target.o.taxi ? 'Mototaxi: ' : 'Hablar con ')) + target.o.name.split(',')[0] + ' (E)')
+  }
   var ACT_ICONS = {
     chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
     door: '<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M4 21h16"/><circle cx="14.5" cy="12.5" r="0.9" fill="currentColor"/>',
@@ -1737,19 +1745,20 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     down: '<path d="M12 4v14M6 12l6 7 6-7"/>',
     eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
     bag: '<path d="M6 8h12l1 12H5L6 8z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+    fist: '<path d="M7 12V9a2 2 0 0 1 4 0V8a2 2 0 0 1 4 0v1a2 2 0 0 1 3 1.7V14a6 6 0 0 1-6 6h-1a6 6 0 0 1-5-2.6L4.5 15.5a1.5 1.5 0 0 1 2.5-1.6"/>',
     hand: '<path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V11M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.5a6 6 0 0 1-5-2.7L3.7 15a1.5 1.5 0 0 1 2.5-1.6L8 15"/>'
   };
   function actSet(el, text) {
     if (el._t === text) return; el._t = text;
-    var k = /Subir/.test(text) ? 'bike' : /Parar/.test(text) ? 'hand' : /Robar/.test(text) ? 'bike' : /Montar|Mototaxi/.test(text) ? 'bike' : (/Bajar/.test(text) ? 'down' : (/Mirar/.test(text) ? 'eye' : (/Comprar/.test(text) ? 'bag' : (/Entrar|puerta/.test(text) ? 'door' : 'chat'))));
+    var k = /Tumbar/.test(text) ? 'fist' : /Subir/.test(text) ? 'bike' : /Parar/.test(text) ? 'hand' : /Robar/.test(text) ? 'bike' : /Montar|Mototaxi/.test(text) ? 'bike' : (/Bajar/.test(text) ? 'down' : (/Mirar/.test(text) ? 'eye' : (/Comprar/.test(text) ? 'bag' : (/Entrar|puerta/.test(text) ? 'door' : 'chat'))));
     el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ACT_ICONS[k] + '</svg>';
     var sm = document.createElement('small'); sm.textContent = text.replace(/\s*\(E\)\s*$/, ''); el.appendChild(sm); el.setAttribute('aria-label', text);
   }
-  function action() {
+  function action(alt) {
     if (IN.active && !dlg) return;
     if (dlg) { dlg.i++; if (dlg.i >= dlg.lines.length) closeDialog(); else showLine(); return; }
     if (!target) return;
-    var t = target, name, lines;
+    var t = (alt === 'alt' && target.alt) ? target.alt : target, name, lines;
     if (t.kind === 'subir') { subirPas(t.id, t.o); return; }
     if (t.kind === 'bajarpas') { bajarPas(); return; }
     if (t.kind === 'parar') { pararMoto(t.o); return; }
@@ -1848,8 +1857,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (!target || target.kind === 'shop') { var bm = null, bd2 = 26; PARKED.forEach(function (o) { if (o.by) return; var d2 = Math.hypot(o.x - player.x, o.y - player.y); if (d2 < bd2) { bd2 = d2; bm = o; } }); if (bm) target = { kind: 'moto', o: bm }; }
     }
     var act = $('act');
-    if (target && !dlg) { act.hidden = false; actSet(act, target.kind === 'subir' ? 'Subirme atrás (E)' : target.kind === 'bajarpas' ? 'Bajar (E)' : target.kind === 'parar' ? 'Parar moto (E)' : target.kind === 'robnpc' ? 'Robar moto (E)' : target.kind === 'robplayer' ? 'Tumbar y robar moto (E)' : target.kind === 'moto' ? 'Montar moto (E)' : target.kind === 'unride' ? 'Bajar (E)' : target.kind === 'shop' ? (target.o.k === 'casa' && !target.o.sign ? 'Tocar la puerta (E)' : (isBank(target.o) ? 'Entrar al banco (E)' : 'Entrar (E)')) : (target.kind === 'statue' ? 'Mirar (E)' : (target.o.vend ? 'Comprar a ' : (target.o.taxi ? 'Mototaxi: ' : 'Hablar con ')) + target.o.name.split(',')[0] + ' (E)')); }
-    else act.hidden = true;
+    if (target && !dlg) { act.hidden = false; actSet(act, actLabel(target)); var a2 = $('act2'); if (target.alt) { a2.hidden = false; actSet(a2, actLabel(target.alt)); } else a2.hidden = true; }
+    else { act.hidden = true; $('act2').hidden = true; }
     hudTimer -= dt;
     if (hudTimer <= 0) {
       hudTimer = 0.3;
@@ -3456,8 +3465,13 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (best) return best;
     Object.keys(players).forEach(function (k) {
       var q = players[k]; if (!q.moto || q.inn) return; var dx = q.x - player.x, dy = q.y - player.y, d = Math.hypot(dx, dy), fr = d > 1 ? (dx * ca + dy * sa) / d : 0;
-      if (d < 58 && d > 1 && fr > 0.35 && !(robCd[k] && time - robCd[k] < 20) && d < bd) { bd = d; best = { kind: 'robplayer', o: q, id: k }; }
-      else if (d < 46 && fr <= 0.35 && (q.spd || 0) < 45 && d < bd && !Object.keys(players).some(function (z) { return players[z].pg === k; })) { bd = d; best = { kind: 'subir', o: q, id: k }; }
+      if (d < 58 && d > 1 && d < bd) {
+        var canRob = !(robCd[k] && time - robCd[k] < 20), canSub = d < 46 && (q.spd || 0) < 45 && !Object.keys(players).some(function (z) { return players[z].pg === k; });
+        // cerca de un jugador en moto salen las dos opciones: subirte atrás (botón principal) o tumbarlo y robarle la moto
+        if (canSub && canRob) { bd = d; best = { kind: 'subir', o: q, id: k, alt: { kind: 'robplayer', o: q, id: k } }; }
+        else if (canSub) { bd = d; best = { kind: 'subir', o: q, id: k }; }
+        else if (canRob) { bd = d; best = { kind: 'robplayer', o: q, id: k }; }
+      }
     });
     return best;
   }
