@@ -29,15 +29,13 @@ for x in range(1883, GX - RX + 2):                     # camino desde la acera d
     for y in (GY - 1, GY, GY + 1): setk(x, y, 4)
 for y in range(GY + RY - 2, GY + RY + 10):             # y otro hacia el estacionamiento
     for x in (GX - 1, GX, GX + 1): setk(x, y, 4)
-for x in range(GX + RX - 2, 1957):
-    for y in (GY - 1, GY, GY + 1): setk(x, y, 4)
 for dy in range(-3, 4):                                # medio óvalo de flores alrededor del letrero (adoquín claro)
     for dx in range(-9, 10):
         if (dx / 9) ** 2 + (dy / 3.2) ** 2 <= 1 and abs(dx) < 8: setk(GX + dx, GY + 7 + dy, 4)
 
 # ---- estacionamiento grande: dos pasillos anchos (donde la gente se reúne), cuatro filas de puestos con rayas
-LX0, LX1, LY0, LY1 = 1956, 2036, 208, 243
-BAYROWS = [(208, 211), (222, 225), (226, 229), (240, 243)]
+LX0, LX1, LY0, LY1 = 1884, 1914, 186, 204          # a la entrada de la presa, del lado de Calabozo; no muy grande
+BAYROWS = [(186, 189), (201, 204)]
 for y in range(LY0 - 1, LY1 + 2):
     for x in range(LX0 - 1, LX1 + 2):
         edge = x in (LX0 - 1, LX1 + 1) or y in (LY0 - 1, LY1 + 1)
@@ -49,18 +47,18 @@ for (a, b) in BAYROWS:
 
 # ---- quiosco / pabellón de techo azul detrás del estacionamiento
 B = D['b']
-B.append([1996, 252, 34, 11, 'comida', 'N', 'azul', 4, 1, 40111, 'KIOSCO LA REPRESA'])
-for y in range(251, 266):
-    for x in range(1992, 2034):
-        if int(G[y, x]) in OKG: G[y, x] = 4 if y in (251, 264) or x in (1992, 2033) else 1
+B.append([1920, 189, 20, 8, 'comida', 'O', 'azul', 4, 1, 40111, 'KIOSCO LA REPRESA'])
+for y in range(188, 198):
+    for x in range(1918, 1941):
+        if int(G[y, x]) in OKG: G[y, x] = 4 if y in (188, 197) or x in (1918, 1940) else 1
 # ---- caminos de acceso al quiosco
-for y in range(LY1 + 2, 252):
-    for x in (1990, 1991, 1992): setk(x, y, 4)
+for y in range(LY1 + 2, GY - RY + 2):
+    for x in (1904, 1905, 1906): setk(x, y, 4)
 
 # ---- limpiar objetos que ya había en estas zonas
 def in_zone(x, y):
     if LX0 - 3 <= x <= LX1 + 3 and LY0 - 3 <= y <= LY1 + 3: return True
-    if 1990 <= x <= 2036 and 249 <= y <= 268: return True
+    if 1916 <= x <= 1942 and 186 <= y <= 199: return True
     if ((x - GX) / (RX + 3)) ** 2 + ((y - GY) / (RY + 3)) ** 2 <= 1.0: return True
     if 1871 <= x <= 1884 and DY0 - 4 <= y <= DY1 + 6: return True
     return False
@@ -72,7 +70,7 @@ def prop(k, x, y):
 # carros en los puestos (algo más de la mitad ocupados)
 for (a, b) in BAYROWS:
     for x in range(LX0 + 1, LX1, 2):
-        if random.random() < 0.3: prop('carro', x, (a + b) // 2)
+        if random.random() < 0.6: prop('carro', x, (a + b) // 2)
 # árboles de sombra: borde del estacionamiento y del jardín
 for x in range(LX0 + 3, LX1, 9): prop(random.choice(['samán', 'mango']), x, LY0 - 3); prop(random.choice(['samán', 'palma']), x + 3, LY1 + 3)
 for y in range(LY0 + 4, LY1, 9): prop(random.choice(['samán', 'mango']), LX0 - 3, y); prop(random.choice(['samán', 'mango']), LX1 + 3, y)
@@ -87,15 +85,15 @@ for a in range(10, 360, 45):
 for a in range(0, 360, 36):
     x = int(round(GX + RX * 0.97 * math.cos(math.radians(a)))); y = int(round(GY + RY * 0.97 * math.sin(math.radians(a))))
     prop('poste', x, y)
-for x in range(LX0 + 6, LX1, 16):
-    prop('poste', x, 216); prop('poste', x, 235)
+for x in (LX0 + 2, LX1 - 2):
+    prop('poste', x, 195)
 for y in range(DY0 + 4, DY1, 14):
     prop('poste', 1870, y); prop('poste', 1878, y)
 for y in range(190, 262, 12): prop('poste', 1884, y)
 D['p'] = P
 # ---- metadatos y lugares
-D['dam'] = {'x': DX, 'y0': DY0, 'y1': DY1, 'sign': [GX, GY + 7], 'lot': [LX0, LY0, LX1, LY1], 'kiosk': [1996, 252, 34, 11]}
-D['pois'] += [[DX + 0.5, 146.0, 'Compuertas de la Represa de Calabozo', 'parque'], [GX + 0.5, GY + 0.5, 'Letrero ♥ CALABOZO', 'parque'], [2013.0, 258.0, 'Kiosco La Represa', 'comida']]
+D['dam'] = {'x': DX, 'y0': DY0, 'y1': DY1, 'sign': [GX, GY + 7], 'lot': [LX0, LY0, LX1, LY1], 'kiosk': [1920, 189, 20, 8], 'music': [1902, 192]}
+D['pois'] += [[DX + 0.5, 146.0, 'Compuertas de la Represa de Calabozo', 'parque'], [GX + 0.5, GY + 0.5, 'Letrero ♥ CALABOZO', 'parque'], [1930.0, 193.0, 'Kiosco La Represa', 'comida']]
 D['g'] = base64.b64encode(G.tobytes()).decode()
 json.dump(D, open('D_presa.json', 'w'), ensure_ascii=False, separators=(',', ':'))
 print('ok | carros', sum(1 for q in P if q[0] == 'carro'), '| objetos', len(P), '| edificios', len(B))
