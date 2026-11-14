@@ -436,6 +436,52 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   .modc h2 { font-size: 11px; }
   .modbtns .btn, .modb .btn, .orow .btn { font-size: 11.5px; }
 }
+/* ===== el juego ocupa toda la ventana en cualquier equipo; los ajustes viven en el menú de pausa ===== */
+html, body { height: 100%; overflow: hidden; }
+body { padding: 0 !important; }
+.wrap { display: block; max-width: none; }
+.wrap > header, .keys, .foot, #phoneview { display: none !important; }
+.stage-row { display: block; }
+.stage, .stage.phone { position: fixed; inset: 0; width: auto; height: auto; border: 0; border-radius: 0; }
+.gear { display: inline-flex; }
+@media (pointer: fine) and (min-width: 761px) and (min-height: 561px) {
+  .gear { top: 10px; right: 126px; } .misbtn { top: 10px; right: 178px; } .phbtn { right: 230px; } .hud { max-width: calc(100% - 300px); }
+}
+.controls { display: none; }
+body.cfg-open .controls { display: flex; position: fixed; left: 50%; top: 50%; right: auto; bottom: auto; transform: translate(-50%, -50%); z-index: 45; width: min(92vw, 460px); max-height: 90dvh; overflow-y: auto; flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 10px; padding: 14px 16px 16px;
+  background: rgba(9, 15, 13, 0.95); border: 1px solid rgba(255, 255, 255, 0.2); border-top: 3px solid var(--accent); border-radius: 2px; box-shadow: 0 0 0 100vmax rgba(4, 8, 6, 0.62); }
+.ptitle { font: 700 12px/1 var(--display); text-transform: uppercase; letter-spacing: 0.13em; color: var(--accent); padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.14); }
+.controls .group { gap: 6px; } .controls .group[hidden] { display: none; }
+.controls .btn { flex: 1 1 auto; min-height: 40px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 2px; font: 700 12px var(--body); text-transform: uppercase; letter-spacing: 0.05em; color: #FFFFFF; }
+.controls .btn[aria-pressed="true"] { background: rgba(245, 179, 1, 0.9); color: #1A1200; border-color: var(--accent); }
+.controls .btn.primary { background: var(--accent); color: #1A1200; border-color: var(--accent); }
+body.cfg-open .cfgclose { display: inline-flex; align-items: center; justify-content: center; }
+@media (max-height: 520px) { body.cfg-open .controls { width: min(94vw, 640px); flex-direction: row; flex-wrap: wrap; align-items: center; } .ptitle { flex: 1 1 100%; } .controls .btn { min-height: 34px; font-size: 11px; } }
+/* ===== portada: el pueblo se ve detrás, con el rótulo del juego ===== */
+.gate { background: linear-gradient(180deg, rgba(5, 9, 8, 0.18) 0%, rgba(5, 9, 8, 0.42) 55%, rgba(5, 9, 8, 0.82) 100%); flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.stage.gate-on > *:not(.gate):not(canvas) { visibility: hidden !important; }
+.glogo { margin: 0; display: flex; flex-direction: column; align-items: center; transform: rotate(-4deg); filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.55)); pointer-events: none; }
+.glogo .l1 { font: 800 min(13vw, 24vh, 104px)/0.9 var(--display); text-transform: uppercase; letter-spacing: -0.03em; color: #FFD23F; transform: skewX(-8deg); -webkit-text-stroke: 2px #2A1500; paint-order: stroke fill;
+  text-shadow: 0 2px 0 #E0352B, 0 4px 0 #E0352B, 0 6px 0 #C22A22, 0 8px 0 #1E3A73, 0 10px 0 #1E3A73, 0 12px 0 #16294F; }
+.glogo .l2 { margin-top: min(2.2vh, 14px); align-self: flex-end; font: 800 italic min(4.2vw, 7.5vh, 30px)/1 var(--display); color: #FFFFFF; background: #D7263D; padding: 0.22em 0.9em 0.28em; letter-spacing: 0.04em; text-transform: uppercase; clip-path: polygon(4% 0, 100% 0, 96% 100%, 0 100%); }
+.gate .gcard { margin: 0; width: min(100%, 420px); background: rgba(9, 15, 13, 0.9); border: 1px solid rgba(255, 255, 255, 0.2); border-top: 3px solid var(--accent); border-radius: 2px; padding: 14px 16px; }
+.gate .gcard.home { background: transparent; border: 0; padding: 0; align-items: center; }
+.ghome { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.ghome[hidden] { display: none; }
+.ghome p { color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); font-size: 14px; text-align: center; max-width: 34ch; }
+.gplay { min-width: 230px; min-height: 54px; border: 0; background: var(--accent); color: #1A1200; font: 800 20px var(--display); text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px)); }
+.gplay:hover { filter: brightness(1.08); }
+.galt { min-height: 40px; padding: 0 16px; background: rgba(7, 12, 10, 0.55); border: 1px solid rgba(255, 255, 255, 0.4); color: #FFFFFF; font: 700 12px var(--body); text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; border-radius: 2px; }
+.gate .gform .btn { border-radius: 2px; font: 700 12px var(--body); text-transform: uppercase; letter-spacing: 0.05em; }
+@media (max-height: 520px) { .gate { gap: 8px; padding: 8px; } .gplay { min-height: 44px; font-size: 16px; } .ghome p { display: none; } .ghome { flex-direction: row; } }
+/* ===== tutorial: un paso a la vez, abajo en el centro ===== */
+.chip.hint { top: auto; bottom: max(14px, env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); max-width: min(440px, calc(100% - 300px)); padding: 6px 14px; font-size: 12.5px; text-align: center; background: linear-gradient(90deg, rgba(5, 9, 8, 0.3), rgba(5, 9, 8, 0.78) 18%, rgba(5, 9, 8, 0.78) 82%, rgba(5, 9, 8, 0.3)); border: 0; border-radius: 0; box-shadow: inset 0 2px 0 var(--accent); }
+.chip.hint b { color: var(--accent); margin-right: 8px; font: 700 11px var(--display); letter-spacing: 0.08em; }
+.stage.mod-open .hint, .stage.map-open .hint, .stage.dialog-open .hint, .stage.chat-open .hint { display: none; }
+/* ===== dinero que sube o baja ===== */
+.ecofl { position: absolute; left: 20px; top: 58px; z-index: 16; font: 800 16px var(--display); pointer-events: none; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9); animation: ecofl 1.3s ease-out forwards; }
+.ecofl.up { color: #8FE3A0; } .ecofl.dn { color: #FF8A8A; }
+@keyframes ecofl { 0% { opacity: 0; transform: translateY(8px) scale(0.9); } 15% { opacity: 1; transform: translateY(0) scale(1.15); } 100% { opacity: 0; transform: translateY(-34px) scale(1); } }
 </style>
 
 <div class="wrap">
@@ -464,7 +510,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       <div class="bigmap" id="bigmap" hidden role="dialog" aria-label="Mapa de Calabozo"><canvas id="bmc"></canvas><div class="bmtop"><b>Mapa de Calabozo</b><span id="bmWhere"></span><small>📍 Toca un sitio del mapa para marcar tu destino</small><button type="button" class="btn bmpinoff" id="bmPinOff" hidden>✖ Quitar pin</button></div><div class="bmzoom"><button type="button" class="bmb" id="bmIn" aria-label="Acercar">+</button><button type="button" class="bmb" id="bmOut" aria-label="Alejar">−</button><button type="button" class="bmb" id="bmMe" aria-label="Centrar en mí">◎</button></div><button type="button" class="btn primary bmback" id="bmBack">Volver al juego</button></div>
       <div class="pinhud" id="pinHud" hidden><span class="parrow" id="pinArr">▲</span><div><b id="pinT"></b><small id="pinD"></small></div></div>
       <div class="chip place" id="place" data-on="0"><small id="placeType"></small><span id="placeName"></span></div>
-      <div class="chip hint" id="hint">Haz clic aquí. Camina con ↑ ↓ o W S, gira con ← → o arrastrando el mouse, y A D para pasos de lado. En el teléfono: la palanca camina y arrastrar el dedo por la imagen gira. Pulsa E frente a las tiendas o una puerta, y T para escribir en el chat.</div>
+      <div class="chip hint" id="hint" hidden>Haz clic aquí. Camina con ↑ ↓ o W S, gira con ← → o arrastrando el mouse, y A D para pasos de lado. En el teléfono: la palanca camina y arrastrar el dedo por la imagen gira. Pulsa E frente a las tiendas o una puerta, y T para escribir en el chat.</div>
       <div class="dpad">
         <button type="button" class="dp up" data-k="up" aria-label="Caminar hacia adelante"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 14l6-6 6 6"/></svg></button>
         <button type="button" class="dp left" data-k="left" aria-label="Girar a la izquierda"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6a7 7 0 1 0 2 6"/><path d="M15 2v4h-4"/></svg></button>
@@ -488,9 +534,14 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         <div class="row"><button type="button" class="btn primary" id="invYes">Aceptar</button><button type="button" class="btn" id="invNo">No, gracias</button></div>
       </div>
       <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateT">
-        <div class="gcard">
-          <h2 id="gateT">Calabozo en Línea</h2>
+        <h2 class="glogo" id="gateT" aria-label="Calabozo en Línea"><span class="l1">Calabozo</span><span class="l2">en línea</span></h2>
+        <div class="gcard" id="gCard">
           <div id="gWait"><p>Conectando con el pueblo…</p></div>
+          <div id="gHome" class="ghome" hidden>
+            <button type="button" class="gplay" id="gPlay">Jugar</button>
+            <button type="button" class="galt" id="gAcc">Entrar con mi cuenta</button>
+            <p>Pasea por Calabozo, busca tu plata y cuida tus vidas. Con cuenta guardas tu personaje y charlas con los demás.</p>
+          </div>
           <form id="gAuth" class="gform" hidden novalidate>
             <p>Crea tu cuenta para tener tu propio personaje y charlar con otras personas en la plaza.</p>
             <div class="fld"><label for="gEmail">Correo</label><input id="gEmail" type="email" autocomplete="email" inputmode="email" required></div>
@@ -511,6 +562,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   </div>
 
   <div class="controls">
+    <div class="ptitle">Pausa</div>
+    <div class="group"><button type="button" class="btn" id="howBtn">Cómo se juega</button><button type="button" class="btn" id="rolBtn">Mi rol</button><button type="button" class="btn" id="credBtn">Créditos</button></div>
     <div class="group" role="group" aria-label="Calidad de imagen">
       <span class="glabel">Calidad</span>
       <button type="button" class="btn" data-q="0" aria-pressed="true">Alta</button>
@@ -1658,7 +1711,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   }
   function clockText() { var m = Math.floor(gameMin) % 1440, h = Math.floor(m / 60), mm = m % 60, ap = h >= 12 ? 'pm' : 'am', h12 = h % 12 || 12; return h12 + ':' + (mm < 10 ? '0' : '') + mm + ' ' + ap + ' · ' + ([28, 37, 34, 28][hour] + Math.round(Math.sin(gameMin / 50))) + ' °C'; }
   var KEYMAP = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', w: 'up', W: 'up', s: 'down', S: 'down', a: 'sl', A: 'sl', d: 'sr', D: 'sr' };
-  function begin() { if (!started) { started = true; $('hint').hidden = true; } }
+  function begin() { if (!started) { started = true; } }
   function inStage() { var a = document.activeElement; if (gateOpen || chatOpen || modOpen || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return false; return a === stage || a === document.body || stage.contains(a); }
   window.addEventListener('keydown', function (e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -1825,7 +1878,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     }
     if (moving && !ride) walkPh += dt * (keys.shift ? 13 : 9);
     misTick(dt); atropelloTick(dt); tumbleTick(dt);
-    ratTick(dt); engineTick(); pinTick(dt); pasajeroTick();
+    ratTick(dt); engineTick(); pinTick(dt); pasajeroTick(); tutTick();
     if (audio && audio.motor) { motorT -= dt; if (motorT <= 0) { motorT = 0.1; audio.motor(!!ride && soundOn && !IN.active, ride ? ride.v : 0); } }
     var walkers = 0;
     for (var i = npcs.length - 1; i >= 0; i--) { var nn = npcs[i]; if (nn.lay) { if (time - nn.lay.t0 > LAYT) nn.lay = null; else continue; } if (nn.tum || nn.back) { npcFly(nn, dt); continue; } if (nn.stat) continue; walkers++; if (Math.hypot(nn.x - player.x, nn.y - player.y) / TS > 55) { npcs.splice(i, 1); continue; } if (!(dlg && target && target.o === nn)) npcWalk(nn, dt); }
@@ -2157,7 +2210,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     function addProp(o) {
       var pm = propMat(o); if (!pm) { props.set(o.pi, null); return; }
       var k = o.big || 1, s = new THREE.Sprite(PH[hour].win && pm.mn ? pm.mn : pm.mat); s.center.set(0.5, 0); s.scale.set(pm.w * k, pm.h * k, 1); s.position.set(o.tx + 0.5, 0, o.ty + 0.5);
-      s.userData.pm = pm; scene.add(s); props.set(o.pi, s);
+      s.userData.pm = pm; s.userData.k = o.k; scene.add(s); props.set(o.pi, s);
     }
 
     // ---- jugadores remotos: personajes voxel que caminan (o van en moto)
@@ -2184,7 +2237,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         var dx = p.tx - p.x, dz = p.ty - p.y;
         if (p.moving && Math.hypot(dx, dz) > 0.5) e.face += wrapA(Math.atan2(dx, dz) - e.face) * 0.25;
         else if (!p.moving && e.face === 0) e.face = [0, Math.PI, -Math.PI / 2, Math.PI / 2][p.dir || 0];
-        R.root.scale.setScalar(VK); R.root.position.set(sx, 0, sz); R.root.rotation.set(0, e.face, 0); R.pose(p.moving ? 'walk' : 'stand', p.t);
+        R.root.scale.setScalar(VK); R.root.position.set(sx, 0, sz); R.root.rotation.set(0, e.face, 0); R.pose(p.moving ? 'walk' : 'stand', p.t); shadow(sx, sz, 0.42);
         if (p.tumbleAt !== undefined) { var tt = time - p.tumbleAt; if (tt >= 0 && tt < (p.tumbleDur || 2.2)) { R.root.position.set(sx, 0, sz); tumbleRig(R, layT(tt, p.tumbleDur), p.tumbleSp || 1, e.face); } }
       });
       avs.forEach(function (e, k) { if (!players[k]) { scene.remove(e.r.root); avs.delete(k); } });
@@ -2273,6 +2326,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       presaTick = function () {
         var px = player.x / TS, pz = player.y / TS, near = Math.hypot(px - cx, pz - cz) < 70;
         notes.forEach(function (n, k) { var t = (time * 0.45 + k / notes.length) % 1; n.visible = near; n.position.set(cx + Math.sin(time * 2 + k * 1.7) * 0.4, 1.0 + t * 2.2, cz + 1.1 + t * 0.4); n.material.opacity = 1 - t; });
+        if (near && Math.hypot(px - cx, pz - cz) < 30) crowd.forEach(function (c) { shadow(c.x, c.z, 0.42); });
         var f = Math.floor(time / 0.17) % 3; if (f === frame && near) return; frame = f;
         meshes.forEach(function (fr) { fr.forEach(function (m) { m.count = 0; m.visible = near; }); }); if (!near) return;
         crowd.forEach(function (c) { var m = meshes[c.v][(f + c.off) % 3]; cq.setFromAxisAngle(cup, c.face); cp.set(c.x, 0, c.z); cm4.compose(cp, cq, cs); m.setMatrixAt(m.count++, cm4); });
@@ -2367,6 +2421,17 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       }
     }
 
+    // ---- sombras suaves bajo personajes, motos, carros y árboles (una sola malla con instancias)
+    var SH_CAP = 240, shN = 0, shGeo = new THREE.PlaneGeometry(1, 1); shGeo.rotateX(-Math.PI / 2);
+    var shMat = new THREE.MeshBasicMaterial({ map: lgTex(64, 64, function (g) { var gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.55, 'rgba(255,255,255,0.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }), color: 0x000000, transparent: true, opacity: 0.5, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+    var shMesh = new THREE.InstancedMesh(shGeo, shMat, SH_CAP); shMesh.count = 0; shMesh.frustumCulled = false; shMesh.renderOrder = 4; scene.add(shMesh);
+    function shadow(x, z, r) { if (shN >= SH_CAP) return; lp.set(x, 0.025, z); lq.identity(); ls.set(r * 2, 1, r * 2); lm4.compose(lp, lq, ls); shMesh.setMatrixAt(shN++, lm4); }
+    function shadowsEnd() {
+      var px = player.x / TS, pz = player.y / TS;
+      props.forEach(function (sp) { if (!sp || !sp.visible) return; var k = sp.userData.k; if (k !== 'mango' && k !== 'samán' && k !== 'palma') return; var dx = sp.position.x - px, dz = sp.position.z - pz; if (dx * dx + dz * dz < 900) shadow(sp.position.x, sp.position.z, k === 'palma' ? 0.9 : 1.7); });
+      shMat.opacity = hour === 3 ? 0.3 : (hour === 2 ? 0.42 : 0.5); shMesh.count = shN; shMesh.instanceMatrix.needsUpdate = true;
+    }
+
     // ---- fase del día (luz, cielo, niebla)
     var lastHour = -1, bright = 1;
     function applyPhase() {
@@ -2448,7 +2513,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       if (wp > 0.01) { tmpA.set(0.38, 0, 0).applyQuaternion(motoQy); tmpB.set(0.38, 0, 0).applyQuaternion(motoQ); motoP.add(tmpA).sub(tmpB); }
       motoM4.compose(motoP, motoQ, motoS);
       if (lit && hour === 3 && dist < 46 && nl < MLMAX) { MLX[nl * 4] = x; MLX[nl * 4 + 1] = z; MLX[nl * 4 + 2] = hx; MLX[nl * 4 + 3] = hz; nl++; }
-      var tt = MOTO_TINT[mc || 0] || MOTO_TINT[0];
+      var tt = MOTO_TINT[mc || 0] || MOTO_TINT[0]; if (dist < 30) shadow(x, z, 0.6);
       if (dist < MOTO_NEAR || !motoFar) { if (motoNear && nN < MOTO_CAP) { motoNear.geometry.attributes.motoTint.setXYZ(nN, tt[0], tt[1], tt[2]); motoNear.setMatrixAt(nN++, motoM4); } }
       else if (nF < MOTO_CAP) { motoFar.geometry.attributes.motoTint.setXYZ(nF, tt[0], tt[1], tt[2]); motoFar.setMatrixAt(nF++, motoM4); }
     }
@@ -2474,6 +2539,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
       carMat.color.setHex(PH[hour].prop); carMatT.color.setHex(PH[hour].prop);
       function put(x, z, hx, hz, col, truck, pp) {
         if (Math.hypot(x - px, z - pz) > vis) return;
+        if (Math.hypot(x - px, z - pz) < 30) shadow(x, z, 1.15);
         carQ.setFromAxisAngle(motoUp, Math.atan2(-hz, hx)); carP.set(x, 0, z); carM4.compose(carP, carQ, motoS); carC.set(col || '#C8302E');
         if (truck) { if (nt < CAR_CAP) { TBODY.setMatrixAt(nt, carM4); TBODY.setColorAt(nt, carC); TDET.setMatrixAt(nt++, carM4); } }
         else if (nc < CAR_CAP) { CBODY.setMatrixAt(nc, carM4); CBODY.setColorAt(nc, carC); CDET.setMatrixAt(nc++, carM4); if (pp && np < CAR_CAP) CPP.setMatrixAt(np++, carM4); }
@@ -2516,7 +2582,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         seen[n.id] = 1; var e = NRIG[n.id];
         if (!e) { e = NRIG[n.id] = { r: VOX.rig(n.look, VXMAT), face: NYAW[n.dir || 0] }; e.r.root.scale.setScalar(VK); scene.add(e.r.root); }
         var R = e.r, tum = n.tum ? time - n.tum.t0 : -1; e.face += wrapA(NYAW[n.dir || 0] - e.face) * 0.2;
-        R.root.position.set(x, 0, z); R.root.rotation.set(0, e.face, 0);
+        R.root.position.set(x, 0, z); R.root.rotation.set(0, e.face, 0); shadow(x, z, n.look && n.look.tall ? 0.5 : 0.42);
         if (n.sit) { R.pose('sit'); if (nst < 24) { nQ.setFromAxisAngle(motoUp, e.face); nP.set(x, 0, z); nM4.compose(nP, nQ, motoS); STO.setMatrixAt(nst++, nM4); } }
         else if (n.trumpet && !n.moving) R.pose('trumpet', time);
         else if (n.dance) R.pose('dance', time + n.id * 0.43);
@@ -2581,11 +2647,12 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         if (TUMBLE) { var tp = tumblePose(layT(TUMBLE.t, TUMBLE.dur), TUMBLE.spin); camera.rotation.order = 'YXZ'; camera.position.set(px, tp.y, pz); camera.rotation.set(tp.pitch, -a - Math.PI / 2 + tp.yaw, tp.roll); }
         else { if (camera.rotation.order !== 'XYZ') camera.rotation.order = 'XYZ'; camera.position.set(px, EYE + bob, pz); camera.rotation.set(0, -a - Math.PI / 2, 0); }
       }
+      if (gateOpen) { var gA = time * 0.06 + 0.8, gsx = D.spawn[0], gsz = D.spawn[1]; camera.position.set(gsx + Math.cos(gA) * 19, 8.5, gsz + Math.sin(gA) * 19); camera.lookAt(gsx, 1.6, gsz); }   // portada: la cámara pasea alrededor de la plaza
       dome.position.copy(camera.position); stars.position.copy(camera.position);
       var sd = sunSpr.userData.dir; if (sunSpr.visible && sd) sunSpr.position.set(px + sd[0] * 380, sd[1] * 380, pz + sd[2] * 380);
       for (var i = 0; i < cloudObjs.length; i++) { var c = CLOUDS[i], ang = c.a + time * 0.004, rr = 320 - c.e * 60; cloudObjs[i].position.set(px + Math.cos(ang) * rr, 60 + c.e * 140, pz + Math.sin(ang) * rr); }
       sun.position.set(px + ph.dir[0] * 60, ph.dir[1] * 60, pz + ph.dir[2] * 60); sun.target.position.set(px, 0, pz);
-      syncPlayers(camera.position); syncMotos(); updateLights(); syncCars(); syncGallinas(); syncNpcs(); if (presaTick) presaTick();
+      shN = 0; syncPlayers(camera.position); syncMotos(); updateLights(); syncCars(); syncGallinas(); syncNpcs(); if (presaTick) presaTick(); shadowsEnd();
       renderer.render(scene, camera);
       // capa 2D: mano, nombres, minimapa
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
@@ -2596,7 +2663,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
         if (vtmp.z > 1 || vtmp.z < -1 || Math.abs(vtmp.x) > 1.2) return;
         drawRemote({ o: p, scr: [(vtmp.x * 0.5 + 0.5) * cv.width, (-vtmp.y * 0.5 + 0.5) * cv.height + 4], ty: dist }, 1);
       });
-      if (!ride && !pas && !TUMBLE) drawHand();
+      if (!ride && !pas && !TUMBLE && !gateOpen) drawHand();
       if ((++mmN % 4) === 0) { drawMinimap(); }
     };
     applyPhase();
@@ -3177,8 +3244,26 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     var rr = $('hudRol'); if (rr && ECO.rol && ROLES[ECO.rol]) rr.textContent = ROLES[ECO.rol].emo + ' ' + ROLES[ECO.rol].name;
     if (kind) { e.classList.remove('bump', 'hit'); void e.offsetWidth; e.classList.add(kind === 1 ? 'bump' : 'hit'); }
   }
+  function ecoFloat(n) {
+    var f = el('span', 'ecofl ' + (n > 0 ? 'up' : 'dn'), (n > 0 ? '+$' : '−$') + Math.abs(n)); stage.appendChild(f); setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); }, 1400);
+    if (audio && soundOn && audio.coin) audio.coin(n > 0);
+  }
+  // ---- tutorial: cuatro pasos que se cumplen jugando
+  var TUT = { i: 0, d: 0, lx: 0, ly: 0, shown: -1, done: false };
+  try { if (localStorage.getItem('calabozo-tuto')) TUT.done = true; } catch (e) {}
+  function tutTick() {
+    var h = $('hint'); if (TUT.done || gateOpen) { if (!h.hidden) h.hidden = true; TUT.lx = player.x; TUT.ly = player.y; return; }
+    var T = [MOB ? 'Mueve la palanca para caminar y arrastra el dedo para mirar' : 'Camina con W A S D y arrastra el mouse para mirar', 'Toca el minimapa redondo para abrir el mapa del pueblo', 'Acércate a un vecino y toca el botón dorado para hablarle', 'Ve a las motos junto a la plaza y súbete a una'];
+    if (TUT.shown !== TUT.i) { TUT.shown = TUT.i; h.innerHTML = ''; h.appendChild(el('b', null, (TUT.i + 1) + '/' + T.length)); h.appendChild(document.createTextNode(T[TUT.i])); h.hidden = false; }
+    var ok = false;
+    if (TUT.i === 0) { TUT.d += Math.hypot(player.x - TUT.lx, player.y - TUT.ly); ok = TUT.d > 64 && TUT.d < 4000; if (TUT.d >= 4000) TUT.d = 0; }
+    else if (TUT.i === 1) ok = mapOpen; else if (TUT.i === 2) ok = !!dlg || (modOpen && target && target.kind === 'npc'); else ok = !!ride;
+    TUT.lx = player.x; TUT.ly = player.y;
+    if (!ok) return; TUT.i++; if (audio && soundOn && audio.chime) audio.chime();
+    if (TUT.i >= T.length) { TUT.done = true; h.hidden = true; try { localStorage.setItem('calabozo-tuto', '1'); } catch (e) {} toast('🎉 ¡Listo! Ya sabes lo básico. Tus misiones están en el botón de la lista'); }
+  }
   function ganar(n, why) {
-    n = Math.floor(+n) || 0; if (!n) return; ECO.money = Math.max(0, ECO.money + n); ecoSave(); ecoUI(n > 0 ? 1 : 2);
+    n = Math.floor(+n) || 0; if (!n) return; ECO.money = Math.max(0, ECO.money + n); ecoSave(); ecoUI(n > 0 ? 1 : 2); ecoFloat(n);
     toast((n > 0 ? '+$' + n : '−$' + (-n)) + (why ? ' · ' + why : ''));
   }
   function puedePagar(n) { return ECO.money >= n; }
@@ -3382,7 +3467,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     if (!PIN || gateOpen || IN.active) { if (!h.hidden) h.hidden = true; return; }
     routeUpdate(false);
     var d = dT([PIN.x, PIN.y]);
-    if (d < PIN.r) { var nm = PIN.name; clearPin(); toast('📍 ¡Llegaste a ' + nm + '!'); return; }
+    if (d < PIN.r) { var nm = PIN.name; clearPin(); toast('📍 ¡Llegaste a ' + nm + '!'); if (audio && soundOn && audio.chime) audio.chime(); return; }
     if (h.hidden) h.hidden = false;
     var rel = Math.atan2(PIN.y - player.y / TS, PIN.x - player.x / TS) - player.a; $('pinArr').style.transform = 'rotate(' + rel + 'rad)';
     pinT -= dt; if (pinT <= 0) { pinT = 0.25; var m = Math.round(d * (D.mpt || 2)); $('pinT').textContent = '📍 ' + PIN.name; $('pinD').textContent = m >= 1000 ? (m / 1000).toFixed(1).replace('.', ',') + ' km' : m + ' m'; }
@@ -3818,7 +3903,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     a = Math.floor(a); if (!(a > 0)) return;
     if (k === 'dep') { if (ECO.money < a) { toast('No tienes tanto efectivo'); return; } ECO.money -= a; ECO.bank += a; movAdd('dep', a); toast('🏦 Depositaste $' + a + ' · Saldo $' + ECO.bank); }
     else { if (ECO.bank < a) { toast('No tienes tanto en la cuenta'); return; } ECO.bank -= a; ECO.money += a; movAdd('ret', a); toast('💵 Retiraste $' + a + ' · Saldo $' + ECO.bank); }
-    ecoSave(); ecoUI(k === 'dep' ? 2 : 1);
+    ecoSave(); ecoUI(k === 'dep' ? 2 : 1); ecoFloat(k === 'dep' ? -a : a);
   }
   function bankCard(withMov) {
     var n = el('div', 'bk');
@@ -4032,6 +4117,9 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     };
     api.quieto = function (vol) { play('quieto', vol === undefined ? 0.8 : vol); };
     api.mama = function (vol) { play('mama', (vol === undefined ? 1 : vol) * 0.4); };
+    function blip(f, t0, dur, vol, type) { var o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + t0; o.type = type || 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.03); }
+    api.coin = function (up) { if (up) { blip(1318, 0, 0.09, 0.12); blip(1976, 0.07, 0.16, 0.12); } else { blip(520, 0, 0.1, 0.1); blip(390, 0.08, 0.18, 0.1); } };
+    api.chime = function () { blip(784, 0, 0.14, 0.1, 'sine'); blip(1046, 0.1, 0.14, 0.1, 'sine'); blip(1568, 0.2, 0.3, 0.1, 'sine'); };
     api.setMode(); return api;
   }
 
@@ -4131,14 +4219,14 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   // ---- pantalla de entrada
   function gmsg(id, t, err) { var e = $(id); e.textContent = t || ''; e.className = 'gmsg' + (err ? ' err' : ''); }
   function showGate(step, msg, err) {
-    gateOpen = true; $('gate').hidden = false;
-    ['gWait', 'gAuth', 'gAvatar'].forEach(function (id) { $(id).hidden = id !== step; });
+    gateOpen = true; $('gate').hidden = false; stage.classList.add('gate-on'); document.body.classList.remove('cfg-open');
+    ['gWait', 'gHome', 'gAuth', 'gAvatar'].forEach(function (id) { $(id).hidden = id !== step; }); $('gCard').classList.toggle('home', step === 'gHome' || step === 'gWait');
     if (step === 'gAuth') gmsg('gMsgA', msg, err);
     if (step === 'gAvatar') gmsg('gMsgV', msg, err);
     var first = step === 'gAuth' ? $('gEmail') : (step === 'gAvatar' ? $('gName') : null);
     if (first) { try { first.focus({ preventScroll: true }); } catch (e) {} }
   }
-  function hideGate() { gateOpen = false; $('gate').hidden = true; try { stage.focus({ preventScroll: true }); } catch (e) { stage.focus(); } }
+  function hideGate() { gateOpen = false; $('gate').hidden = true; stage.classList.remove('gate-on'); try { stage.focus({ preventScroll: true }); } catch (e) { stage.focus(); } }
   function errText(e) {
     var m = (e && (e.message || e.error_description)) || '';
     if (/invalid login/i.test(m)) return 'Correo o clave incorrectos.';
@@ -4153,6 +4241,8 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   function toast(t) { var e = $('toast'); e.textContent = t; e.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { e.hidden = true; }, 3200); }
 
   function initOnline() {
+    $('gPlay').addEventListener('click', function () { $('gSolo').click(); });
+    $('gAcc').addEventListener('click', function () { showGate('gAuth'); });
     $('gSolo').addEventListener('click', function () { OL.solo = true; hideGate(); syncAccountUI(); ecoLoad(null); });
     $('gAuth').addEventListener('submit', function (e) { e.preventDefault(); doAuth('in'); });
     $('gUp').addEventListener('click', function () { doAuth('up'); });
@@ -4168,7 +4258,7 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
     OL.sb.auth.getSession().then(function (r) {
       if (done) return; done = true; clearTimeout(to);
       var s = r && r.data && r.data.session;
-      if (s) { OL.user = s.user; afterLogin(); } else showGate('gAuth');
+      if (s) { OL.user = s.user; afterLogin(); } else showGate('gHome');
     }).catch(function () { if (done) return; done = true; clearTimeout(to); showGate('gAuth', 'No hay conexión con el servidor.', true); });
     OL.sb.auth.onAuthStateChange(function (ev) { if (ev === 'SIGNED_OUT') setTimeout(leaveOnline, 0); });
   }
@@ -4717,6 +4807,17 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
   $('fsBtn').addEventListener('click', function () { if (document.fullscreenElement || document.webkitFullscreenElement) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {} } else goFull(); });
   if (!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen) || isStandalone()) $('fsBtn').hidden = true;
   $('cfgBtn').addEventListener('click', function () { document.body.classList.toggle('cfg-open'); });
+  function cfgOff() { document.body.classList.remove('cfg-open'); }
+  $('howBtn').addEventListener('click', function () {
+    cfgOff(); var n = el('div', 'modb');
+    (MOB ? ['Palanca (abajo a la izquierda): caminar. Hasta el borde: correr.', 'Arrastra el dedo por la pantalla para mirar.', 'Botón dorado: hablar, entrar, montar la moto o bajarte.', 'Minimapa: ábrelo y toca un sitio para marcar tu destino.']
+         : ['W A S D o flechas: caminar · Shift: correr · arrastra el mouse para mirar.', 'E: hablar, entrar, montar la moto o bajarte · C: caballito.', 'M: mapa (clic en un sitio para marcar destino) · J: misiones · P: teléfono · T: chat.'])
+      .concat(['Cuida tus 5 vidas: mira la calle antes de cruzar y corre si te sigue un ratero.', 'Guarda la plata en el Banesco: en el banco no te la roban ni la pierdes.']).forEach(function (t) { n.appendChild(el('p', null, t)); });
+    modShow({ title: 'Cómo se juega', node: n, btns: [{ t: 'Entendido', cls: 'primary' }] });
+  });
+  $('rolBtn').addEventListener('click', function () { cfgOff(); if (ECO.rol) roleIntro(false); });
+  $('credBtn').addEventListener('click', function () { cfgOff(); var n = el('div', 'modb'), f = document.querySelector('.foot'); n.appendChild(el('p', null, f ? f.textContent : '')); modShow({ title: 'Créditos', node: n, btns: [{ t: 'Cerrar' }] }); });
+  window.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !gateOpen && !mapOpen && !modOpen && !chatOpen && !dlg) { e.preventDefault(); document.body.classList.toggle('cfg-open'); } });
   $('cfgClose').addEventListener('click', function () { document.body.classList.remove('cfg-open'); try { stage.focus({ preventScroll: true }); } catch (e) {} });
   if (MOB) {
     $('hint').textContent = 'Palanca para caminar · arrastra el dedo por la imagen para mirar';
