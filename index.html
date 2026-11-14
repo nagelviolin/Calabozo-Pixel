@@ -2274,10 +2274,200 @@ body.cfg-open .cfgclose { display: inline-flex; align-items: center; justify-con
       return (propMats[key] = r);
     }
     function addProp(o) {
+      if (P3K[o.k]) { var s3 = new THREE.Object3D(); s3.position.set(o.tx + 0.5, 0, o.ty + 0.5); s3.userData = { k: o.k, pm: { lamp: false }, p3: p3inst(o) }; props.set(o.pi, s3); P3dirty = true; return; }
       var pm = propMat(o); if (!pm) { props.set(o.pi, null); return; }
       var k = o.big || 1, s = new THREE.Sprite(PH[hour].win && pm.mn ? pm.mn : pm.mat); s.center.set(0.5, 0); s.scale.set(pm.w * k, pm.h * k, 1); s.position.set(o.tx + 0.5, 0, o.ty + 0.5);
       s.userData.pm = pm; s.userData.k = o.k; scene.add(s); props.set(o.pi, s);
     }
+    // ---- estilo 3D, fase 2: árboles, palmas, postes, faroles y bancos en 3D (un dibujo por tipo, instanciado)
+    var P3K = { mango: 1, 'samán': 1, palma: 1, poste: 1, farol: 1, banco: 1 }, P3NEAR = MOB ? 28 : 40, P3at = [1e9, 1e9], P3dirty = true, P3lit = null, P3T = { value: 0 };
+    var P3 = (function () {
+      var E = new THREE.Euler(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S = new THREE.Vector3(), CC = new THREE.Color(), CD = new THREE.Color();
+      function M(x, y, z, rx, ry, rz, sx, sy, sz) { E.set(rx || 0, ry || 0, rz || 0); Q.setFromEuler(E); V.set(x, y, z); S.set(sx || 1, sy === undefined ? (sx || 1) : sy, sz === undefined ? (sx || 1) : sz); return new THREE.Matrix4().compose(V, Q, S); }
+      function nz(x, y, z) { var n = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453; return n - Math.floor(n); }
+      // degradado vertical con un poquito de ruido (aspecto pintado)
+      function grad(a, b, y0, y1, nzA) { var A = new THREE.Color(a), B = new THREE.Color(b), k = nzA === undefined ? 0.06 : nzA; return function (c, x, y, z) { var t = Math.max(0, Math.min(1, (y - y0) / (y1 - y0))); c.copy(A).lerp(B, t); var f = 1 + (nz(x, y, z) - 0.5) * k; c.r *= f; c.g *= f; c.b *= f; }; }
+      function flat(h) { var A = new THREE.Color(h); return function (c) { c.copy(A); }; }
+      function part(geo, m, colFn) {
+        var g = geo.index ? geo.toNonIndexed() : geo; g.applyMatrix4(m);
+        var pos = g.attributes.position, n = pos.count, col = new Float32Array(n * 3);
+        for (var i = 0; i < n; i++) { colFn(CC, pos.getX(i), pos.getY(i), pos.getZ(i)); col[i * 3] = CC.r; col[i * 3 + 1] = CC.g; col[i * 3 + 2] = CC.b; }
+        return { p: pos.array, n: g.attributes.normal.array, c: col };
+      }
+      function merge(parts) {
+        var tp = 0; parts.forEach(function (p) { tp += p.p.length; });
+        var P = new Float32Array(tp), N = new Float32Array(tp), C = new Float32Array(tp), o = 0;
+        parts.forEach(function (p) { P.set(p.p, o); N.set(p.n, o); C.set(p.c, o); o += p.p.length; });
+        var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.BufferAttribute(N, 3)); g.setAttribute('color', new THREE.BufferAttribute(C, 3)); g.computeBoundingSphere(); return g;
+      }
+      function cyl(rt, rb, h, seg, hs) { return new THREE.CylinderGeometry(rt, rb, h, seg, hs || 1); }
+      function ico(r, d) { return new THREE.IcosahedronGeometry(r, d === undefined ? 1 : d); }
+      function box(x, y, z) { return new THREE.BoxGeometry(x, y, z); }
+      // copa: bolas con un poco de abombado al azar para que no se vean perfectas
+      function blob(r, seed, lo) { var g = ico(r, lo ? 0 : 1), p = g.attributes.position; for (var i = 0; i < p.count; i++) { var x = p.getX(i), y = p.getY(i), z = p.getZ(i), f = 1 + (nz(x * 3 + seed, y * 3, z * 3) - 0.5) * 0.22; p.setXYZ(i, x * f, y * f, z * f); } g.computeVertexNormals(); return g; }
+
+      // ---- mango: tronco con ramas y copa redonda de varias bolas
+      function mango(fruit, lo) {
+        var L = [], bark = grad('#5A3D25', '#7A5636', 0, 1.6), leaf = grad('#1E4A24', '#56A04A', 1.3, 3.4, 0.1);
+        L.push(part(cyl(0.12, 0.2, 1.6, lo ? 5 : 7), M(0, 0.8, 0), bark));
+        if (!lo) L.push(part(cyl(0.05, 0.09, 0.95, 5), M(0.28, 1.6, 0, 0, 0, -0.75), bark));
+        if (!lo) L.push(part(cyl(0.05, 0.09, 0.9, 5), M(-0.25, 1.55, 0.1, 0, 0, 0.8), bark));
+        if (!lo) L.push(part(cyl(0.05, 0.08, 0.85, 5), M(0, 1.55, -0.26, -0.8, 0, 0), bark));
+        [[0, 2.35, 0, 1.05, 1.15, 0.85], [0.78, 2.1, 0.25, 0.72, 1, 0.9], [-0.72, 2.12, -0.2, 0.76, 1, 0.9], [0.15, 2.18, -0.78, 0.7, 1, 0.9], [-0.2, 2.22, 0.74, 0.72, 1, 0.9], [0.08, 2.92, 0.05, 0.66, 1.1, 0.85]].forEach(function (b, i) {
+          if (!lo || i % 2 === 0) L.push(part(blob(lo ? b[3] * 1.12 : b[3], i * 7, lo), M(b[0], b[1], b[2], 0, i, 0, b[4], b[5], b[4]), leaf));
+        });
+        if (fruit) { var FC = ['#F2A93B', '#E4572E', '#F5C542']; for (var f = 0; f < 11; f++) { var a = f * 2.399, rr = 1.02 + (f % 3) * 0.08, yy = 1.95 + (f % 4) * 0.12; L.push(part(ico(0.085, 0), M(Math.cos(a) * rr, yy, Math.sin(a) * rr, 0, 0, 0, 1, 1.25, 1), flat(FC[f % 3]))); } }
+        return merge(L);
+      }
+      // ---- samán: copa ancha y aplanada como sombrilla
+      function saman(lo) {
+        var L = [], bark = grad('#4E3A28', '#6E5238', 0, 2), leaf = grad('#2F5E2A', '#7DB45A', 2.1, 3.5, 0.1);
+        L.push(part(cyl(0.18, 0.3, 1.7, 8), M(0, 0.85, 0), bark));
+        [[0.9, 0.5], [-0.85, 0.6], [0.3, -0.95], [-0.35, -0.9]].forEach(function (d) { var a = Math.atan2(d[1], d[0]); L.push(part(cyl(0.06, 0.12, 1.5, 5), M(d[0] * 0.55, 1.95, d[1] * 0.55, 0, -a, 0.95), bark)); });
+        L.push(part(blob(1.5, 3, lo), M(0, 2.75, 0, 0, 0, 0, 1.75, 0.5, 1.75), leaf));
+        var nb = lo ? 5 : 7; for (var i = 0; i < nb; i++) { var a = i / nb * Math.PI * 2 + 0.3; L.push(part(blob(lo ? 1.0 : 0.9, i * 5, lo), M(Math.cos(a) * 1.75, 2.6 + (i % 2) * 0.12, Math.sin(a) * 1.75, 0, a, 0, 1.25, 0.58, 1.25), leaf)); }
+        L.push(part(blob(1.0, 9, lo), M(0.1, 3.2, -0.1, 0, 0, 0, 1.45, 0.45, 1.45), leaf));
+        return merge(L);
+      }
+      // hoja de palma: tira arqueada con pliegue en V, de dos caras
+      function frond(ang, len, up, droop, wid, c0, c1, n) {
+        n = n || 8; var P = [], N = [], C = [], pts = [], A = new THREE.Color(c0), B = new THREE.Color(c1), ca = Math.cos(ang), sa = Math.sin(ang);
+        for (var i = 0; i <= n; i++) {
+          var t = i / n, d = len * t, y = up * Math.sin(Math.PI * t * 0.85) - droop * t * t, w = wid * Math.sin(Math.PI * (t * 0.92 + 0.06));
+          var cx = ca * d, cz = sa * d, px = -sa * w, pz = ca * w;
+          pts.push([[cx + px, y - w * 0.25, cz + pz], [cx, y + 0.02, cz], [cx - px, y - w * 0.25, cz - pz], t]);
+        }
+        function tri(a, b, c, t, back) {
+          var ab = new THREE.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2]), ac = new THREE.Vector3(c[0] - a[0], c[1] - a[1], c[2] - a[2]), nn = ab.cross(ac).normalize();
+          var col = A.clone().lerp(B, t); if (back) col.multiplyScalar(0.8);
+          [a, b, c].forEach(function (v) { P.push(v[0], v[1], v[2]); N.push(nn.x, nn.y, nn.z); C.push(col.r, col.g, col.b); });
+        }
+        for (i = 0; i < n; i++) {
+          var p0 = pts[i], p1 = pts[i + 1], t = (p0[3] + p1[3]) / 2;
+          for (var s = 0; s < 2; s++) {
+            var a = p0[s], b = p0[s + 1], c = p1[s], d2 = p1[s + 1];
+            tri(a, c, b, t, false); tri(b, c, d2, t, false); tri(a, b, c, t, true); tri(b, d2, c, t, true);
+          }
+        }
+        return { p: new Float32Array(P), n: new Float32Array(N), c: new Float32Array(C) };
+      }
+      function offs(pp, x, y, z) { for (var i = 0; i < pp.p.length; i += 3) { pp.p[i] += x; pp.p[i + 1] += y; pp.p[i + 2] += z; } return pp; }
+      // ---- palma real (chaguaramo): tronco claro con anillos y algo abombado, cuello verde y penacho
+      function palma(lo) {
+        var L = [], tg = cyl(0.13, 0.19, 4.1, lo ? 6 : 8, lo ? 8 : 26), p = tg.attributes.position;
+        for (var i = 0; i < p.count; i++) { var y = p.getY(i), t = (y + 2.05) / 4.1, f = 1 + 0.28 * Math.sin(Math.PI * Math.min(1, t * 1.6)) * (1 - t * 0.6); p.setX(i, p.getX(i) * f); p.setZ(i, p.getZ(i) * f); }
+        tg.computeVertexNormals();
+        var ring = function (c, x, y, z) { var b = (Math.floor(y * 7) % 2) ? 0.93 : 1; c.set('#D6CFBF'); c.lerp(CD.set('#9C9483'), Math.max(0, 0.45 - y * 0.12)); c.multiplyScalar(b); };
+        L.push(part(tg, M(0, 2.05, 0), ring));
+        L.push(part(cyl(0.12, 0.155, 0.75, 8), M(0, 4.45, 0), grad('#5E9442', '#8CBF5E', 4.1, 4.8, 0.04)));
+        var top = 4.8;
+        var nf = lo ? 8 : 11; for (var k = 0; k < nf; k++) { var a = k / nf * Math.PI * 2 + (k % 2) * 0.2, lw = k % 3 === 0; L.push(offs(frond(a, lw ? 1.5 : 1.85, lw ? 0.15 : 0.5, lw ? 1.25 : 1.0, lo ? 0.3 : 0.26, '#2F7530', '#6DB84E', lo ? 4 : 8), 0, top, 0)); }
+        for (k = 0; k < (lo ? 0 : 3); k++) { var a2 = k * 2.1 + 0.7; L.push(offs(frond(a2, 1.4, 0.05, 1.6, 0.2, '#6E7A3A', '#A59A55'), 0, top - 0.15, 0)); }
+        return merge(L);
+      }
+      // ---- poste de luz: concreto, cruceta, aisladores, brazo con lámpara hacia la calle (+X)
+      function poste(trafo) {
+        var L = [], conc = grad('#9E9C94', '#C2C0B8', 0, 4.2, 0.04), dk = flat('#5E5B54'), ins = flat('#E6E1D2'), met = flat('#45464A');
+        L.push(part(cyl(0.07, 0.115, 4.15, 6), M(0, 2.075, 0), conc));
+        L.push(part(box(1.15, 0.08, 0.08), M(0, 3.62, 0), dk));
+        [-0.48, -0.2, 0.2, 0.48].forEach(function (x) { L.push(part(cyl(0.025, 0.035, 0.1, 6), M(x, 3.71, 0), ins)); });
+        L.push(part(cyl(0.022, 0.022, 0.7, 5), M(0.33, 3.92, 0, 0, 0, -1.35), met));
+        L.push(part(box(0.36, 0.09, 0.16), M(0.68, 3.97, 0, 0, 0, 0.08), met));
+        if (trafo) { L.push(part(cyl(0.15, 0.15, 0.44, 8), M(-0.24, 3.05, 0), grad('#7D8285', '#9AA0A3', 2.8, 3.3, 0.02))); L.push(part(cyl(0.16, 0.16, 0.04, 8), M(-0.24, 3.29, 0), dk)); }
+        return merge(L);
+      }
+      // ---- farol colonial negro
+      function farol() {
+        var L = [], bk = grad('#141517', '#2A2C30', 0, 2, 0.03);
+        L.push(part(cyl(0.12, 0.16, 0.2, 8), M(0, 0.1, 0), bk));
+        L.push(part(cyl(0.035, 0.05, 1.3, 8), M(0, 0.85, 0), bk));
+        L.push(part(cyl(0.07, 0.07, 0.05, 8), M(0, 1.47, 0), bk));
+        L.push(part(box(0.26, 0.035, 0.26), M(0, 1.49, 0), bk));
+        [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(function (d) { L.push(part(box(0.025, 0.34, 0.025), M(d[0] * 0.115, 1.67, d[1] * 0.115), bk)); });
+        L.push(part(new THREE.ConeGeometry(0.21, 0.16, 4), M(0, 1.92, 0, 0, Math.PI / 4, 0), bk));
+        L.push(part(ico(0.035, 0), M(0, 2.02, 0), bk));
+        return merge(L);
+      }
+      function glassFarol() { return merge([part(box(0.2, 0.32, 0.2), M(0, 1.67, 0), flat('#FFFFFF'))]); }
+      function glassPoste() { return merge([part(box(0.28, 0.025, 0.12), M(0.68, 3.915, 0, 0, 0, 0.08), flat('#FFFFFF'))]); }
+      // ---- banco de plaza: listones verdes y patas de hierro
+      function banco() {
+        var L = [], gr = grad('#2E6B44', '#45965F', 0.15, 0.5, 0.05), ir = flat('#232325');
+        [-0.48, 0.48].forEach(function (x) { L.push(part(box(0.05, 0.22, 0.3), M(x, 0.11, 0), ir)); L.push(part(box(0.05, 0.3, 0.04), M(x, 0.33, -0.15, -0.12, 0, 0), ir)); });
+        [-0.1, 0, 0.1].forEach(function (z) { L.push(part(box(1.12, 0.03, 0.085), M(0, 0.235, z), gr)); });
+        [0.33, 0.43].forEach(function (y) { L.push(part(box(1.12, 0.07, 0.025), M(0, y, -0.16 - (y - 0.33) * 0.15, -0.12, 0, 0), gr)); });
+        return merge(L);
+      }
+
+      var sway = new THREE.MeshLambertMaterial({ vertexColors: true });
+      sway.onBeforeCompile = function (sh) {
+        sh.uniforms.uT = P3T;
+        sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n#ifdef USE_INSTANCING\n  float sw = max(position.y - 1.4, 0.0) * 0.02; vec3 ip = instanceMatrix[3].xyz;\n  transformed.x += sin(uT * 1.3 + ip.x * 0.8 + ip.z * 0.3) * sw; transformed.z += cos(uT * 1.05 + ip.z * 0.7 + ip.x * 0.2) * sw * 0.8;\n#endif');
+      };
+      var stat = new THREE.MeshLambertMaterial({ vertexColors: true }), glass = new THREE.MeshBasicMaterial({ color: 0xD9D4BC });
+      function cnt(k, f) { var n = 0; propList.forEach(function (o) { if (o.k === k && (!f || f(o))) n++; }); return Math.max(1, n); }
+      function IM(geo, mat, cap, cast) {
+        var m = new THREE.InstancedMesh(geo, mat, cap); m.count = 0; m.frustumCulled = false;
+        m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(cap * 3).fill(1), 3);
+        m.castShadow = !!cast; m.receiveShadow = !!cast; m.userData.cast = !!cast; scene.add(m); return m;
+      }
+      var R = {
+        mango0: IM(mango(true), sway, cnt('mango', function (o) { return o.v < 2; }), true), mango1: IM(mango(false), sway, cnt('mango', function (o) { return o.v >= 2; }), true),
+        saman: IM(saman(), sway, cnt('samán'), true), palma: IM(palma(), sway, cnt('palma'), true),
+        mangoL: IM(mango(false, true), sway, cnt('mango'), false), samanL: IM(saman(true), sway, cnt('samán'), false), palmaL: IM(palma(true), sway, cnt('palma'), false),
+        poste0: IM(poste(false), stat, cnt('poste', function (o) { return !(o.v % 2); }), true), poste1: IM(poste(true), stat, cnt('poste', function (o) { return o.v % 2; }), true),
+        posteGlass: IM(glassPoste(), glass, cnt('poste'), false), farol: IM(farol(), stat, cnt('farol'), true), farolGlass: IM(glassFarol(), glass, cnt('farol'), false), banco: IM(banco(), stat, cnt('banco'), true)
+      };
+      R.glass = glass; return R;
+    })();
+    // hacia qué lado está la calle (el brazo del poste apunta hacia ella)
+    function poleDir(o) {
+      if (o.pd) return o.pd; var D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      for (var d = 1; d <= 3; d++) for (var j = 0; j < 4; j++) { var g = gk(o.tx + D4[j][0] * d, o.ty + D4[j][1] * d); if (g === 3 || g === 15) return (o.pd = D4[j]); }
+      return (o.pd = [1, 0]);
+    }
+    var P3UP = new THREE.Vector3(0, 1, 0), P3W = new THREE.Color(1, 1, 1);
+    function p3inst(o) {
+      var r = hh(o.tx, o.ty, 77), r2 = hh(o.tx, o.ty, 78), k = o.big || 1, ry = r * Math.PI * 2, sc = 1, sy = 1, list, far = null, col = P3W;
+      switch (o.k) {
+        case 'mango': list = [o.v < 2 ? P3.mango0 : P3.mango1]; far = [P3.mangoL]; sc = k * (0.88 + r2 * 0.26); break;
+        case 'samán': list = [P3.saman]; far = [P3.samanL]; sc = k * (0.85 + r2 * 0.3); break;
+        case 'palma': list = [P3.palma]; far = [P3.palmaL]; sc = k * (0.9 + r2 * 0.2); break;
+        case 'poste': var pd = poleDir(o); ry = Math.atan2(-pd[1], pd[0]); list = [o.v % 2 ? P3.poste1 : P3.poste0, P3.posteGlass]; break;
+        case 'farol': ry = 0; list = [P3.farol, P3.farolGlass]; break;
+        default: ry = Math.floor(r * 4) * Math.PI / 2; list = [P3.banco];
+      }
+      if (o.k === 'mango' || o.k === 'samán' || o.k === 'palma') { sy = 0.92 + hh(o.tx, o.ty, 80) * 0.16; col = new THREE.Color(0.9 + r2 * 0.16, 0.92 + hh(o.tx, o.ty, 79) * 0.14, 0.9 + r * 0.12); }
+      var m = new THREE.Matrix4().compose(new THREE.Vector3(o.tx + 0.5, 0, o.ty + 0.5), new THREE.Quaternion().setFromAxisAngle(P3UP, ry), new THREE.Vector3(sc, sc * sy, sc));
+      return { m: m, list: list, far: far || list, x: o.tx + 0.5, z: o.ty + 0.5, col: col };
+    }
+    function p3sync() {
+      P3T.value = performance.now() / 1000;
+      var lit = hour === 3 && !dark; if (lit !== P3lit) { P3lit = lit; P3.glass.color.setHex(lit ? 0xFFE6A0 : (hour === 3 ? 0x3A3832 : 0xD9D4BC)); }
+      var cx = camera.position.x, cz = camera.position.z;
+      if (!P3dirty && Math.abs(cx - P3at[0]) + Math.abs(cz - P3at[1]) < 4) return; P3dirty = false; P3at[0] = cx; P3at[1] = cz;
+      var all = [P3.mango0, P3.mango1, P3.saman, P3.palma, P3.mangoL, P3.samanL, P3.palmaL, P3.poste0, P3.poste1, P3.posteGlass, P3.farol, P3.farolGlass, P3.banco], nr2 = P3NEAR * P3NEAR;
+      all.forEach(function (m) { m.count = 0; });
+      props.forEach(function (sp) {
+        if (!sp || !sp.userData.p3) return; var d = sp.userData.p3, dx = d.x - cx, dz = d.z - cz;
+        (dx * dx + dz * dz < nr2 ? d.list : d.far).forEach(function (m) { if (m.count >= m.instanceMatrix.count) return; m.setMatrixAt(m.count, d.m); m.setColorAt(m.count, d.col); m.count++; });
+      });
+      all.forEach(function (m) { m.instanceMatrix.needsUpdate = true; m.instanceColor.needsUpdate = true; });
+    }
+    // cables de luz entre postes (una sola malla de líneas para todo el pueblo)
+    (function () {
+      var pts = [];
+      CABLES.forEach(function (cb) {
+        var a = cb[0], b = cb[1], da = poleDir(a), db = poleDir(b), flip = (da[0] * db[0] + da[1] * db[1]) < 0 ? -1 : 1;
+        var ax = a.tx + 0.5, az = a.ty + 0.5, bx = b.tx + 0.5, bz = b.ty + 0.5, len = Math.hypot(bx - ax, bz - az), sag = Math.min(0.9, 0.025 * len);
+        [-0.48, 0.48].forEach(function (s) {
+          var x0 = ax + da[0] * s, z0 = az + da[1] * s, x1 = bx + db[0] * s * flip, z1 = bz + db[1] * s * flip, py = null;
+          for (var i = 0; i <= 8; i++) { var t = i / 8, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t, y = 3.74 - sag * 4 * t * (1 - t); if (py) pts.push(py[0], py[1], py[2], x, y, z); py = [x, y, z]; }
+        });
+      });
+      var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3));
+      var ln = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0x1C1C1E })); ln.userData.cast = false; scene.add(ln);
+    })();
 
     // ---- jugadores remotos: personajes voxel que caminan (o van en moto)
     var avs = new Map(), VXMAT = VOX.mat(), VK = 0.95 / 26, MOTO_K = 0.6, RIDE_S = 0.85, SEAT = 0.38 * MOTO_K / 0.5, HIP = 6.6 * VK * RIDE_S, RBACK = 0.19; // moto un 20 % mayor que la real para que encaje con los personajes
@@ -2441,7 +2631,7 @@ body.cfg-open .cfgclose { display: inline-flex; align-items: center; justify-con
       for (i = 0; i < propList.length; i++) {
         var o = propList[i], dd2 = Math.hypot(o.tx - px, o.ty - py), has = props.has(o.pi);
         if (!has && dd2 < RLOAD) addProp(o);
-        else if (has && dd2 > RDROP) { var s = props.get(o.pi); if (s) scene.remove(s); props.delete(o.pi); }
+        else if (has && dd2 > RDROP) { var s = props.get(o.pi); if (s) { scene.remove(s); if (s.userData.p3) P3dirty = true; } props.delete(o.pi); }
       }
     }
     // construye lo que falta del mapa y sube sus texturas a la GPU aquí mismo (antes se subían al aparecer en pantalla y daban tirones)
@@ -2473,7 +2663,7 @@ body.cfg-open .cfgclose { display: inline-flex; align-items: center; justify-con
     var lm4 = new THREE.Matrix4(), lq = new THREE.Quaternion(), lp = new THREE.Vector3(), ls = new THREE.Vector3(), lUp = new THREE.Vector3(0, 1, 0);
     function lampsAll() {
       if (lampL) return lampL; lampL = [];
-      propList.forEach(function (o) { if (o.k === 'poste') lampL.push({ x: o.tx + 0.5, z: o.ty + 0.5, y: 3.8, r: 10 }); else if (o.k === 'farol') lampL.push({ x: o.tx + 0.5, z: o.ty + 0.5, y: 1.65, r: 7 }); });
+      propList.forEach(function (o) { if (o.k === 'poste') { var pd = poleDir(o); lampL.push({ x: o.tx + 0.5 + pd[0] * 0.68, z: o.ty + 0.5 + pd[1] * 0.68, y: 3.88, r: 10 }); } else if (o.k === 'farol') lampL.push({ x: o.tx + 0.5, z: o.ty + 0.5, y: 1.65, r: 7 }); });
       return lampL;
     }
     function updateLights() {
@@ -2509,7 +2699,7 @@ body.cfg-open .cfgclose { display: inline-flex; align-items: center; justify-con
     function shadow(x, z, r) { if (shN >= SH_CAP) return; lp.set(x, 0.025, z); lq.identity(); ls.set(r * 2, 1, r * 2); lm4.compose(lp, lq, ls); shMesh.setMatrixAt(shN++, lm4); }
     function shadowsEnd() {
       var px = player.x / TS, pz = player.y / TS;
-      props.forEach(function (sp) { if (!sp || !sp.visible) return; var k = sp.userData.k; if (k !== 'mango' && k !== 'samán' && k !== 'palma') return; var dx = sp.position.x - px, dz = sp.position.z - pz; if (dx * dx + dz * dz < 900) shadow(sp.position.x, sp.position.z, k === 'palma' ? 0.9 : 1.7); });
+      props.forEach(function (sp) { if (!sp || !sp.visible) return; var k = sp.userData.k; if (k !== 'mango' && k !== 'samán' && k !== 'palma') return; var dx = sp.position.x - px, dz = sp.position.z - pz; if (dx * dx + dz * dz < 900) shadowB(sp.position.x, sp.position.z, k === 'palma' ? 0.9 : 1.7); });
       shMat.opacity = hour === 3 ? 0.3 : (hour === 2 ? 0.42 : 0.5); shMesh.count = shN; shMesh.instanceMatrix.needsUpdate = true;
     }
 
@@ -2746,7 +2936,7 @@ body.cfg-open .cfgclose { display: inline-flex; align-items: center; justify-con
       waterTick(px, pz);
       for (var i = 0; i < cloudObjs.length; i++) { var c = CLOUDS[i], ang = c.a + time * 0.004, rr = 320 - c.e * 60; cloudObjs[i].position.set(px + Math.cos(ang) * rr, 60 + c.e * 140, pz + Math.sin(ang) * rr); }
       sun.position.set(px + ph.dir[0] * 60, ph.dir[1] * 60, pz + ph.dir[2] * 60); sun.target.position.set(px, 0, pz);
-      if (--castT <= 0) { castT = 40; markCasters(); } if ((quality === 0 && hour !== 3) !== SHON) lastHour = -1;
+      p3sync(); if (--castT <= 0) { castT = 40; markCasters(); } if ((quality === 0 && hour !== 3) !== SHON) lastHour = -1;
       shN = 0; syncPlayers(camera.position); syncMotos(); updateLights(); syncCars(); syncGallinas(); syncNpcs(); if (presaTick) presaTick(); shadowsEnd();
       renderer.render(scene, camera);
       // capa 2D: mano, nombres, minimapa
