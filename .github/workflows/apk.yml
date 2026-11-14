@@ -60,7 +60,7 @@ jobs:
       - name: Permiso de micrófono (chat de voz)
         run: |
           M=android/app/src/main/AndroidManifest.xml
-          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n</manifest>#' $M
+          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <uses-permission android:name="android.permission.VIBRATE" />\n</manifest>#' $M
           grep -q RECORD_AUDIO $M || { echo "no se pudo añadir el permiso de micrófono"; exit 1; }
 
       - name: Firma fija (para poder actualizar sin desinstalar)
